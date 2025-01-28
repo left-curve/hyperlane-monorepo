@@ -137,7 +137,7 @@ strum_macros = "0.26.2"
 tempfile = "3.3"
 tendermint = "0.40.1"
 tendermint-rpc = { version = "0.40.1", features = ["http-client", "tokio"] }
-thiserror = "1.0"
+thiserror = "2.0"
 time = "0.3"
 tiny-keccak = "2.0.2"
 tokio = { version = "1.42.0", features = ["parking_lot", "tracing"] }
