@@ -138,6 +138,7 @@ pub enum KnownHyperlaneDomain {
     Celo = 42220,
     Cheesechain = 383353,
     Cyber = 7560,
+    Dango = 69,
     DegenChain = 666666666,
     EclipseMainnet = 1408864445,
     Endurance = 648,
@@ -276,6 +277,8 @@ pub enum HyperlaneDomainProtocol {
     Sealevel,
     /// A Cosmos-based chain type which uses hyperlane-cosmos.
     Cosmos,
+    /// A Grug-based chain type which uses hyperlane-grug.
+    Grug,
 }
 
 impl HyperlaneDomainProtocol {
@@ -286,6 +289,7 @@ impl HyperlaneDomainProtocol {
             Fuel => format!("{:?}", addr),
             Sealevel => format!("{:?}", addr),
             Cosmos => format!("{:?}", addr),
+            Grug => format!("{:?}", H160::from(addr)),
         }
     }
 }
@@ -322,7 +326,7 @@ impl KnownHyperlaneDomain {
         many_to_one!(match self {
             Mainnet: [
                 Ancient8, Arbitrum, Avalanche, BinanceSmartChain, Blast, Bob, Celo, Cheesechain, Cyber,
-                DegenChain, EclipseMainnet, Endurance, Ethereum, Fraxtal, FuseMainnet, Gnosis,
+                Dango, DegenChain, EclipseMainnet, Endurance, Ethereum, Fraxtal, FuseMainnet, Gnosis,
                 InEvm, Injective, Kroma, Linea, Lisk, Lukso, MantaPacific, Mantle, Merlin,
                 Metis, Mint, Mode, Moonbeam, Neutron, Optimism, Osmosis, Polygon, ProofOfPlay,
                 ReAl, Redstone, Sanko, Sei, SolanaMainnet, Taiko, Tangle, Treasure, Viction, Worldchain, Xai,
@@ -367,6 +371,7 @@ impl KnownHyperlaneDomain {
                 // Local chains
                 CosmosTest99990, CosmosTest99991,
             ],
+            HyperlaneDomainProtocol::Grug: [Dango],
         })
     }
 
@@ -394,7 +399,7 @@ impl KnownHyperlaneDomain {
                 Abstracttestnet, Treasure, Treasuretopaz, Zeronetwork, Zklink, Zksync,
             ],
             HyperlaneDomainTechnicalStack::Other: [
-                Avalanche, BinanceSmartChain, Celo, EclipseMainnet, Endurance, Ethereum,
+                Avalanche, BinanceSmartChain, Celo, Dango, EclipseMainnet, Endurance, Ethereum,
                 FuseMainnet, Gnosis, Injective, Linea, Lukso, Neutron, Osmosis, Polygon,
                 Sei, SolanaMainnet, Taiko, Viction, Zetachain,
 
@@ -592,7 +597,7 @@ impl HyperlaneDomain {
         use HyperlaneDomainProtocol::*;
         let protocol = self.domain_protocol();
         many_to_one!(match protocol {
-            IndexMode::Block: [Ethereum, Cosmos],
+            IndexMode::Block: [Ethereum, Cosmos, Grug],
             IndexMode::Sequence : [Sealevel, Fuel],
         })
     }

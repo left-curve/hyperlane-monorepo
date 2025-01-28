@@ -1,0 +1,14 @@
+[package]
+name = "hyperlane-grug"
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license-file.workspace = true
+publish.workspace = true
+version.workspace = true
+
+[dependencies]
+auto_impl.workspace = true
+async-trait = { workspace = true }
+hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
+grug-hyperlane-types.workspace = true
