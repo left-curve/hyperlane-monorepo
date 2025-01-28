@@ -1,0 +1,13 @@
+
+[package]
+name = "hyperlane-dango"
+documentation = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license-file = { workspace = true }
+publish = { workspace = true }
+version = { workspace = true }
+
+[dependencies]
+grug = { workspace = true}
+dango-hyperlane-types = { workspace = true }

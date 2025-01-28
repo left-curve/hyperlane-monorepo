@@ -4,6 +4,7 @@ members = [
   "agents/scraper",
   "agents/validator",
   "chains/hyperlane-cosmos",
+  "chains/hyperlane-dango",
   "chains/hyperlane-ethereum",
   "chains/hyperlane-fuel",
   "chains/hyperlane-sealevel",
@@ -81,7 +82,7 @@ ibc-proto = "0.51.1"
 injective-protobuf = "0.2.2"
 injective-std = "1.13.6"
 itertools = "*"
-jobserver = "=0.1.26"
+jobserver = "0.1"
 jsonrpc-core = "18.0"
 k256 = { version = "0.13.4", features = ["arithmetic", "std", "ecdsa"] }
 lazy_static = "1.5.0"
@@ -137,7 +138,7 @@ strum_macros = "0.26.2"
 tempfile = "3.3"
 tendermint = "0.40.1"
 tendermint-rpc = { version = "0.40.1", features = ["http-client", "tokio"] }
-thiserror = "1.0"
+thiserror = "2.0"
 time = "0.3"
 tiny-keccak = "2.0.2"
 tokio = { version = "1.42.0", features = ["parking_lot", "tracing"] }
