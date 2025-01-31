@@ -3,10 +3,11 @@ use {
     crate::DangoConnectionConf,
     async_trait::async_trait,
     dango_types::auth::Metadata,
-    grug::{Addr, Inner, JsonDeExt, Tx},
+    grug::{Addr, Inner, JsonDeExt, Message, NonEmpty, Tx},
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
-        HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H256, H512, U256,
+        HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H160, H256, H512,
+        U256,
     },
 };
 
@@ -81,18 +82,16 @@ impl HyperlaneProvider for DangoProvider {
             ))
         })?;
 
-        // TODO - implement contract address (recipient)
-
         // let gas_price = self.calculate_gas_price(&hash, &tx)?;
         Ok(TxnInfo {
             hash: hash.into(),
             gas_limit: tx.gas_limit.into(),
             max_priority_fee_per_gas: None,
             max_fee_per_gas: None,
-            gas_price: None,
+            gas_price: None, // TODO is this needed?
             nonce: data.nonce.into(),
             sender: H256::from_slice(tx.sender.inner()),
-            recipient: None,
+            recipient: self.recipient(tx.msgs),
             receipt: None,
             raw_input_data: None,
         })
@@ -135,5 +134,17 @@ impl HyperlaneProvider for DangoProvider {
             },
             min_gas_price: None,
         }));
+    }
+}
+
+impl DangoProvider {
+    /// Assume there are exactly one Msg.
+    pub fn recipient(&self, msgs: NonEmpty<Vec<Message>>) -> Option<H256> {
+        let msg = msgs.first().unwrap();
+        match msg {
+            Message::Execute(msg) => Some(H160::from_slice(msg.contract.inner()).into()),
+            Message::Transfer(msg) => Some(H160::from_slice(msg.to.inner()).into()), // TODO: is this needed?
+            _ => None,
+        }
     }
 }
