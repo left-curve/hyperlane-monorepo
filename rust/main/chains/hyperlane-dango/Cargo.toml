@@ -9,5 +9,13 @@ publish = { workspace = true }
 version = { workspace = true }
 
 [dependencies]
-grug = { workspace = true}
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+dango-types = { workspace = true }
 dango-hyperlane-types = { workspace = true }
+grug = { workspace = true}
+hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
+tendermint ={ workspace = true }
+tendermint-rpc = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }

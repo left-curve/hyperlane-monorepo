@@ -40,6 +40,266 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de7fa236829ba0841304542f7614c42b80fca007455315c45c785ccfa873a85b"
+dependencies = [
+ "actix-macros",
+ "actix-rt",
+ "actix_derive",
+ "bitflags 2.6.0",
+ "bytes",
+ "crossbeam-channel",
+ "futures-core",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+ "log",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "pin-project-lite",
+ "smallvec",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "actix-codec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f7b0a21988c1bf877cf4759ef5ddaac04c1c9fe808c9142ecb78ba97d97a28a"
+dependencies = [
+ "bitflags 2.6.0",
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "memchr",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "actix-files"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0773d59061dedb49a8aed04c67291b9d8cf2fe0b60130a381aab53c6dd86e9be"
+dependencies = [
+ "actix-http",
+ "actix-service",
+ "actix-utils",
+ "actix-web",
+ "bitflags 2.6.0",
+ "bytes",
+ "derive_more 0.99.18",
+ "futures-core",
+ "http-range",
+ "log",
+ "mime",
+ "mime_guess",
+ "percent-encoding",
+ "pin-project-lite",
+ "v_htmlescape",
+]
+
+[[package]]
+name = "actix-http"
+version = "3.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d48f96fc3003717aeb9856ca3d02a8c7de502667ad76eeacd830b48d2e91fac4"
+dependencies = [
+ "actix-codec",
+ "actix-rt",
+ "actix-service",
+ "actix-utils",
+ "ahash 0.8.11",
+ "base64 0.22.1",
+ "bitflags 2.6.0",
+ "brotli",
+ "bytes",
+ "bytestring",
+ "derive_more 0.99.18",
+ "encoding_rs",
+ "flate2",
+ "futures-core",
+ "h2 0.3.26",
+ "http 0.2.12",
+ "httparse",
+ "httpdate",
+ "itoa",
+ "language-tags",
+ "local-channel",
+ "mime",
+ "percent-encoding",
+ "pin-project-lite",
+ "rand 0.8.5",
+ "sha1",
+ "smallvec",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "zstd 0.13.2",
+]
+
+[[package]]
+name = "actix-macros"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01ed3140b2f8d422c68afa1ed2e85d996ea619c988ac834d255db32138655cb"
+dependencies = [
+ "quote 1.0.37",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "actix-router"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13d324164c51f63867b57e73ba5936ea151b8a41a1d23d1031eeb9f70d0236f8"
+dependencies = [
+ "bytestring",
+ "cfg-if",
+ "http 0.2.12",
+ "regex",
+ "regex-lite",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "actix-rt"
+version = "2.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24eda4e2a6e042aa4e55ac438a2ae052d3b5da0ecf83d7411e1a368946925208"
+dependencies = [
+ "futures-core",
+ "tokio",
+]
+
+[[package]]
+name = "actix-server"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ca2549781d8dd6d75c40cf6b6051260a2cc2f3c62343d761a969a0640646894"
+dependencies = [
+ "actix-rt",
+ "actix-service",
+ "actix-utils",
+ "futures-core",
+ "futures-util",
+ "mio",
+ "socket2 0.5.7",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "actix-service"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b894941f818cfdc7ccc4b9e60fa7e53b5042a2e8567270f9147d5591893373a"
+dependencies = [
+ "futures-core",
+ "paste",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "actix-utils"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88a1dcdff1466e3c2488e1cb5c36a71822750ad43839937f85d2f4d9f8b705d8"
+dependencies = [
+ "local-waker",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "actix-web"
+version = "4.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9180d76e5cc7ccbc4d60a506f2c727730b154010262df5b910eb17dbe4b8cb38"
+dependencies = [
+ "actix-codec",
+ "actix-http",
+ "actix-macros",
+ "actix-router",
+ "actix-rt",
+ "actix-server",
+ "actix-service",
+ "actix-utils",
+ "actix-web-codegen",
+ "ahash 0.8.11",
+ "bytes",
+ "bytestring",
+ "cfg-if",
+ "cookie 0.16.2",
+ "derive_more 0.99.18",
+ "encoding_rs",
+ "futures-core",
+ "futures-util",
+ "impl-more",
+ "itoa",
+ "language-tags",
+ "log",
+ "mime",
+ "once_cell",
+ "pin-project-lite",
+ "regex",
+ "regex-lite",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "smallvec",
+ "socket2 0.5.7",
+ "time",
+ "url",
+]
+
+[[package]]
+name = "actix-web-actors"
+version = "4.3.1+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f98c5300b38fd004fe7d2a964f9a90813fdbe8a81fed500587e78b1b71c6f980"
+dependencies = [
+ "actix",
+ "actix-codec",
+ "actix-http",
+ "actix-web",
+ "bytes",
+ "bytestring",
+ "futures-core",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "actix-web-codegen"
+version = "4.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f591380e2e68490b5dfaf1dd1aa0ebe78d84ba7067078512b4ea6e4492d622b8"
+dependencies = [
+ "actix-router",
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "actix_derive"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6ac1e58cded18cb28ddc17143c4dea5345b3ad575e14f32f66e4054a56eb271"
+dependencies = [
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "syn 2.0.96",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -114,6 +374,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
 dependencies = [
  "cfg-if",
+ "getrandom 0.2.15",
  "once_cell",
  "version_check",
  "zerocopy",
@@ -374,6 +635,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eab1c04a571841102f5345a8fc0f6bb3d31c315dec879b5c6e42e40ce7ffa34e"
 
 [[package]]
+name = "ascii_utils"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71938f30533e4d95a6d17aa530939da3842c2ab6f4f84b9dae68447e4129f74a"
+
+[[package]]
 name = "asn1-rs"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -500,6 +767,111 @@ dependencies = [
  "futures-lite",
  "once_cell",
  "tokio",
+]
+
+[[package]]
+name = "async-graphql"
+version = "7.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0a9916334e00a14428e03b9b1c73a0baf1c834ebe0ff1be146e1247390b31f1"
+dependencies = [
+ "async-graphql-derive",
+ "async-graphql-parser",
+ "async-graphql-value",
+ "async-stream",
+ "async-trait",
+ "base64 0.22.1",
+ "blocking",
+ "bytes",
+ "chrono",
+ "fast_chemail",
+ "fnv",
+ "futures-channel",
+ "futures-timer",
+ "futures-util",
+ "handlebars",
+ "http 1.2.0",
+ "indexmap 2.5.0",
+ "log",
+ "lru",
+ "mime",
+ "multer 3.1.0",
+ "num-traits",
+ "opentelemetry",
+ "pin-project-lite",
+ "regex",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sha2 0.10.8",
+ "static_assertions_next",
+ "tempfile",
+ "thiserror 1.0.63",
+ "tracing",
+ "tracing-futures",
+ "url",
+ "uuid 1.12.0",
+]
+
+[[package]]
+name = "async-graphql-actix-web"
+version = "7.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75af23eca6e9be23454eed4a453dab4f173a9800694a74e782872fedaafbd7e0"
+dependencies = [
+ "actix",
+ "actix-http",
+ "actix-web",
+ "actix-web-actors",
+ "async-channel 2.3.1",
+ "async-graphql",
+ "async-stream",
+ "futures-channel",
+ "futures-util",
+ "serde_json",
+ "thiserror 1.0.63",
+]
+
+[[package]]
+name = "async-graphql-derive"
+version = "7.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88d6f3ad293f7b9974aef6297673ac3e9097824f84264a9548cbb87006c94044"
+dependencies = [
+ "Inflector",
+ "async-graphql-parser",
+ "darling 0.20.10",
+ "proc-macro-crate 3.2.0",
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "strum 0.26.3",
+ "syn 2.0.96",
+ "thiserror 1.0.63",
+]
+
+[[package]]
+name = "async-graphql-parser"
+version = "7.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ca5697e57fcad289d26948e2ab2f11b9cfe7d645503a1f37fa86640c061c772"
+dependencies = [
+ "async-graphql-value",
+ "pest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "async-graphql-value"
+version = "7.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6266ea7ab3ce41585e16caa0e1e8d97de37827227950820fdab6b69d9c09a63a"
+dependencies = [
+ "bytes",
+ "indexmap 2.5.0",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1139,6 +1511,16 @@ dependencies = [
 
 [[package]]
 name = "borsh"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
+dependencies = [
+ "borsh-derive 0.10.4",
+ "hashbrown 0.11.2",
+]
+
+[[package]]
+name = "borsh"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6362ed55def622cddc70a4746a68554d7b687713770de539e59a739b249f8ed"
@@ -1153,8 +1535,21 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6441c552f230375d18e3cc377677914d2ca2b0d36e52129fe15450a2dce46775"
 dependencies = [
- "borsh-derive-internal",
- "borsh-schema-derive-internal",
+ "borsh-derive-internal 0.9.3",
+ "borsh-schema-derive-internal 0.9.3",
+ "proc-macro-crate 0.1.5",
+ "proc-macro2 1.0.93",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "borsh-derive"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "831213f80d9423998dd696e2c5345aba6be7a0bd8cd19e31c5243e13df1cef89"
+dependencies = [
+ "borsh-derive-internal 0.10.4",
+ "borsh-schema-derive-internal 0.10.4",
  "proc-macro-crate 0.1.5",
  "proc-macro2 1.0.93",
  "syn 1.0.109",
@@ -1186,10 +1581,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "borsh-derive-internal"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65d6ba50644c98714aa2a70d13d7df3cd75cd2b523a2b452bf010443800976b3"
+dependencies = [
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "borsh-schema-derive-internal"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdbd5696d8bfa21d53d9fe39a714a18538bad11492a42d066dbbc395fb1951c0"
+dependencies = [
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "borsh-schema-derive-internal"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "276691d96f063427be83e6692b86148e488ebba9f48f77788724ca027ba3b6d4"
 dependencies = [
  "proc-macro2 1.0.93",
  "quote 1.0.37",
@@ -1316,6 +1733,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "bytestring"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e465647ae23b2823b0753f50decb2d5a86d2bb2cac04788fafd1f80e45378e5f"
+dependencies = [
+ "bytes",
 ]
 
 [[package]]
@@ -1836,6 +2262,17 @@ dependencies = [
 
 [[package]]
 name = "cookie"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
+dependencies = [
+ "percent-encoding",
+ "time",
+ "version_check",
+]
+
+[[package]]
+name = "cookie"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
@@ -1851,7 +2288,7 @@ version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "387461abbc748185c3a6e1673d826918b450b87ff22639429c694619a83b6cf6"
 dependencies = [
- "cookie",
+ "cookie 0.17.0",
  "idna 0.3.0",
  "log",
  "publicsuffix",
@@ -2428,6 +2865,27 @@ checksum = "aa595c4ed7a5374e0e58c5c34f9d93bd6b7d45062790963bd4b4c3c0bf520c4d"
 dependencies = [
  "cynic-codegen",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "dango-types"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+dependencies = [
+ "anyhow",
+ "borsh 1.5.1",
+ "byteorder",
+ "data-encoding",
+ "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "hex-literal",
+ "hyperlane-types",
+ "paste",
+ "pyth-sdk 0.8.0",
+ "pyth-wormhole-attester-sdk",
+ "pythnet-sdk",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -3602,6 +4060,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 
 [[package]]
+name = "fast-math"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2465292146cdfc2011350fe3b1c616ac83cf0faeedb33463ba1c332ed8948d66"
+dependencies = [
+ "ieee754",
+]
+
+[[package]]
+name = "fast_chemail"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "495a39d30d624c2caabe6312bfead73e7717692b44e0b32df168c275a2e8e9e4"
+dependencies = [
+ "ascii_utils",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4462,19 +4938,52 @@ dependencies = [
 [[package]]
 name = "grug"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "borsh 1.5.1",
- "grug-client",
- "grug-ffi",
- "grug-macros",
- "grug-math",
- "grug-storage",
- "grug-testing",
- "grug-types",
+ "grug-client 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-macros 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-testing 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "serde",
  "serde_json",
  "serde_with",
+]
+
+[[package]]
+name = "grug"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+dependencies = [
+ "borsh 1.5.1",
+ "grug-client 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-macros 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-testing 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "serde",
+ "serde_json",
+ "serde_with",
+]
+
+[[package]]
+name = "grug-app"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "borsh 1.5.1",
+ "chrono",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "prost 0.13.4",
+ "thiserror 2.0.11",
+ "tracing",
 ]
 
 [[package]]
@@ -4484,9 +4993,9 @@ source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858
 dependencies = [
  "borsh 1.5.1",
  "chrono",
- "grug-math",
- "grug-storage",
- "grug-types",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "prost 0.13.4",
  "thiserror 2.0.11",
  "tracing",
@@ -4495,15 +5004,46 @@ dependencies = [
 [[package]]
 name = "grug-client"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
- "grug-jmt",
- "grug-math",
- "grug-types",
+ "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "serde",
  "tendermint",
  "tendermint-rpc",
+]
+
+[[package]]
+name = "grug-client"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+dependencies = [
+ "anyhow",
+ "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "serde",
+ "tendermint",
+ "tendermint-rpc",
+]
+
+[[package]]
+name = "grug-crypto"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "blake2",
+ "blake3",
+ "digest 0.10.7",
+ "ed25519-dalek 2.1.1",
+ "k256 0.13.4",
+ "p256",
+ "sha2 0.10.8",
+ "sha3 0.10.8",
+ "signature 2.2.0",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4526,12 +5066,33 @@ dependencies = [
 [[package]]
 name = "grug-db-memory"
 version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "thiserror 2.0.11",
+]
+
+[[package]]
+name = "grug-db-memory"
+version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
- "grug-app",
- "grug-jmt",
- "grug-types",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "thiserror 2.0.11",
+]
+
+[[package]]
+name = "grug-ffi"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "borsh 1.5.1",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "serde",
 ]
 
 [[package]]
@@ -4540,8 +5101,21 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "borsh 1.5.1",
- "grug-types",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "serde",
+]
+
+[[package]]
+name = "grug-jmt"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "borsh 1.5.1",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "serde",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4550,11 +5124,21 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "borsh 1.5.1",
- "grug-math",
- "grug-storage",
- "grug-types",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "serde",
  "thiserror 2.0.11",
+]
+
+[[package]]
+name = "grug-macros"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "proc-macro2 1.0.93",
+ "quote 1.0.37",
+ "syn 2.0.96",
 ]
 
 [[package]]
@@ -4565,6 +5149,18 @@ dependencies = [
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
+]
+
+[[package]]
+name = "grug-math"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "bnum 0.12.1",
+ "borsh 1.5.1",
+ "paste",
+ "serde",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4582,12 +5178,37 @@ dependencies = [
 [[package]]
 name = "grug-mock-account"
 version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "anyhow",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "serde",
+]
+
+[[package]]
+name = "grug-mock-account"
+version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "anyhow",
- "grug-ffi",
- "grug-storage",
- "grug-types",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "serde",
+]
+
+[[package]]
+name = "grug-mock-bank"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "anyhow",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "serde",
 ]
 
@@ -4597,10 +5218,25 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "anyhow",
- "grug-ffi",
- "grug-math",
- "grug-storage",
- "grug-types",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "serde",
+]
+
+[[package]]
+name = "grug-mock-taxman"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "anyhow",
+ "borsh 1.5.1",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "serde",
 ]
 
@@ -4611,11 +5247,24 @@ source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858
 dependencies = [
  "anyhow",
  "borsh 1.5.1",
- "grug-ffi",
- "grug-math",
- "grug-mock-bank",
- "grug-storage",
- "grug-types",
+ "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "serde",
+]
+
+[[package]]
+name = "grug-storage"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "bnum 0.12.1",
+ "borsh 1.5.1",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "prost 0.13.4",
  "serde",
 ]
 
@@ -4626,10 +5275,40 @@ source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858
 dependencies = [
  "bnum 0.12.1",
  "borsh 1.5.1",
- "grug-math",
- "grug-types",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "prost 0.13.4",
  "serde",
+]
+
+[[package]]
+name = "grug-testing"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "assertor",
+ "async-graphql",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-db-memory 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-mock-account 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-mock-taxman 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-vm-rust 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-httpd",
+ "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "k256 0.13.4",
+ "rand 0.8.5",
+ "sea-orm 1.1.4",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -4638,22 +5317,47 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "assertor",
- "grug-app",
- "grug-crypto",
- "grug-db-memory",
- "grug-math",
- "grug-mock-account",
- "grug-mock-bank",
- "grug-mock-taxman",
- "grug-types",
- "grug-vm-rust",
- "indexer-sql",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-db-memory 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-mock-account 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-mock-taxman 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-vm-rust 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "k256 0.13.4",
  "rand 0.8.5",
  "sea-orm 1.1.4",
  "serde",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "grug-types"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "bnum 0.12.1",
+ "borsh 1.5.1",
+ "data-encoding",
+ "digest 0.10.7",
+ "dyn-clone",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "hex-literal",
+ "paste",
+ "prost 0.13.4",
+ "ripemd",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sha2 0.10.8",
+ "sha3 0.10.8",
+ "strum_macros 0.26.4",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4666,8 +5370,8 @@ dependencies = [
  "data-encoding",
  "digest 0.10.7",
  "dyn-clone",
- "grug-crypto",
- "grug-math",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "hex-literal",
  "paste",
  "prost 0.13.4",
@@ -4684,12 +5388,25 @@ dependencies = [
 [[package]]
 name = "grug-vm-rust"
 version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "elsa",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "serde",
+ "thiserror 2.0.11",
+]
+
+[[package]]
+name = "grug-vm-rust"
+version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "elsa",
- "grug-app",
- "grug-crypto",
- "grug-types",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "serde",
  "thiserror 2.0.11",
 ]
@@ -4730,6 +5447,20 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+]
+
+[[package]]
+name = "handlebars"
+version = "5.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d08485b96a0e6393e9e4d1b8d48cf74ad6c063cd905eb33f42c1ce3f0377539b"
+dependencies = [
+ "log",
+ "pest",
+ "pest_derive",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.63",
 ]
 
 [[package]]
@@ -4934,6 +5665,9 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "hex-literal"
@@ -5062,6 +5796,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-range"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21dec9db110f5f872ed9699c3ecf50cf16f423502706ba5c72462e28d3157573"
+
+[[package]]
 name = "httparse"
 version = "1.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5106,7 +5846,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.7",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -5236,7 +5976,7 @@ dependencies = [
  "hyperlane-fuel",
  "hyperlane-sealevel",
  "hyperlane-test",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "maplit",
  "mockall",
  "paste",
@@ -5289,7 +6029,7 @@ dependencies = [
  "futures",
  "getrandom 0.2.15",
  "hex 0.4.3",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "num 0.4.3",
  "num-derive 0.4.2",
  "num-traits",
@@ -5330,7 +6070,7 @@ dependencies = [
  "ibc-proto",
  "injective-protobuf",
  "injective-std",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "once_cell",
  "protobuf",
  "ripemd",
@@ -5375,8 +6115,16 @@ dependencies = [
 name = "hyperlane-dango"
 version = "0.1.0"
 dependencies = [
- "grug",
+ "anyhow",
+ "async-trait",
+ "dango-types",
+ "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "hyperlane-core",
  "hyperlane-types",
+ "tendermint",
+ "tendermint-rpc",
+ "thiserror 2.0.11",
+ "url",
 ]
 
 [[package]]
@@ -5395,7 +6143,7 @@ dependencies = [
  "futures-util",
  "hex 0.4.3",
  "hyperlane-core",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "num 0.4.3",
  "num-traits",
  "reqwest",
@@ -5568,7 +6316,7 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "anyhow",
- "grug",
+ "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "sha3 0.10.8",
 ]
 
@@ -5654,6 +6402,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ieee754"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9007da9cacbd3e6343da136e98b0d2df013f553d35bdec8b518f07bea768e19c"
+
+[[package]]
 name = "im"
 version = "15.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5685,6 +6439,12 @@ source = "git+https://github.com/hyperlane-xyz/parity-common.git?branch=hyperlan
 dependencies = [
  "parity-scale-codec",
 ]
+
+[[package]]
+name = "impl-more"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8a5a9a0ff0086c7a148acb942baaabeadf9504d10400b5a05645853729b9cd2"
 
 [[package]]
 name = "impl-rlp"
@@ -5782,15 +6542,15 @@ checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 [[package]]
 name = "indexer-disk-saver"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
  "borsh 1.5.1",
  "glob",
- "grug-app",
- "grug-math",
- "grug-types",
- "indexer-sql-migration",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "lzma-rs",
  "sea-orm 1.1.4",
  "serde",
@@ -5802,18 +6562,68 @@ dependencies = [
 ]
 
 [[package]]
-name = "indexer-sql"
+name = "indexer-disk-saver"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "anyhow",
+ "borsh 1.5.1",
+ "glob",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "lzma-rs",
+ "sea-orm 1.1.4",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.11",
+ "tokio",
+ "uuid 1.12.0",
+]
+
+[[package]]
+name = "indexer-httpd"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "actix",
+ "actix-files",
+ "actix-web",
+ "anyhow",
+ "async-graphql",
+ "async-graphql-actix-web",
+ "chrono",
+ "clap 4.5.27",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "num_cpus",
+ "sea-orm 1.1.4",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.11",
+ "tokio",
+ "tracing",
+ "tracing-actix-web",
+ "tracing-subscriber",
+ "uuid 1.12.0",
+]
+
+[[package]]
+name = "indexer-sql"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "anyhow",
  "async-trait",
  "borsh 1.5.1",
- "grug-app",
- "grug-math",
- "grug-types",
- "indexer-disk-saver",
- "indexer-sql-migration",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-disk-saver 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "sea-orm 1.1.4",
  "serde",
  "serde_json",
@@ -5824,6 +6634,40 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid 1.12.0",
+]
+
+[[package]]
+name = "indexer-sql"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "borsh 1.5.1",
+ "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "indexer-disk-saver 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "sea-orm 1.1.4",
+ "serde",
+ "serde_json",
+ "strum 0.26.3",
+ "strum_macros 0.26.4",
+ "tempfile",
+ "thiserror 2.0.11",
+ "tokio",
+ "tracing",
+ "uuid 1.12.0",
+]
+
+[[package]]
+name = "indexer-sql-migration"
+version = "0.1.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "async-std",
+ "sea-orm-migration 1.1.4",
 ]
 
 [[package]]
@@ -6088,6 +6932,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "language-tags"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4345964bb142484797b161f473a503a434de77149dd8c7427788c6e13379388"
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6243,6 +7093,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
+name = "local-channel"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6cbc85e69b8df4b8bb8b89ec634e7189099cea8927a276b7384ce5488e53ec8"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "local-waker",
+]
+
+[[package]]
+name = "local-waker"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d873d7c67ce09b42110d801813efbc9364414e356be9935700d368351657487"
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6259,6 +7126,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 dependencies = [
  "value-bag",
+]
+
+[[package]]
+name = "lru"
+version = "0.12.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
+dependencies = [
+ "hashbrown 0.15.2",
 ]
 
 [[package]]
@@ -6442,6 +7318,7 @@ checksum = "80e04d1dcff3aae0704555fe5fee3bcfaf3d1fdf8a7e521d5b9d2b42acb52cec"
 dependencies = [
  "hermit-abi 0.3.9",
  "libc",
+ "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
 ]
@@ -6492,6 +7369,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "multer"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83e87776546dc87511aa5ee218730c92b666d7264ab6ed41f9d215af9cd5224b"
+dependencies = [
+ "bytes",
+ "encoding_rs",
+ "futures-util",
+ "http 1.2.0",
+ "httparse",
+ "memchr",
+ "mime",
+ "spin 0.9.8",
+ "version_check",
+]
+
+[[package]]
 name = "multisig-ism"
 version = "0.1.0"
 dependencies = [
@@ -6502,6 +7396,12 @@ dependencies = [
  "spl-type-length-value",
  "thiserror 1.0.63",
 ]
+
+[[package]]
+name = "mutually_exclusive_features"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e94e1e6445d314f972ff7395df2de295fe51b71821694f0b0e1e79c4f12c8577"
 
 [[package]]
 name = "native-tls"
@@ -6817,7 +7717,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
 dependencies = [
- "proc-macro-crate 3.2.0",
+ "proc-macro-crate 1.2.1",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -6941,6 +7841,19 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "opentelemetry"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab70038c28ed37b97d8ed414b6429d343a8bbf44c9f79ec854f3a643029ba6d7"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 1.0.63",
 ]
 
 [[package]]
@@ -7682,7 +8595,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -7695,7 +8608,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "157c5a9d7ea5c2ed2d9fb8f495b64759f7816c7eaea54ba3978f0d63000162e3"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -7781,6 +8694,62 @@ checksum = "96a8c1bda5ae1af7f99a2962e49df150414a43d62404644d98dd5c3a93d07457"
 dependencies = [
  "idna 0.3.0",
  "psl-types",
+]
+
+[[package]]
+name = "pyth-sdk"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
+dependencies = [
+ "borsh 0.9.3",
+ "borsh-derive 0.9.3",
+ "hex 0.4.3",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-sdk"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e7aeef4d5f0a9c98ff5af2ddd84a8b89919c512188305b497a9eb9afa97a949"
+dependencies = [
+ "borsh 0.10.4",
+ "borsh-derive 0.10.4",
+ "getrandom 0.2.15",
+ "hex 0.4.3",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-wormhole-attester-sdk"
+version = "0.1.2"
+source = "git+https://github.com/pyth-network/pyth-crosschain?rev=cd67cd8#cd67cd82efa3ec9e6a4d4d065457645cabf4992e"
+dependencies = [
+ "hex 0.4.3",
+ "pyth-sdk 0.5.0",
+ "serde",
+]
+
+[[package]]
+name = "pythnet-sdk"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "498d20fd330277697aaee92f341bdabdb4695b10e05f054157a18ad8b7746a17"
+dependencies = [
+ "bincode",
+ "borsh 0.10.4",
+ "bytemuck",
+ "byteorder",
+ "fast-math",
+ "hex 0.4.3",
+ "rustc_version",
+ "serde",
+ "sha3 0.10.8",
+ "slow_primes",
+ "thiserror 1.0.63",
 ]
 
 [[package]]
@@ -8077,6 +9046,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-lite"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53a49587ad06b26609c52e423de037e7f57f20d53535d66e08c695f347df952a"
+
+[[package]]
 name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8111,7 +9086,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "mockall",
  "num-derive 0.4.2",
  "num-traits",
@@ -8152,7 +9127,7 @@ dependencies = [
  "async-compression",
  "base64 0.21.7",
  "bytes",
- "cookie",
+ "cookie 0.17.0",
  "cookie_store",
  "encoding_rs",
  "futures-core",
@@ -8844,7 +9819,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "migration",
  "num-bigint 0.4.6",
  "num-traits",
@@ -9669,6 +10644,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "slow_primes"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58267dd2fbaa6dceecba9e3e106d2d90a2b02497c0e8b01b8759beccf5113938"
+dependencies = [
+ "num 0.2.1",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9718,7 +10702,7 @@ dependencies = [
  "spl-token",
  "spl-token-2022",
  "thiserror 1.0.63",
- "zstd",
+ "zstd 0.11.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -10733,6 +11717,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "static_assertions_next"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7beae5182595e9a8b683fa98c4317f956c9a2dec3b9716990d20023cc60c766"
+
+[[package]]
 name = "stringprep"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11589,6 +12579,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-actix-web"
+version = "0.7.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54a9f5c1aca50ebebf074ee665b9f99f2e84906dcf6b993a0d0090edb835166d"
+dependencies = [
+ "actix-web",
+ "mutually_exclusive_features",
+ "pin-project",
+ "tracing",
+ "uuid 1.12.0",
+]
+
+[[package]]
 name = "tracing-attributes"
 version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11625,6 +12628,8 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
+ "futures",
+ "futures-task",
  "pin-project",
  "tracing",
 ]
@@ -11968,6 +12973,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "v_htmlescape"
+version = "0.15.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e8257fbc510f0a46eb602c10215901938b5c2a7d5e70fc11483b1d3c9b5b18c"
+
+[[package]]
 name = "validator"
 version = "0.1.0"
 dependencies = [
@@ -12082,7 +13093,7 @@ dependencies = [
  "log",
  "mime",
  "mime_guess",
- "multer",
+ "multer 2.1.0",
  "percent-encoding",
  "pin-project",
  "scoped-tls",
@@ -12673,7 +13684,16 @@ version = "0.11.2+zstd.1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20cc960326ece64f010d2d2107537f26dc589a6573a316bd5b1dba685fa5fde4"
 dependencies = [
- "zstd-safe",
+ "zstd-safe 5.0.2+zstd.1.5.2",
+]
+
+[[package]]
+name = "zstd"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcf2b778a664581e31e389454a7072dab1647606d44f7feea22cd5abb9c9f3f9"
+dependencies = [
+ "zstd-safe 7.2.1",
 ]
 
 [[package]]
@@ -12683,6 +13703,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d2a5585e04f9eea4b2a3d1eca508c4dee9592a89ef6f450c11719da0726f4db"
 dependencies = [
  "libc",
+ "zstd-sys",
+]
+
+[[package]]
+name = "zstd-safe"
+version = "7.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54a3ab4db68cea366acc5c897c7b4d4d1b8994a9cd6e6f841f8964566a419059"
+dependencies = [
  "zstd-sys",
 ]
 
