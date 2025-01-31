@@ -18,4 +18,5 @@ hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
 tendermint ={ workspace = true }
 tendermint-rpc = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
 url = { workspace = true }

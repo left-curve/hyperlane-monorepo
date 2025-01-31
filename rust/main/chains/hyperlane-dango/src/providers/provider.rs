@@ -6,8 +6,7 @@ use {
     grug::{Addr, Inner, JsonDeExt, Tx},
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
-        HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H256, H512,
-        U256,
+        HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H256, H512, U256,
     },
 };
 
@@ -101,6 +100,12 @@ impl HyperlaneProvider for DangoProvider {
 
     /// Returns whether a contract exists at the provided address
     async fn is_contract(&self, address: &H256) -> ChainResult<bool> {
+        let address = Addr::try_from(&address.as_fixed_bytes()[12..]).map_err(|_| {
+            ChainCommunicationError::ParseError {
+                msg: "unable to parse address".to_string(),
+            }
+        })?;
+
         self.provider.is_contract(address).await
     }
 

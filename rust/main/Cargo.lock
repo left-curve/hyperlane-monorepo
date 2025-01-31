@@ -6124,6 +6124,7 @@ dependencies = [
  "tendermint",
  "tendermint-rpc",
  "thiserror 2.0.11",
+ "tokio",
  "url",
 ]
 
