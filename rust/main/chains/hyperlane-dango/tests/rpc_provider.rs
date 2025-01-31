@@ -1,27 +1,27 @@
+mod src;
+
 use {
     grug::{Addr, Denom},
     hyperlane_dango::RpcProvider,
-    std::{str::FromStr, sync::LazyLock},
+    src::constants::{
+        EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
+        NOT_EXISTING_USER,
+    },
+    std::str::FromStr,
     url::Url,
 };
 
 const RPC_URL: &str = "http://65.108.46.248:26657";
 
-const EXISTING_CONTRACT: LazyLock<Addr> =
-    LazyLock::new(|| Addr::from_str("0x2f3d763027f30db0250de65d037058c8bcbd3352").unwrap());
-const NOT_EXISTING_CONTRACT: LazyLock<Addr> =
-    LazyLock::new(|| Addr::from_str("0x929a99d0881f07e03d5f91b5ad2a1fc188f64ea1").unwrap());
-
-const EXISTING_USER: LazyLock<Addr> =
-    LazyLock::new(|| Addr::from_str("0xcf8c496fb3ff6abd98f2c2b735a0a148fed04b54").unwrap());
-const NOT_EXISTING_USER: LazyLock<Addr> =
-    LazyLock::new(|| Addr::from_str("0x384ba320f302804a0a03bfc8bb171f35d8b84f01").unwrap());
-
-const EXISTING_COIN: LazyLock<Denom> = LazyLock::new(|| Denom::from_str("uusdc").unwrap());
-const NOT_EXISTING_COIN: LazyLock<Denom> = LazyLock::new(|| Denom::from_str("abcde").unwrap());
-
 #[tokio::test]
 async fn rpc_test() {
+    let existing_contract = Addr::from_str(EXISTING_CONTRACT).unwrap();
+    let not_existing_contract = Addr::from_str(NOT_EXISTING_CONTRACT).unwrap();
+    let existing_user = Addr::from_str(EXISTING_USER).unwrap();
+    let not_existing_user = Addr::from_str(NOT_EXISTING_USER).unwrap();
+    let existing_coin = Denom::from_str(EXISTING_COIN).unwrap();
+    let not_existing_coin = Denom::from_str(NOT_EXISTING_COIN).unwrap();
+
     let client = RpcProvider::new(&Url::parse(RPC_URL).unwrap()).unwrap();
 
     // Get block.
@@ -43,31 +43,31 @@ async fn rpc_test() {
 
     // Check if a contract exists.
     {
-        assert!(client.is_contract(*EXISTING_CONTRACT).await.unwrap());
-        assert!(!client.is_contract(*NOT_EXISTING_CONTRACT).await.unwrap());
+        assert!(client.is_contract(existing_contract).await.unwrap());
+        assert!(!client.is_contract(not_existing_contract).await.unwrap());
     }
 
     // Get the balance of an address.
     {
         // Get the balance of a coin for an address.
         let balance = client
-            .get_balance(*EXISTING_USER, EXISTING_COIN.clone())
+            .get_balance(existing_user, existing_coin.clone())
             .await
             .unwrap();
 
-        assert!(balance.denom == *EXISTING_COIN);
+        assert!(balance.denom == existing_coin);
         assert!(balance.amount > 0.into());
 
         // Get the balance of a NOT existing coin for an address.
         let balance = client
-            .get_balance(*EXISTING_USER, NOT_EXISTING_COIN.clone())
+            .get_balance(existing_user, not_existing_coin)
             .await
             .unwrap();
         assert!(balance.amount == 0.into());
 
         // Get the balance of a coin for a NOT existing address.
         let balance = client
-            .get_balance(*NOT_EXISTING_USER, EXISTING_COIN.clone())
+            .get_balance(not_existing_user, existing_coin)
             .await
             .unwrap();
         assert!(balance.amount == 0.into());
