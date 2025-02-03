@@ -342,6 +342,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "aes-gcm"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "831010a0f742e1209b3bcea8fab6a8e149051ba6099432c8cb2cc117dec3ead1"
+dependencies = [
+ "aead",
+ "aes",
+ "cipher",
+ "ctr",
+ "ghash",
+ "subtle",
+]
+
+[[package]]
 name = "aes-gcm-siv"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1351,6 +1365,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "bip32"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db40d3dfbeab4e031d78c844642fa0caa0b0db11ce1607ac9d2986dff1405c69"
+dependencies = [
+ "bs58 0.5.1",
+ "hmac 0.12.1",
+ "k256 0.13.4",
+ "once_cell",
+ "pbkdf2 0.12.2",
+ "rand_core 0.6.4",
+ "ripemd",
+ "secp256k1 0.27.0",
+ "sha2 0.10.8",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1516,7 +1549,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
 dependencies = [
  "borsh-derive 0.10.4",
- "hashbrown 0.11.2",
+ "hashbrown 0.13.2",
 ]
 
 [[package]]
@@ -2868,6 +2901,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "dango-client"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+dependencies = [
+ "aes-gcm",
+ "anyhow",
+ "bip32",
+ "dango-types",
+ "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "k256 0.13.4",
+ "pbkdf2 0.12.2",
+ "rand 0.8.5",
+ "sha2 0.10.8",
+]
+
+[[package]]
 name = "dango-types"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
@@ -2878,7 +2928,7 @@ dependencies = [
  "data-encoding",
  "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "hex-literal",
- "hyperlane-types",
+ "hyperlane-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
  "paste",
  "pyth-sdk 0.8.0",
  "pyth-wormhole-attester-sdk",
@@ -4419,7 +4469,7 @@ dependencies = [
  "lazy_static",
  "p256",
  "rand 0.8.5",
- "secp256k1",
+ "secp256k1 0.26.0",
  "serde",
  "sha2 0.10.8",
  "zeroize",
@@ -4877,6 +4927,16 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "ghash"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0d8a4362ccb29cb0b265253fb0a2728f592895ee6854fd9bc13f2ffda266ff1"
+dependencies = [
+ "opaque-debug 0.3.1",
+ "polyval",
 ]
 
 [[package]]
@@ -5846,7 +5906,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.7",
  "tokio",
  "tower-service",
  "tracing",
@@ -5976,7 +6036,7 @@ dependencies = [
  "hyperlane-fuel",
  "hyperlane-sealevel",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "maplit",
  "mockall",
  "paste",
@@ -6029,7 +6089,7 @@ dependencies = [
  "futures",
  "getrandom 0.2.15",
  "hex 0.4.3",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "num 0.4.3",
  "num-derive 0.4.2",
  "num-traits",
@@ -6070,7 +6130,7 @@ dependencies = [
  "ibc-proto",
  "injective-protobuf",
  "injective-std",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "once_cell",
  "protobuf",
  "ripemd",
@@ -6117,10 +6177,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "dango-client",
  "dango-types",
  "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "hyperlane-core",
- "hyperlane-types",
+ "hyperlane-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
  "tendermint",
  "tendermint-rpc",
  "thiserror 2.0.11",
@@ -6144,7 +6205,7 @@ dependencies = [
  "futures-util",
  "hex 0.4.3",
  "hyperlane-core",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "num 0.4.3",
  "num-traits",
  "reqwest",
@@ -6309,6 +6370,16 @@ dependencies = [
  "async-trait",
  "hyperlane-core",
  "mockall",
+]
+
+[[package]]
+name = "hyperlane-types"
+version = "0.0.0"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
+dependencies = [
+ "anyhow",
+ "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "sha3 0.10.8",
 ]
 
 [[package]]
@@ -8596,7 +8667,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -8609,7 +8680,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "157c5a9d7ea5c2ed2d9fb8f495b64759f7816c7eaea54ba3978f0d63000162e3"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -9087,7 +9158,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "mockall",
  "num-derive 0.4.2",
  "num-traits",
@@ -9820,7 +9891,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "migration",
  "num-bigint 0.4.6",
  "num-traits",
@@ -10223,6 +10294,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4124a35fe33ae14259c490fd70fa199a32b9ce9502f2ee6bc4f81ec06fa65894"
 dependencies = [
  "rand 0.8.5",
+ "secp256k1-sys",
+]
+
+[[package]]
+name = "secp256k1"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25996b82292a7a57ed3508f052cfff8640d38d32018784acd714758b43da9c8f"
+dependencies = [
  "secp256k1-sys",
 ]
 
@@ -10650,7 +10730,7 @@ version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58267dd2fbaa6dceecba9e3e106d2d90a2b02497c0e8b01b8759beccf5113938"
 dependencies = [
- "num 0.2.1",
+ "num 0.4.3",
 ]
 
 [[package]]

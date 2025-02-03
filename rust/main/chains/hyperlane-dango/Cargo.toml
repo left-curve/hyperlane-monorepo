@@ -11,6 +11,7 @@ version = { workspace = true }
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
+dango-client = { workspace = true }
 dango-types = { workspace = true }
 dango-hyperlane-types = { workspace = true }
 grug = { workspace = true}

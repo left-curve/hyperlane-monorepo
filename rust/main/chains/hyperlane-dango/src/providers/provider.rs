@@ -1,9 +1,11 @@
 use {
     super::RpcProvider,
-    crate::DangoConnectionConf,
+    crate::{DangoConnectionConf, ToDangoAddr},
     async_trait::async_trait,
     dango_types::auth::Metadata,
-    grug::{Addr, Inner, JsonDeExt, Message, NonEmpty, Tx},
+    grug::{
+        Addr, Inner, JsonDeExt, Message, NonEmpty, Tx, __private::serde::{de::DeserializeOwned, Serialize},
+    },
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
         HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H160, H256, H512,
@@ -99,11 +101,7 @@ impl HyperlaneProvider for DangoProvider {
 
     /// Returns whether a contract exists at the provided address
     async fn is_contract(&self, address: &H256) -> ChainResult<bool> {
-        let address = Addr::try_from(&address.as_fixed_bytes()[12..]).map_err(|_| {
-            ChainCommunicationError::ParseError {
-                msg: "unable to parse address".to_string(),
-            }
-        })?;
+        let address = address.to_dango_addr()?;
 
         self.provider.is_contract(address).await
     }
@@ -146,5 +144,19 @@ impl DangoProvider {
             Message::Transfer(msg) => Some(H160::from_slice(msg.to.inner()).into()), // TODO: is this needed?
             _ => None,
         }
+    }
+
+    /// Query a contract on the chain.
+    pub async fn query_wasm_smart<M, R>(
+        &self,
+        contract: Addr,
+        msg: &M,
+        height: Option<u64>,
+    ) -> ChainResult<R>
+    where
+        M: Serialize,
+        R: DeserializeOwned,
+    {
+        self.provider.query_wasm_smart(contract, msg, height).await
     }
 }
