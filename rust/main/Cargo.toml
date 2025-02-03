@@ -161,9 +161,9 @@ warp = "0.3"
 which = "4.3"
 ya-gcp = { version = "0.11.3", features = ["storage"] }
 
-grug = { git = "https://github.com/left-curve/left-curve.git",  branch = "grug/client_traits" }
-dango-types = { git = "https://github.com/left-curve/left-curve.git", rev = "4017448", package = "dango-types" }
-dango-client = { git = "https://github.com/left-curve/left-curve.git", rev = "4017448", package = "dango-client" }
+grug = { git = "https://github.com/left-curve/left-curve.git", branch = "grug/client_traits" }
+dango-types = { git = "https://github.com/left-curve/left-curve.git", branch = "grug/client_traits" }
+dango-client = { git = "https://github.com/left-curve/left-curve.git", branch = "grug/client_traits" }
 dango-hyperlane-types = { git = "https://github.com/left-curve/left-curve.git", branch = "grug/client_traits", package = "hyperlane-types" }
 
 

@@ -2903,14 +2903,14 @@ dependencies = [
 [[package]]
 name = "dango-client"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#77834ee5a6d30263bc29dd1e94ffcbddbb4bfd2f"
 dependencies = [
  "aes-gcm",
  "anyhow",
  "bip32",
  "dango-types",
- "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug",
+ "grug-crypto",
  "k256 0.13.4",
  "pbkdf2 0.12.2",
  "rand 0.8.5",
@@ -2920,15 +2920,15 @@ dependencies = [
 [[package]]
 name = "dango-types"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
+source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#77834ee5a6d30263bc29dd1e94ffcbddbb4bfd2f"
 dependencies = [
  "anyhow",
  "borsh 1.5.1",
  "byteorder",
  "data-encoding",
- "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug",
  "hex-literal",
- "hyperlane-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "hyperlane-types",
  "paste",
  "pyth-sdk 0.8.0",
  "pyth-wormhole-attester-sdk",
@@ -5001,31 +5001,13 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "borsh 1.5.1",
- "grug-client 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-macros 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-testing 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
- "serde_json",
- "serde_with",
-]
-
-[[package]]
-name = "grug"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "borsh 1.5.1",
- "grug-client 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-macros 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-testing 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-client",
+ "grug-ffi",
+ "grug-macros",
+ "grug-math",
+ "grug-storage",
+ "grug-testing",
+ "grug-types",
  "serde",
  "serde_json",
  "serde_with",
@@ -5038,24 +5020,9 @@ source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_tr
 dependencies = [
  "borsh 1.5.1",
  "chrono",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "prost 0.13.4",
- "thiserror 2.0.11",
- "tracing",
-]
-
-[[package]]
-name = "grug-app"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "borsh 1.5.1",
- "chrono",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math",
+ "grug-storage",
+ "grug-types",
  "prost 0.13.4",
  "thiserror 2.0.11",
  "tracing",
@@ -5067,23 +5034,9 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
- "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
- "tendermint",
- "tendermint-rpc",
-]
-
-[[package]]
-name = "grug-client"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-jmt",
+ "grug-math",
+ "grug-types",
  "serde",
  "tendermint",
  "tendermint-rpc",
@@ -5107,41 +5060,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "grug-crypto"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "blake2",
- "blake3",
- "digest 0.10.7",
- "ed25519-dalek 2.1.1",
- "k256 0.13.4",
- "p256",
- "sha2 0.10.8",
- "sha3 0.10.8",
- "signature 2.2.0",
- "thiserror 2.0.11",
-]
-
-[[package]]
 name = "grug-db-memory"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "thiserror 2.0.11",
-]
-
-[[package]]
-name = "grug-db-memory"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-jmt 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-app",
+ "grug-jmt",
+ "grug-types",
  "thiserror 2.0.11",
 ]
 
@@ -5151,17 +5076,7 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "borsh 1.5.1",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
-]
-
-[[package]]
-name = "grug-ffi"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "borsh 1.5.1",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-types",
  "serde",
 ]
 
@@ -5171,22 +5086,9 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "borsh 1.5.1",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
- "thiserror 2.0.11",
-]
-
-[[package]]
-name = "grug-jmt"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "borsh 1.5.1",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math",
+ "grug-storage",
+ "grug-types",
  "serde",
  "thiserror 2.0.11",
 ]
@@ -5195,16 +5097,6 @@ dependencies = [
 name = "grug-macros"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
-dependencies = [
- "proc-macro2 1.0.93",
- "quote 1.0.37",
- "syn 2.0.96",
-]
-
-[[package]]
-name = "grug-macros"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "proc-macro2 1.0.93",
  "quote 1.0.37",
@@ -5224,38 +5116,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "grug-math"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "bnum 0.12.1",
- "borsh 1.5.1",
- "paste",
- "serde",
- "thiserror 2.0.11",
-]
-
-[[package]]
 name = "grug-mock-account"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
-]
-
-[[package]]
-name = "grug-mock-account"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-ffi",
+ "grug-storage",
+ "grug-types",
  "serde",
 ]
 
@@ -5265,23 +5133,10 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
-]
-
-[[package]]
-name = "grug-mock-bank"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-ffi",
+ "grug-math",
+ "grug-storage",
+ "grug-types",
  "serde",
 ]
 
@@ -5292,26 +5147,11 @@ source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_tr
 dependencies = [
  "anyhow",
  "borsh 1.5.1",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
-]
-
-[[package]]
-name = "grug-mock-taxman"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "borsh 1.5.1",
- "grug-ffi 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-storage 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-ffi",
+ "grug-math",
+ "grug-mock-bank",
+ "grug-storage",
+ "grug-types",
  "serde",
 ]
 
@@ -5322,21 +5162,8 @@ source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_tr
 dependencies = [
  "bnum 0.12.1",
  "borsh 1.5.1",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "prost 0.13.4",
- "serde",
-]
-
-[[package]]
-name = "grug-storage"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "bnum 0.12.1",
- "borsh 1.5.1",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-math",
+ "grug-types",
  "prost 0.13.4",
  "serde",
 ]
@@ -5350,17 +5177,17 @@ dependencies = [
  "anyhow",
  "assertor",
  "async-graphql",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-db-memory 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-mock-account 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-mock-taxman 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-vm-rust 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-app",
+ "grug-crypto",
+ "grug-db-memory",
+ "grug-math",
+ "grug-mock-account",
+ "grug-mock-bank",
+ "grug-mock-taxman",
+ "grug-types",
+ "grug-vm-rust",
  "indexer-httpd",
- "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "indexer-sql",
  "k256 0.13.4",
  "rand 0.8.5",
  "sea-orm 1.1.4",
@@ -5372,30 +5199,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "grug-testing"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "assertor",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-db-memory 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-mock-account 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-mock-bank 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-mock-taxman 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-vm-rust 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "k256 0.13.4",
- "rand 0.8.5",
- "sea-orm 1.1.4",
- "serde",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "grug-types"
 version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
@@ -5405,33 +5208,8 @@ dependencies = [
  "data-encoding",
  "digest 0.10.7",
  "dyn-clone",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "hex-literal",
- "paste",
- "prost 0.13.4",
- "ripemd",
- "serde",
- "serde_json",
- "serde_with",
- "sha2 0.10.8",
- "sha3 0.10.8",
- "strum_macros 0.26.4",
- "thiserror 2.0.11",
-]
-
-[[package]]
-name = "grug-types"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "bnum 0.12.1",
- "borsh 1.5.1",
- "data-encoding",
- "digest 0.10.7",
- "dyn-clone",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-crypto",
+ "grug-math",
  "hex-literal",
  "paste",
  "prost 0.13.4",
@@ -5451,22 +5229,9 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "elsa",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "serde",
- "thiserror 2.0.11",
-]
-
-[[package]]
-name = "grug-vm-rust"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "elsa",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-crypto 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-app",
+ "grug-crypto",
+ "grug-types",
  "serde",
  "thiserror 2.0.11",
 ]
@@ -6179,9 +5944,9 @@ dependencies = [
  "async-trait",
  "dango-client",
  "dango-types",
- "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug",
  "hyperlane-core",
- "hyperlane-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "hyperlane-types",
  "tendermint",
  "tendermint-rpc",
  "thiserror 2.0.11",
@@ -6378,17 +6143,7 @@ version = "0.0.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
 dependencies = [
  "anyhow",
- "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "sha3 0.10.8",
-]
-
-[[package]]
-name = "hyperlane-types"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "grug 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug",
  "sha3 0.10.8",
 ]
 
@@ -6619,32 +6374,10 @@ dependencies = [
  "anyhow",
  "borsh 1.5.1",
  "glob",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "lzma-rs",
- "sea-orm 1.1.4",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.11",
- "tokio",
- "uuid 1.12.0",
-]
-
-[[package]]
-name = "indexer-disk-saver"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "borsh 1.5.1",
- "glob",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-app",
+ "grug-math",
+ "grug-types",
+ "indexer-sql-migration",
  "lzma-rs",
  "sea-orm 1.1.4",
  "serde",
@@ -6668,8 +6401,8 @@ dependencies = [
  "async-graphql-actix-web",
  "chrono",
  "clap 4.5.27",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "indexer-sql 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
+ "grug-types",
+ "indexer-sql",
  "num_cpus",
  "sea-orm 1.1.4",
  "serde",
@@ -6691,36 +6424,11 @@ dependencies = [
  "anyhow",
  "async-trait",
  "borsh 1.5.1",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "indexer-disk-saver 0.0.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits)",
- "sea-orm 1.1.4",
- "serde",
- "serde_json",
- "strum 0.26.3",
- "strum_macros 0.26.4",
- "tempfile",
- "thiserror 2.0.11",
- "tokio",
- "tracing",
- "uuid 1.12.0",
-]
-
-[[package]]
-name = "indexer-sql"
-version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
-dependencies = [
- "anyhow",
- "async-trait",
- "borsh 1.5.1",
- "grug-app 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-math 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "grug-types 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "indexer-disk-saver 0.0.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
- "indexer-sql-migration 0.1.0 (git+https://github.com/left-curve/left-curve.git?rev=4017448)",
+ "grug-app",
+ "grug-math",
+ "grug-types",
+ "indexer-disk-saver",
+ "indexer-sql-migration",
  "sea-orm 1.1.4",
  "serde",
  "serde_json",
@@ -6737,15 +6445,6 @@ dependencies = [
 name = "indexer-sql-migration"
 version = "0.1.0"
 source = "git+https://github.com/left-curve/left-curve.git?branch=grug/client_traits#65f716514adb7cad3c4c68b535832e7a1382feca"
-dependencies = [
- "async-std",
- "sea-orm-migration 1.1.4",
-]
-
-[[package]]
-name = "indexer-sql-migration"
-version = "0.1.0"
-source = "git+https://github.com/left-curve/left-curve.git?rev=4017448#401744858dd5e5a4082aeb2dded9d245068b5ce9"
 dependencies = [
  "async-std",
  "sea-orm-migration 1.1.4",
