@@ -4,9 +4,10 @@ use {
     async_trait::async_trait,
     dango_types::auth::Metadata,
     grug::{
-        Addr, Inner, JsonDeExt, Message, NonEmpty, Tx,
+        Addr, Inner, JsonDeExt, Message, NonEmpty, Signer, Tx,
         __private::serde::{de::DeserializeOwned, Serialize},
     },
+    grug_app::Shared,
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
         HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H160, H256, H512,
@@ -162,8 +163,15 @@ impl DangoProvider {
         self.provider.query_wasm_smart(contract, msg, height).await
     }
 
-    pub async fn send_messages(&mut self, msgs: Vec<Message>) -> ChainResult<tx_sync::Response> {
+    pub async fn send_messages<T>(
+        self,
+        signer: Shared<T>,
+        msgs: Vec<Message>,
+    ) -> ChainResult<tx_sync::Response>
+    where
+        T: Signer,
+    {
         let msgs = NonEmpty::new(msgs).unwrap();
-        self.provider.send_messages(msgs).await
+        self.provider.send_messages(signer, msgs).await
     }
 }

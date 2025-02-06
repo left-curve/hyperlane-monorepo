@@ -1,7 +1,6 @@
 mod src;
 
 use {
-    dango_client::SigningKey,
     grug::{Addr, Denom},
     hyperlane_dango::RpcProvider,
     src::constants::{
@@ -23,15 +22,9 @@ async fn rpc_test() {
     let existing_coin = Denom::from_str(EXISTING_COIN).unwrap();
     let not_existing_coin = Denom::from_str(NOT_EXISTING_COIN).unwrap();
 
-    let client = RpcProvider::new(
-        &Url::parse(RPC_URL).unwrap(),
-        "dango",
-        "username",
-        EXISTING_USER,
-        SigningKey::new_random(),
-    )
-    .await
-    .unwrap();
+    let client = RpcProvider::new(&Url::parse(RPC_URL).unwrap(), "dango")
+        .await
+        .unwrap();
 
     // Get block.
     {

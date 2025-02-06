@@ -1,15 +1,18 @@
 use {
     crate::{ToDangoAddr, ToDangoHexByteArray},
     async_trait::async_trait,
+    dango_client::SingleSigner,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coin, Coins, HexByteArray, Json, Message, MsgExecute, __private::serde::Serialize},
+    grug::{Coins, Defined, HexByteArray, Message},
+    grug_app::Shared,
     hyperlane_core::{
         Announcement, ChainCommunicationError, ChainResult, HyperlaneChain, HyperlaneContract,
         HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
     },
-    std::collections::{BTreeMap, BTreeSet},
-    tendermint::validator,
-    tendermint_rpc::endpoint::validators,
+    std::{
+        collections::{BTreeMap, BTreeSet},
+        ops::DerefMut,
+    },
 };
 
 use crate::provider::DangoProvider;
@@ -18,6 +21,7 @@ use crate::provider::DangoProvider;
 pub struct DangoValidatorAnnounce {
     provider: DangoProvider,
     address: H256,
+    signer: Shared<SingleSigner<Defined<u32>>>,
 }
 
 impl HyperlaneContract for DangoValidatorAnnounce {
@@ -83,7 +87,12 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
 
         let msg = Message::execute(self.address.to_dango_addr()?, &msg, Coins::new()).unwrap();
 
-        // let res = self.provider.send_messages(vec![msg]).await?;
+        let signer = self.signer.clone();
+
+        // let res = self
+        //     .provider
+        //     .send_messages(signer, vec![msg])
+        //     .await?;
 
         todo!()
     }
