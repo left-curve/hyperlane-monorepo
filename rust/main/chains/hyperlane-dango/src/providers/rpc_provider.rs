@@ -2,11 +2,12 @@ use {
     crate::HyperlaneDangoError,
     dango_client::{SigningKey, SingleSigner},
     grug::{
-        Addr, Coin, Defined, Denom, Hash256, SigningClient, Undefined, __private::serde::{de::DeserializeOwned, Serialize}
+        Addr, Coin, Defined, Denom, Hash256, Inner, Message, NonEmpty, SigningClient, Undefined,
+        __private::serde::{de::DeserializeOwned, Serialize},
     },
     hyperlane_core::{ChainResult, H256},
-    std::fmt::Debug,
-    tendermint_rpc::endpoint::{block, tx},
+    std::{fmt::Debug, str::FromStr},
+    tendermint_rpc::endpoint::{block, broadcast::tx_sync, tx},
     url::Url,
 };
 
@@ -18,33 +19,38 @@ pub struct RpcProvider {
 
 impl Debug for RpcProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RpcProvider").finish()
+        f.debug_struct("RpcProvider")
+            .field("client", &self.client)
+            .field("sk", &self.sk)
+            .field("signer username", &self.signer.username)
+            .field("signer addr", &self.signer.address)
+            .field("signer nonce", &self.signer.nonce)
+            .finish()
     }
 }
 
 impl Clone for RpcProvider {
+    // Cloning the provider will clone the client and the signer.
+    // The signer should not be a problem since there will be only one instance of the signer
+    // that sign transactions. The others are just for querying the chain.
     fn clone(&self) -> Self {
-        todo!()
-        // Self {
-        //     client: self.client.clone(),
-        //     sk: self.sk.clone(),
-        //     signer: SingleSigner::<Undefined<u32>>::new(
-        //         self.signer.username.inner(),
-        //         self.signer.address,
-        //         self.sk,
-        //     ),
-        //     &self.signer.username.inner(),
-        //     &self.signer.address,
-        //     self.sk,
-        // )
-        // .unwrap(),
-        // }
+        Self {
+            client: self.client.clone(),
+            sk: self.sk.clone(),
+            signer: SingleSigner::<Undefined<u32>>::new(
+                self.signer.username.inner(),
+                self.signer.address,
+                self.sk.clone(),
+            )
+            .unwrap()
+            .with_nonce(*self.signer.nonce.inner()),
+        }
     }
 }
 
 impl RpcProvider {
     /// Create new `RpcProvider`
-    pub fn new(
+    pub async fn new(
         url: &Url,
         chain_id: &str,
         username: &str,
@@ -56,9 +62,14 @@ impl RpcProvider {
         let client = SigningClient::connect(chain_id, tendermint_url)
             .map_err(Into::<HyperlaneDangoError>::into)?;
 
-        todo!()
-        // let signer = SingleSigner::<Undefined<u32>>::new(username, Addr::from_str(address)?,4 sk);
-        // return Ok(Self { client });
+        let signer = SingleSigner::<Undefined<u32>>::new(
+            username,
+            Addr::from_str(address).unwrap(),
+            sk.clone(),
+        )
+        .unwrap();
+        let signer = signer.query_nonce(&client).await.unwrap();
+        return Ok(Self { client, sk, signer });
     }
 
     /// Request block by block height if height is provided, otherwise return the latest block.
@@ -115,12 +126,21 @@ impl RpcProvider {
     }
 
     /// Broadcast a transaction to the chain.
-    pub async fn send_messages(&self, msg: Vec<u8>) -> ChainResult<H256> {
-        todo!()
-        // Ok(self
-        //     .client
-        //     .send_messages(msg)
-        //     .await
-        //     .map_err(Into::<HyperlaneDangoError>::into)?)
+    pub async fn send_messages(
+        &mut self,
+        msgs: NonEmpty<Vec<Message>>,
+    ) -> ChainResult<tx_sync::Response> {
+        Ok(self
+            .client
+            .send_messages(
+                &mut self.signer,
+                msgs,
+                grug::GasOption::Simulate {
+                    scale: 1.2,
+                    flat_increase: 0,
+                },
+            )
+            .await
+            .map_err(Into::<HyperlaneDangoError>::into)?)
     }
 }

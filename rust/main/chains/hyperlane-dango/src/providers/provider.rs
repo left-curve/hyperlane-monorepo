@@ -4,13 +4,15 @@ use {
     async_trait::async_trait,
     dango_types::auth::Metadata,
     grug::{
-        Addr, Inner, JsonDeExt, Message, NonEmpty, Tx, __private::serde::{de::DeserializeOwned, Serialize},
+        Addr, Inner, JsonDeExt, Message, NonEmpty, Tx,
+        __private::serde::{de::DeserializeOwned, Serialize},
     },
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
         HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H160, H256, H512,
         U256,
     },
+    tendermint_rpc::endpoint::broadcast::tx_sync,
 };
 
 #[derive(Debug, Clone)]
@@ -158,5 +160,10 @@ impl DangoProvider {
         R: DeserializeOwned,
     {
         self.provider.query_wasm_smart(contract, msg, height).await
+    }
+
+    pub async fn send_messages(&mut self, msgs: Vec<Message>) -> ChainResult<tx_sync::Response> {
+        let msgs = NonEmpty::new(msgs).unwrap();
+        self.provider.send_messages(msgs).await
     }
 }

@@ -2,7 +2,7 @@ use {
     crate::{ToDangoAddr, ToDangoHexByteArray},
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::HexByteArray,
+    grug::{Coin, Coins, HexByteArray, Json, Message, MsgExecute, __private::serde::Serialize},
     hyperlane_core::{
         Announcement, ChainCommunicationError, ChainResult, HyperlaneChain, HyperlaneContract,
         HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
@@ -80,6 +80,10 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 },
             )?,
         };
+
+        let msg = Message::execute(self.address.to_dango_addr()?, &msg, Coins::new()).unwrap();
+
+        // let res = self.provider.send_messages(vec![msg]).await?;
 
         todo!()
     }
