@@ -81,7 +81,7 @@ impl RpcProvider {
 
     /// Broadcast a transaction to the chain.
     pub async fn send_messages<S>(
-        self,
+        &self,
         signer: &mut S,
         msgs: NonEmpty<Vec<Message>>,
     ) -> ChainResult<tx_sync::Response>
@@ -93,6 +93,28 @@ impl RpcProvider {
             .send_messages(
                 signer,
                 msgs,
+                grug::GasOption::Simulate {
+                    scale: 1.2,
+                    flat_increase: 0,
+                },
+            )
+            .await
+            .map_err(Into::<HyperlaneDangoError>::into)?)
+    }
+
+    pub async fn send_message<S>(
+        &self,
+        signer: &mut S,
+        msg: Message,
+    ) -> ChainResult<tx_sync::Response>
+    where
+        S: Signer,
+    {
+        Ok(self
+            .client
+            .send_message(
+                signer,
+                msg,
                 grug::GasOption::Simulate {
                     scale: 1.2,
                     flat_increase: 0,

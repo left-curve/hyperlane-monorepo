@@ -1,5 +1,5 @@
 use {
-    crate::{ToDangoAddr, ToDangoHexByteArray},
+    crate::{provider::DangoProvider, ToDangoAddr, ToDangoHexByteArray},
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
     grug::{Coins, HexByteArray, Message, SigningClient, TestAccount},
@@ -17,7 +17,7 @@ use {
 
 #[derive(Debug)]
 pub struct DangoValidatorAnnounce {
-    provider: SigningClient,
+    provider: DangoProvider,
     address: H256,
     signer: Arc<RwLock<TestAccount>>,
 }
@@ -30,13 +30,11 @@ impl HyperlaneContract for DangoValidatorAnnounce {
 
 impl HyperlaneChain for DangoValidatorAnnounce {
     fn domain(&self) -> &HyperlaneDomain {
-        todo!()
-        // self.provider.domain()
+        self.provider.domain()
     }
 
     fn provider(&self) -> Box<dyn HyperlaneProvider> {
-        todo!()
-        // self.provider.provider()
+        self.provider.provider()
     }
 }
 
@@ -92,7 +90,7 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
 
         let res = self
             .provider
-            .send_message(signer.write().await.deref_mut(), msg, todo!())
+            .send_message(signer.write().await.deref_mut(), msg)
             .await
             .unwrap();
 

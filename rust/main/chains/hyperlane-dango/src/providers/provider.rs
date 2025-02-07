@@ -162,8 +162,19 @@ impl DangoProvider {
         self.provider.query_wasm_smart(contract, msg, height).await
     }
 
+    pub async fn send_message<S>(
+        &self,
+        signer: &mut S,
+        msg: Message,
+    ) -> ChainResult<tx_sync::Response>
+    where
+        S: Signer,
+    {
+        self.provider.send_message(signer, msg).await
+    }
+
     pub async fn send_messages<S>(
-        self,
+        &self,
         signer: &mut S,
         msgs: Vec<Message>,
     ) -> ChainResult<tx_sync::Response>
