@@ -17,6 +17,7 @@ dango-hyperlane-types = { workspace = true }
 grug = { workspace = true}
 grug-app = { workspace = true }
 hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
+serde = { workspace = true }
 tendermint ={ workspace = true }
 tendermint-rpc = { workspace = true }
 thiserror = { workspace = true }
