@@ -4,9 +4,8 @@ use {
         Addr, Coin, Denom, Hash256, Message, NonEmpty, Signer, SigningClient,
         __private::serde::{de::DeserializeOwned, Serialize},
     },
-    grug_app::Shared,
     hyperlane_core::{ChainResult, H256},
-    std::{fmt::Debug, ops::DerefMut},
+    std::fmt::Debug,
     tendermint_rpc::endpoint::{block, broadcast::tx_sync, tx},
     url::Url,
 };
@@ -81,18 +80,18 @@ impl RpcProvider {
     }
 
     /// Broadcast a transaction to the chain.
-    pub async fn send_messages<T>(
+    pub async fn send_messages<S>(
         self,
-        signer: Shared<T>,
+        signer: &mut S,
         msgs: NonEmpty<Vec<Message>>,
     ) -> ChainResult<tx_sync::Response>
     where
-        T: Signer,
+        S: Signer,
     {
         Ok(self
             .client
             .send_messages(
-                signer.write_access().deref_mut(),
+                signer,
                 msgs,
                 grug::GasOption::Simulate {
                     scale: 1.2,

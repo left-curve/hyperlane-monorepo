@@ -7,7 +7,6 @@ use {
         Addr, Inner, JsonDeExt, Message, NonEmpty, Signer, Tx,
         __private::serde::{de::DeserializeOwned, Serialize},
     },
-    grug_app::Shared,
     hyperlane_core::{
         h512_to_bytes, BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
         HyperlaneDomain, HyperlaneProvider, HyperlaneProviderError, TxnInfo, H160, H256, H512,
@@ -163,13 +162,13 @@ impl DangoProvider {
         self.provider.query_wasm_smart(contract, msg, height).await
     }
 
-    pub async fn send_messages<T>(
+    pub async fn send_messages<S>(
         self,
-        signer: Shared<T>,
+        signer: &mut S,
         msgs: Vec<Message>,
     ) -> ChainResult<tx_sync::Response>
     where
-        T: Signer,
+        S: Signer,
     {
         let msgs = NonEmpty::new(msgs).unwrap();
         self.provider.send_messages(signer, msgs).await

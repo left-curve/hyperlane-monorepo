@@ -1,10 +1,8 @@
 use {
     crate::{ToDangoAddr, ToDangoHexByteArray},
     async_trait::async_trait,
-    dango_client::SingleSigner,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, Defined, HexByteArray, Message},
-    grug_app::Shared,
+    grug::{Coins, HexByteArray, Message, SigningClient, TestAccount},
     hyperlane_core::{
         Announcement, ChainCommunicationError, ChainResult, HyperlaneChain, HyperlaneContract,
         HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
@@ -12,16 +10,16 @@ use {
     std::{
         collections::{BTreeMap, BTreeSet},
         ops::DerefMut,
+        sync::Arc,
     },
+    tokio::sync::RwLock,
 };
-
-use crate::provider::DangoProvider;
 
 #[derive(Debug)]
 pub struct DangoValidatorAnnounce {
-    provider: DangoProvider,
+    provider: SigningClient,
     address: H256,
-    signer: Shared<SingleSigner<Defined<u32>>>,
+    signer: Arc<RwLock<TestAccount>>,
 }
 
 impl HyperlaneContract for DangoValidatorAnnounce {
@@ -32,11 +30,13 @@ impl HyperlaneContract for DangoValidatorAnnounce {
 
 impl HyperlaneChain for DangoValidatorAnnounce {
     fn domain(&self) -> &HyperlaneDomain {
-        self.provider.domain()
+        todo!()
+        // self.provider.domain()
     }
 
     fn provider(&self) -> Box<dyn HyperlaneProvider> {
-        self.provider.provider()
+        todo!()
+        // self.provider.provider()
     }
 }
 
@@ -65,7 +65,8 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 &msg,
                 None,
             )
-            .await?;
+            .await
+            .unwrap();
 
         Ok(response
             .into_iter()
@@ -89,10 +90,11 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
 
         let signer = self.signer.clone();
 
-        // let res = self
-        //     .provider
-        //     .send_messages(signer, vec![msg])
-        //     .await?;
+        let res = self
+            .provider
+            .send_message(signer.write().await.deref_mut(), msg, todo!())
+            .await
+            .unwrap();
 
         todo!()
     }
