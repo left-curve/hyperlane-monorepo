@@ -1,26 +1,24 @@
 use {
     super::{graphql::GraphQlProvider, DangoProvider},
     crate::{
-        BlockOutcome, ConnectionConf, DangoSigner, HashConvertor, DangoResult,
-        IntoDangoError, ProviderConf, SearchTxOutcome, TryHashConvertor,
+        BlockOutcome, ConnectionConf, DangoResult, DangoSigner, HashConvertor, IntoDangoError,
+        ProviderConf, SearchTxOutcome, TryHashConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
-    dango_types::auth::Metadata,
+    dango_types::{
+        account::spot,
+        auth::{Metadata, Nonce},
+    },
     grug::{
-        Addr, Coin, ContractInfo, Denom, Hash256, Inner, JsonDeExt, Message, Signer, SigningClient,
-        Uint128,
+        Addr, Coin, ContractInfo, Defined, Denom, Hash256, Inner, JsonDeExt, Message, Signer, SigningClient, Uint128
     },
     hyperlane_core::{
         BlockInfo, ChainInfo, ChainResult, HyperlaneChain, HyperlaneDomain, HyperlaneProvider,
         TxnInfo, H256, H512, U256,
     },
     serde::{de::DeserializeOwned, Serialize},
-    std::{
-        fmt::Debug,
-        ops::DerefMut,
-        str::FromStr,
-    },
+    std::{collections::BTreeSet, fmt::Debug, ops::DerefMut, str::FromStr},
 };
 
 #[derive(Debug, Clone)]
@@ -178,10 +176,19 @@ impl HyperlaneDangoProvider {
             .clone()
             .ok_or(anyhow!("can't use send_message if signer is not specified"))?;
 
-        // get nonce:
+        let nonce = self
+            .provider
+            .query_wasm_smart::<_, BTreeSet<Nonce>>(
+                signer.read().await.address,
+                &spot::QueryMsg::SeenNonces {},
+                None,
+            )
+            .await?
+            .last()
+            .map(|newest_nonce| newest_nonce + 1)
+            .unwrap_or(0);
 
-        
-
+        signer.write().await.nonce = Defined::new(nonce);
 
         let response = self
             .provider

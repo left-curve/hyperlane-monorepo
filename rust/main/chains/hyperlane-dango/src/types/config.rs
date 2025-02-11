@@ -4,7 +4,7 @@ use {
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
 
-/// Cosmos connection configuration
+/// Dango connection configuration
 #[derive(Debug, Clone)]
 pub struct ConnectionConf {
     /// Provider configuration
