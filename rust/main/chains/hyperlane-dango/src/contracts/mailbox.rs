@@ -1,14 +1,14 @@
 use {
     crate::{
-        hyperlane_contract, provider::DangoProvider, HashConvertor, IntoDangoError,
-        TryHashConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner,
+        HashConvertor, IntoDangoError, TryHashConvertor,
     },
     async_trait::async_trait,
-    dango_hyperlane_types::{hooks::merkle, mailbox, recipients::RecipientQuery},
+    dango_hyperlane_types::{mailbox, recipients::RecipientQuery},
     grug::{Coins, HexBinary, Message},
     hyperlane_core::{
-        ChainResult, HyperlaneMessage, Mailbox, RawHyperlaneMessage, ReorgPeriod, TxCostEstimate,
-        TxOutcome, H256, U256,
+        ChainResult, ContractLocator, HyperlaneMessage, Mailbox, RawHyperlaneMessage, ReorgPeriod,
+        TxCostEstimate, TxOutcome, H256, U256,
     },
 };
 
@@ -16,7 +16,19 @@ use {
 pub struct DangoMailbox {
     provider: DangoProvider,
     address: H256,
-    merkle_tree: H256,
+}
+
+impl DangoMailbox {
+    pub fn new(
+        config: &ConnectionConf,
+        locator: &ContractLocator,
+        signer: Option<DangoSigner>,
+    ) -> DangoResult<Self> {
+        Ok(Self {
+            provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
+            address: locator.address,
+        })
+    }
 }
 
 hyperlane_contract!(DangoMailbox);
@@ -28,12 +40,11 @@ impl Mailbox for DangoMailbox {
         Ok(self
             .provider
             .query_wasm_smart(
-                self.merkle_tree.try_convert()?,
-                merkle::QueryTreeRequest {},
+                self.address.try_convert()?,
+                mailbox::QueryNonceRequest {},
                 None,
             )
-            .await?
-            .count as u32)
+            .await?)
     }
 
     /// Fetch the status of a message

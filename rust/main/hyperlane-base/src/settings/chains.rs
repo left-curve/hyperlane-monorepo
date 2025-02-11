@@ -263,8 +263,13 @@ impl ChainConf {
                     .map(|m| Box::new(m) as Box<dyn Mailbox>)
                     .map_err(Into::into)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                Ok(
+                    Box::new(h_dango::DangoMailbox::new(conf, &locator, signer)?)
+                        as Box<dyn Mailbox>,
+                )
+            }
         }
         .context(ctx)
     }
