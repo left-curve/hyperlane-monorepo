@@ -1,69 +1,138 @@
 use {
-    crate::{hyperlane_contract, provider::HyperlaneDangoProvider},
+    crate::{
+        hyperlane_contract, provider::DangoProvider, HashConvertor, IntoDangoError,
+        TryHashConvertor,
+    },
     async_trait::async_trait,
-    hyperlane_core::{Mailbox, H256},
+    dango_hyperlane_types::{hooks::merkle, mailbox, recipients::RecipientQuery},
+    grug::{Coins, HexBinary, Message},
+    hyperlane_core::{
+        ChainResult, HyperlaneMessage, Mailbox, RawHyperlaneMessage, ReorgPeriod, TxCostEstimate,
+        TxOutcome, H256, U256,
+    },
 };
 
 #[derive(Debug)]
 pub struct DangoMailbox {
-    provider: HyperlaneDangoProvider,
+    provider: DangoProvider,
     address: H256,
+    merkle_tree: H256,
 }
 
 hyperlane_contract!(DangoMailbox);
 
-// #[async_trait]
-// impl Mailbox for DangoMailbox {   
-//         /// Gets the current leaf count of the merkle tree
-//         ///
-//         /// - `reorg_period` is how far behind the current block to query, if not specified
-//         ///   it will query at the latest block.
-//         async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32>;
-    
-//         /// Fetch the status of a message
-//         async fn delivered(&self, id: H256) -> ChainResult<bool>;
-    
-//         /// Fetch the current default interchain security module value
-//         async fn default_ism(&self) -> ChainResult<H256>;
-    
-//         /// Get the latest checkpoint.
-//         async fn recipient_ism(&self, recipient: H256) -> ChainResult<H256>;
-    
-//         /// Process a message with a proof against the provided signed checkpoint
-//         async fn process(
-//             &self,
-//             message: &HyperlaneMessage,
-//             metadata: &[u8],
-//             tx_gas_limit: Option<U256>,
-//         ) -> ChainResult<TxOutcome>;
-    
-//         /// Process a message with a proof against the provided signed checkpoint
-//         async fn process_batch(
-//             &self,
-//             _messages: &[BatchItem<HyperlaneMessage>],
-//         ) -> ChainResult<BatchResult> {
-//             // Batching is not supported by default
-//             Err(ChainCommunicationError::BatchingFailed)
-//         }
-    
-//         /// Try process the given operations as a batch. Returns the outcome of the
-//         /// batch (if one was submitted) and the operations that were not submitted.
-//         async fn try_process_batch<'a>(
-//             &self,
-//             _ops: Vec<&'a QueueOperation>,
-//         ) -> ChainResult<BatchResult> {
-//             // Batching is not supported by default
-//             Err(ChainCommunicationError::BatchingFailed)
-//         }
-    
-//         /// Estimate transaction costs to process a message.
-//         async fn process_estimate_costs(
-//             &self,
-//             message: &HyperlaneMessage,
-//             metadata: &[u8],
-//         ) -> ChainResult<TxCostEstimate>;
-    
-//         /// Get the calldata for a transaction to process a message with a proof
-//         /// against the provided signed checkpoint
-//         fn process_calldata(&self, message: &HyperlaneMessage, metadata: &[u8]) -> Vec<u8>;
-// }
+#[async_trait]
+impl Mailbox for DangoMailbox {
+    /// since Dango has no reorg period, we always query the latest block
+    async fn count(&self, _reorg_period: &ReorgPeriod) -> ChainResult<u32> {
+        Ok(self
+            .provider
+            .query_wasm_smart(
+                self.merkle_tree.try_convert()?,
+                merkle::QueryTreeRequest {},
+                None,
+            )
+            .await?
+            .count as u32)
+    }
+
+    /// Fetch the status of a message
+    async fn delivered(&self, id: H256) -> ChainResult<bool> {
+        Ok(self
+            .provider
+            .query_wasm_smart(
+                self.address.try_convert()?,
+                mailbox::QueryDeliveredRequest {
+                    message_id: id.convert(),
+                },
+                None,
+            )
+            .await?)
+    }
+
+    /// Fetch the current default interchain security module value
+    async fn default_ism(&self) -> ChainResult<H256> {
+        Ok(self
+            .provider
+            .query_wasm_smart(
+                self.address.try_convert()?,
+                mailbox::QueryConfigRequest {},
+                None,
+            )
+            .await?
+            .default_ism
+            .convert())
+    }
+
+    /// Get the latest checkpoint.
+    async fn recipient_ism(&self, recipient: H256) -> ChainResult<H256> {
+        if let Some(ism) = self
+            .provider
+            .query_wasm_smart(
+                recipient.try_convert()?,
+                dango_hyperlane_types::recipients::QueryRecipientRequest(
+                    RecipientQuery::InterchainSecurityModule {},
+                ),
+                None,
+            )
+            .await?
+            .as_interchain_security_module()
+        {
+            Ok(ism.convert())
+        } else {
+            self.default_ism().await
+        }
+    }
+
+    /// Process a message with a proof against the provided signed checkpoint
+    async fn process(
+        &self,
+        message: &HyperlaneMessage,
+        metadata: &[u8],
+        tx_gas_limit: Option<U256>,
+    ) -> ChainResult<TxOutcome> {
+        Ok(self
+            .provider
+            .send_message_and_find(
+                Message::execute(
+                    self.address.try_convert()?,
+                    &mailbox::ExecuteMsg::Process {
+                        raw_message: HexBinary::from_inner(RawHyperlaneMessage::from(message)),
+                        raw_metadata: HexBinary::from_inner(metadata.to_vec()),
+                    },
+                    Coins::default(),
+                )
+                .into_dango_error()?,
+                tx_gas_limit.map(|limit| limit.try_into().unwrap()),
+            )
+            .await?)
+    }
+
+    /// Estimate transaction costs to process a message.
+    async fn process_estimate_costs(
+        &self,
+        message: &HyperlaneMessage,
+        metadata: &[u8],
+    ) -> ChainResult<TxCostEstimate> {
+        Ok(self
+            .provider
+            .extimate_costs(
+                Message::execute(
+                    self.address.try_convert()?,
+                    &mailbox::ExecuteMsg::Process {
+                        raw_message: HexBinary::from_inner(RawHyperlaneMessage::from(message)),
+                        raw_metadata: HexBinary::from_inner(metadata.to_vec()),
+                    },
+                    Coins::default(),
+                )
+                .into_dango_error()?,
+            )
+            .await?)
+    }
+
+    /// Get the calldata for a transaction to process a message with a proof
+    /// against the provided signed checkpoint
+    fn process_calldata(&self, _message: &HyperlaneMessage, _metadata: &[u8]) -> Vec<u8> {
+        todo!() // not required (see cosmos implementation)
+    }
+}

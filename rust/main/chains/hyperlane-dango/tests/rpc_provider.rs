@@ -2,7 +2,7 @@ mod src;
 
 use {
     grug::{Addr, Denom, ResultExt, SigningClient},
-    hyperlane_dango::DangoProvider,
+    hyperlane_dango::DangoProviderInterface,
     src::constants::{
         EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
         NOT_EXISTING_USER,

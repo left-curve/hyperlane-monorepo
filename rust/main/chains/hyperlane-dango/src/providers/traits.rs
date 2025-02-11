@@ -1,12 +1,12 @@
 use {
     crate::{BlockOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
-    grug::{Addr, ContractInfo, Denom, Hash256, Message, QueryRequest, Signer, Uint128},
+    grug::{Addr, ContractInfo, Denom, GasOption, Hash256, Message, QueryRequest, Signer, TxOutcome, Uint128},
     serde::{de::DeserializeOwned, Serialize},
 };
 
 #[async_trait]
-pub trait DangoProvider {
+pub trait DangoProviderInterface {
     /// Get block info for a given block height. If block height is None, return the latest block.
     async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome>;
 
@@ -32,7 +32,20 @@ pub trait DangoProvider {
         R::Response: DeserializeOwned;
 
     /// Sign and broadcast a message.
-    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> DangoResult<Hash256>
+    async fn send_message<S>(
+        &self,
+        signer: &mut S,
+        msg: Message,
+        gas: GasOption,
+    ) -> DangoResult<Hash256>
+    where
+        S: Signer + Send + Sync;
+
+    async fn simulate_message<S>(
+        &self,
+        signer: &S,
+        msg: Message,
+    ) -> DangoResult<TxOutcome>
     where
         S: Signer + Send + Sync;
 }

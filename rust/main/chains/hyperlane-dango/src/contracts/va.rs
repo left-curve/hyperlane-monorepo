@@ -1,22 +1,21 @@
 use {
     crate::{
-        hyperlane_contract, provider::HyperlaneDangoProvider, ConnectionConf, DangoResult,
-        DangoSigner, HashConvertor, TryHashConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult,
+        DangoSigner, HashConvertor, IntoDangoError, TryHashConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, HexByteArray, Inner, Message},
+    grug::{Coins, Message},
     hyperlane_core::{
-        Announcement, ChainCommunicationError, ChainResult, ContractLocator, FixedPointNumber,
-        SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
+        Announcement, ChainResult, ContractLocator, SignedType, TxOutcome, ValidatorAnnounce, H256,
+        U256,
     },
     std::collections::BTreeSet,
-    tokio::time::{sleep, Duration},
 };
 
 #[derive(Debug)]
 pub struct DangoValidatorAnnounce {
-    provider: HyperlaneDangoProvider,
+    provider: DangoProvider,
     address: H256,
 }
 
@@ -27,7 +26,7 @@ impl DangoValidatorAnnounce {
         signer: Option<DangoSigner>,
     ) -> DangoResult<Self> {
         Ok(Self {
-            provider: HyperlaneDangoProvider::from_config(config, locator.domain.clone(), signer)?,
+            provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
             address: locator.address,
         })
     }
@@ -67,31 +66,16 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
         let msg = ExecuteMsg::Announce {
             validator: announcement.value.validator.convert(),
             storage_location: announcement.value.storage_location,
-            signature: HexByteArray::<65>::try_from(announcement.signature.to_vec()).map_err(
-                |_| ChainCommunicationError::ParseError {
-                    msg: "unable to parse signature".to_string(),
-                },
-            )?,
+            signature: announcement
+                .signature
+                .to_vec()
+                .try_into()
+                .into_dango_error()?,
         };
 
         let msg = Message::execute(self.address.try_convert()?, &msg, Coins::new()).unwrap();
 
-        let hash = self.provider.send_message(msg).await?;
-
-        for _ in 0..10 {
-            if let Ok(response) = self.provider.search_tx(hash).await {
-                return Ok(TxOutcome {
-                    transaction_id: hash.convert(),
-                    executed: response.outcome.result.is_ok(),
-                    gas_used: response.outcome.gas_used.into(),
-                    gas_price: FixedPointNumber::from(self.provider.gas_price().amount.inner()),
-                });
-            } else {
-                sleep(Duration::from_secs(1)).await;
-            }
-        }
-
-        Err(ChainCommunicationError::TransactionDropped(hash.convert()))
+        Ok(self.provider.send_message_and_find(msg, None).await?)
     }
     /// Returns the number of additional tokens needed to pay for the announce
     /// transaction. Return `None` if the needed tokens cannot be determined.

@@ -1,8 +1,11 @@
 use {
-    super::DangoProvider,
+    super::DangoProviderInterface,
     crate::{BlockOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
-    grug::{Addr, ContractInfo, Denom, Hash256, QueryRequest, Signer, Uint128},
+    grug::{
+        Addr, ContractInfo, Denom, GasOption, Hash256, Message, QueryRequest, Signer, TxOutcome,
+        Uint128,
+    },
     serde::{de::DeserializeOwned, Serialize},
 };
 
@@ -10,7 +13,7 @@ use {
 pub struct GraphQlProvider {}
 
 #[async_trait]
-impl DangoProvider for GraphQlProvider {
+impl DangoProviderInterface for GraphQlProvider {
     async fn get_block(&self, _height: Option<u64>) -> DangoResult<BlockOutcome> {
         unimplemented!()
     }
@@ -41,7 +44,19 @@ impl DangoProvider for GraphQlProvider {
         unimplemented!()
     }
 
-    async fn send_message<S>(&self, _signer: &mut S, _msg: grug::Message) -> DangoResult<Hash256>
+    async fn send_message<S>(
+        &self,
+        _signer: &mut S,
+        _msg: grug::Message,
+        _gas: GasOption,
+    ) -> DangoResult<Hash256>
+    where
+        S: Signer + Send + Sync,
+    {
+        unimplemented!()
+    }
+
+    async fn simulate_message<S>(&self, _signer: &S, _msg: Message) -> DangoResult<TxOutcome>
     where
         S: Signer + Send + Sync,
     {

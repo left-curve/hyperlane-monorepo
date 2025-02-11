@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use grug::Hash256;
 use hyperlane_core::ChainCommunicationError;
 
 pub type DangoResult<T> = Result<T, DangoError>;
@@ -22,6 +23,9 @@ pub enum DangoError {
         from: String,
         reason: String,
     },
+
+    #[error("transaction not found: {hash}")]
+    TxNotFound { hash: Hash256 },
 }
 
 impl DangoError {

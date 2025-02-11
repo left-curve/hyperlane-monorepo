@@ -1,5 +1,5 @@
 use {
-    crate::{provider::HyperlaneDangoProvider, DangoResult, DangoSigner},
+    crate::{provider::DangoProvider, DangoResult, DangoSigner},
     grug::{Coin, Denom},
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
@@ -13,6 +13,10 @@ pub struct ConnectionConf {
     pub canonical_asset: Denom,
     // Gas price
     pub gas_price: Coin,
+    /// Gas scale
+    pub gas_scale: f64,
+    /// Flat gas increase
+    pub flat_gas_increase: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -37,7 +41,7 @@ impl ConnectionConf {
         domain: HyperlaneDomain,
         signer: Option<DangoSigner>,
     ) -> DangoResult<Box<dyn HyperlaneProvider>> {
-        Ok(Box::new(HyperlaneDangoProvider::from_config(
+        Ok(Box::new(DangoProvider::from_config(
             &self, domain, signer,
         )?))
     }

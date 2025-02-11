@@ -1,21 +1,18 @@
 use {
-    super::DangoProvider,
+    super::DangoProviderInterface,
     crate::{BlockOutcome, DangoResult, SearchTxOutcome, TryHashConvertor},
     async_trait::async_trait,
     grug::{
-        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, QueryRequest, Signer,
-        SigningClient, Tx, TxOutcome, Uint128,
+        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, NonEmpty, QueryRequest,
+        Signer, SigningClient, Tx, TxOutcome, Uint128,
     },
     serde::{de::DeserializeOwned, Serialize},
     std::ops::Deref,
     tendermint::abci::Code,
 };
 
-const GAS_OPTION_SCALE: f64 = 1.2;
-const GAS_OPTION_FLAT_INCREASE: u64 = 100_000;
-
 #[async_trait]
-impl DangoProvider for SigningClient {
+impl DangoProviderInterface for SigningClient {
     async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
         let response = self.query_block(height).await?;
 
@@ -73,21 +70,25 @@ impl DangoProvider for SigningClient {
         Ok(self.deref().query_wasm_smart(contract, req, height).await?)
     }
 
-    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> DangoResult<Hash256>
+    async fn send_message<S>(
+        &self,
+        signer: &mut S,
+        msg: Message,
+        gas: GasOption,
+    ) -> DangoResult<Hash256>
     where
         S: Signer + Send + Sync,
     {
-        let response = self
-            .send_message(
-                signer,
-                msg,
-                GasOption::Simulate {
-                    scale: GAS_OPTION_SCALE,
-                    flat_increase: GAS_OPTION_FLAT_INCREASE,
-                },
-            )
-            .await?;
+        let response = self.send_message(signer, msg, gas).await?;
 
         Ok(response.hash.try_convert()?)
+    }
+
+    async fn simulate_message<S>(&self, signer: &S, msg: Message) -> DangoResult<TxOutcome>
+    where
+        S: Signer + Send + Sync,
+    {
+        let unsigned_tx = signer.unsigned_transaction(NonEmpty::new(vec![msg])?, &self.chain_id)?;
+        Ok(self.simulate(&unsigned_tx).await?)
     }
 }
