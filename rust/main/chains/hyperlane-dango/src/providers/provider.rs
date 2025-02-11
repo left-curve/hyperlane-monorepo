@@ -1,12 +1,12 @@
 use {
     super::DangoProvider,
-    crate::{DangoConnectionConf, HashConvertor, TryHashConvertor},
+    crate::{ConnectionConf, HashConvertor, IntoHyperlaneDangoError, TryHashConvertor},
     async_trait::async_trait,
     dango_types::auth::Metadata,
     grug::{Addr, Coin, Inner, JsonDeExt},
     hyperlane_core::{
-        BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
-        HyperlaneDomain, HyperlaneProvider, TxnInfo, H256, H512, U256,
+        BlockInfo, ChainInfo, ChainResult, HyperlaneChain, HyperlaneDomain, HyperlaneProvider,
+        TxnInfo, H256, H512, U256,
     },
     std::{fmt::Debug, ops::Deref, str::FromStr},
 };
@@ -16,15 +16,14 @@ pub struct HyperlaneDangoProvider<P>
 where
     P: DangoProvider,
 {
-    domain: HyperlaneDomain,
-    connection_conf: DangoConnectionConf,
-    provider: P,
+    pub domain: HyperlaneDomain,
+    pub connection_conf: ConnectionConf,
+    pub provider: P,
 }
 
 impl<P> HyperlaneChain for HyperlaneDangoProvider<P>
 where
     P: DangoProvider + Clone + Send + Sync + Debug + 'static,
-    ChainCommunicationError: From<P::Error>,
 {
     fn domain(&self) -> &HyperlaneDomain {
         &self.domain
@@ -38,7 +37,6 @@ where
 impl<P> HyperlaneProvider for HyperlaneDangoProvider<P>
 where
     P: DangoProvider + Clone + Send + Sync + Debug + 'static,
-    ChainCommunicationError: From<P::Error>,
 {
     /// Get block info for a given block height
     async fn get_block_by_height(&self, height: u64) -> ChainResult<BlockInfo> {
@@ -55,7 +53,7 @@ where
     async fn get_txn_by_hash(&self, hash: &H512) -> ChainResult<TxnInfo> {
         let tx = self.provider.search_tx(hash.try_convert()?).await?;
 
-        let data: Metadata = tx.tx.data.deserialize_json()?;
+        let data: Metadata = tx.tx.data.deserialize_json().into_dango_error()?;
 
         Ok(TxnInfo {
             hash: *hash,
@@ -84,7 +82,7 @@ where
 
     /// Fetch the balance of the wallet address associated with the chain provider.
     async fn get_balance(&self, address: String) -> ChainResult<U256> {
-        let address = Addr::from_str(&address)?;
+        let address = Addr::from_str(&address).into_dango_error()?;
 
         let balance = self
             .provider

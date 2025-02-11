@@ -5797,6 +5797,7 @@ dependencies = [
  "futures-util",
  "hyperlane-core",
  "hyperlane-cosmos",
+ "hyperlane-dango",
  "hyperlane-ethereum",
  "hyperlane-fuel",
  "hyperlane-sealevel",

@@ -1,6 +1,6 @@
 use {
     super::DangoProvider,
-    crate::{BlockOutcome, SearchTxOutcome, TryHashConvertor},
+    crate::{BlockOutcome, HyperlaneDangoResult, SearchTxOutcome, TryHashConvertor},
     async_trait::async_trait,
     grug::{
         Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, Signer, SigningClient,
@@ -15,9 +15,7 @@ const GAS_OPTION_FLAT_INCREASE: u64 = 100_000;
 
 #[async_trait]
 impl DangoProvider for SigningClient {
-    type Error = anyhow::Error;
-
-    async fn get_block(&self, height: Option<u64>) -> Result<BlockOutcome, Self::Error> {
+    async fn get_block(&self, height: Option<u64>) -> HyperlaneDangoResult<BlockOutcome> {
         let response = self.query_block(height).await?;
 
         Ok(BlockOutcome {
@@ -33,7 +31,7 @@ impl DangoProvider for SigningClient {
         })
     }
 
-    async fn search_tx(&self, hash: Hash256) -> Result<SearchTxOutcome, Self::Error> {
+    async fn search_tx(&self, hash: Hash256) -> HyperlaneDangoResult<SearchTxOutcome> {
         let response = self.query_tx(hash).await?;
         let tx: Tx = response.tx.deserialize_json()?;
 
@@ -52,12 +50,12 @@ impl DangoProvider for SigningClient {
         })
     }
 
-    async fn balance(&self, addr: Addr, denom: Denom) -> Result<Uint128, Self::Error> {
+    async fn balance(&self, addr: Addr, denom: Denom) -> HyperlaneDangoResult<Uint128> {
         Ok(self.query_balance(addr, denom, None).await?.amount)
     }
 
-    async fn contract_info(&self, addr: Addr) -> Result<ContractInfo, Self::Error> {
-        self.query_contract(addr, None).await
+    async fn contract_info(&self, addr: Addr) -> HyperlaneDangoResult<ContractInfo> {
+        Ok(self.query_contract(addr, None).await?)
     }
 
     async fn query_wasm_smart<M, R>(
@@ -65,7 +63,7 @@ impl DangoProvider for SigningClient {
         contract: Addr,
         msg: &M,
         height: Option<u64>,
-    ) -> Result<R, Self::Error>
+    ) -> HyperlaneDangoResult<R>
     where
         M: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -73,7 +71,7 @@ impl DangoProvider for SigningClient {
         Ok(self.query_wasm_smart(contract, msg, height).await?)
     }
 
-    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> Result<Hash256, Self::Error>
+    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> HyperlaneDangoResult<Hash256>
     where
         S: Signer + Send + Sync,
     {

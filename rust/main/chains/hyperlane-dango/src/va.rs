@@ -1,8 +1,12 @@
 use {
-    crate::{provider::HyperlaneDangoProvider, DangoProvider, HashConvertor, TryHashConvertor},
+    crate::{
+        provider::HyperlaneDangoProvider, DangoProvider, HashConvertor, HyperlaneDangoResult,
+        TryHashConvertor,
+    },
     async_trait::async_trait,
+    dango_client::SingleSigner,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, HexByteArray, Inner, Message, TestAccount},
+    grug::{Coins, Defined, HexByteArray, Inner, Message},
     hyperlane_core::{
         Announcement, ChainCommunicationError, ChainResult, FixedPointNumber, HyperlaneChain,
         HyperlaneContract, HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome,
@@ -27,13 +31,12 @@ where
 {
     provider: HyperlaneDangoProvider<P>,
     address: H256,
-    signer: Arc<RwLock<TestAccount>>,
+    signer: Arc<RwLock<SingleSigner<Defined<u32>>>>,
 }
 
 impl<P> HyperlaneContract for DangoValidatorAnnounce<P>
 where
     P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-    ChainCommunicationError: From<P::Error>,
 {
     fn address(&self) -> H256 {
         self.address
@@ -43,7 +46,6 @@ where
 impl<P> HyperlaneChain for DangoValidatorAnnounce<P>
 where
     P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-    ChainCommunicationError: From<P::Error>,
 {
     fn domain(&self) -> &HyperlaneDomain {
         self.provider.domain()
@@ -58,7 +60,6 @@ where
 impl<P> ValidatorAnnounce for DangoValidatorAnnounce<P>
 where
     P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-    ChainCommunicationError: From<P::Error>,
 {
     /// Returns the announced storage locations for the provided validators.
     async fn get_announced_storage_locations(
@@ -68,7 +69,7 @@ where
         let validators = validators
             .iter()
             .map(|v| v.try_convert())
-            .collect::<ChainResult<BTreeSet<_>>>()?;
+            .collect::<HyperlaneDangoResult<BTreeSet<_>>>()?;
 
         let response = self
             .provider

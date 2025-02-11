@@ -1,6 +1,7 @@
 use {
+    crate::{HyperlaneDangoError, HyperlaneDangoResult},
     grug::{EncodedBytes, Encoder, Hash256, Inner},
-    hyperlane_core::{ChainCommunicationError, ChainResult, H160, H256, H512},
+    hyperlane_core::{H160, H256, H512},
     tendermint::Hash as TmHash,
 };
 
@@ -60,18 +61,16 @@ where
 // ------------------------------ TryHashConvertor -----------------------------
 
 pub trait TryHashConvertor<T> {
-    fn try_convert(self) -> ChainResult<T>;
+    fn try_convert(self) -> HyperlaneDangoResult<T>;
 }
 
 impl TryHashConvertor<Hash256> for H512 {
-    fn try_convert(self) -> ChainResult<Hash256> {
+    fn try_convert(self) -> HyperlaneDangoResult<Hash256> {
         if self[..32] != [0; 32] {
-            return Err(ChainCommunicationError::ParseError {
-                msg: format!(
-                    "invalid conversion from H512 to Hash256. First 32 bytes are not zero: {}.",
-                    self
-                ),
-            });
+            return Err(HyperlaneDangoError::conversion::<Hash256, _, _>(
+                self,
+                "first 32 bytes are not zero.",
+            ));
         }
 
         let mut bytes = [0u8; 32];
@@ -84,14 +83,13 @@ impl<E> TryHashConvertor<EncodedBytes<[u8; 20], E>> for H256
 where
     E: Encoder,
 {
-    fn try_convert(self) -> ChainResult<EncodedBytes<[u8; 20], E>> {
+    fn try_convert(self) -> HyperlaneDangoResult<EncodedBytes<[u8; 20], E>> {
         if self[..12] != [0; 12] {
-            return Err(ChainCommunicationError::ParseError {
-                msg: format!(
-                    "invalid conversion from H256 to EncodedBytes<[u8; 20], E>. First 12 bytes are not zero: {}.",
-                    self
-                ),
-            });
+            return Err(HyperlaneDangoError::conversion::<
+                EncodedBytes<[u8; 20], E>,
+                _,
+                _,
+            >(self, "first 12 bytes are not zero."));
         }
 
         let mut bytes = [0u8; 20];
@@ -101,13 +99,13 @@ where
 }
 
 impl TryHashConvertor<Hash256> for TmHash {
-    fn try_convert(self) -> ChainResult<Hash256> {
+    fn try_convert(self) -> HyperlaneDangoResult<Hash256> {
         match self {
             TmHash::Sha256(bytes) => Ok(Hash256::from_inner(bytes)),
-            TmHash::None => Err(ChainCommunicationError::ParseError {
-                msg: "invalid conversion from tendermint::Hash to Hash256. Hash is None."
-                    .to_string(),
-            }),
+            TmHash::None => Err(HyperlaneDangoError::conversion::<Hash256, _, _>(
+                self,
+                "hash is None.",
+            )),
         }
     }
 }
