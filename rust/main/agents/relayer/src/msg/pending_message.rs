@@ -21,11 +21,11 @@ use hyperlane_core::{
 };
 use prometheus::{IntCounter, IntGauge};
 use serde::Serialize;
-use tracing::{debug, error, info, info_span, instrument, trace, warn, Instrument};
+use tracing::{debug, error, info, info_span, instrument, trace, warn, Instrument, Level};
 
 use super::{
     gas_payment::{GasPaymentEnforcer, GasPolicyStatus},
-    metadata::{BaseMetadataBuilder, MessageMetadataBuilder, MetadataBuilder},
+    metadata::{BaseMetadataBuilder, MessageMetadataBuilder, Metadata, MetadataBuilder},
 };
 
 pub const CONFIRM_DELAY: Duration = if cfg!(any(test, feature = "test-utils")) {
@@ -35,6 +35,8 @@ pub const CONFIRM_DELAY: Duration = if cfg!(any(test, feature = "test-utils")) {
     // Wait 10 min after submitting the message before confirming in normal/production mode
     Duration::from_secs(60 * 10)
 };
+
+pub const RETRIEVED_MESSAGE_LOG: &str = "Message status retrieved from db";
 
 /// The message context contains the links needed to submit a message. Each
 /// instance is for a unique origin -> destination pairing.
@@ -271,10 +273,20 @@ impl PendingOperation for PendingMessage {
                 return self.on_reprepare(Some(err), ReprepareReason::ErrorBuildingMetadata);
             }
         };
-        self.metadata = metadata.clone();
 
-        let Some(metadata) = metadata else {
-            return self.on_reprepare::<String>(None, ReprepareReason::CouldNotFetchMetadata);
+        let metadata_bytes = match metadata {
+            Metadata::Found(metadata_bytes) => {
+                self.metadata = Some(metadata_bytes.clone());
+                metadata_bytes
+            }
+            Metadata::CouldNotFetch => {
+                return self.on_reprepare::<String>(None, ReprepareReason::CouldNotFetchMetadata);
+            }
+            // If the metadata building is refused, we still allow it to be retried later.
+            Metadata::Refused(reason) => {
+                warn!(?reason, "Metadata building refused");
+                return self.on_reprepare::<String>(None, ReprepareReason::MessageMetadataRefused);
+            }
         };
 
         // Estimate transaction costs for the process call. If there are issues, it's
@@ -284,7 +296,7 @@ impl PendingOperation for PendingMessage {
         let tx_cost_estimate = match self
             .ctx
             .destination_mailbox
-            .process_estimate_costs(&self.message, &metadata)
+            .process_estimate_costs(&self.message, &metadata_bytes)
             .await
         {
             Ok(tx_cost_estimate) => tx_cost_estimate,
@@ -332,7 +344,7 @@ impl PendingOperation for PendingMessage {
         }
 
         self.submission_data = Some(Box::new(MessageSubmissionData {
-            metadata,
+            metadata: metadata_bytes,
             gas_limit,
         }));
         PendingOperationResult::Success
@@ -510,27 +522,53 @@ impl PendingMessage {
         ctx: Arc<MessageContext>,
         app_context: Option<String>,
     ) -> Self {
-        let mut pm = Self::new(
-            message,
-            ctx,
-            // Since we don't persist the message status for now, assume it's the first attempt
-            PendingOperationStatus::FirstPrepareAttempt,
-            app_context,
-        );
-        match pm
-            .ctx
+        // Attempt to fetch status about message from database
+        let message_status = match ctx.origin_db.retrieve_status_by_message_id(&message.id()) {
+            Ok(Some(status)) => {
+                // This event is used for E2E tests to ensure message statuses
+                // are being properly loaded from the db
+                tracing::event!(
+                    if cfg!(feature = "test-utils") {
+                        Level::DEBUG
+                    } else {
+                        Level::TRACE
+                    },
+                    ?status,
+                    id=?message.id(),
+                    RETRIEVED_MESSAGE_LOG,
+                );
+                status
+            }
+            _ => {
+                tracing::event!(
+                    if cfg!(feature = "test-utils") {
+                        Level::DEBUG
+                    } else {
+                        Level::TRACE
+                    },
+                    "Message status not found in db"
+                );
+                PendingOperationStatus::FirstPrepareAttempt
+            }
+        };
+
+        let num_retries = match ctx
             .origin_db
-            .retrieve_pending_message_retry_count_by_message_id(&pm.message.id())
+            .retrieve_pending_message_retry_count_by_message_id(&message.id())
         {
-            Ok(Some(num_retries)) => {
-                let next_attempt_after = PendingMessage::calculate_msg_backoff(num_retries)
-                    .map(|dur| Instant::now() + dur);
-                pm.num_retries = num_retries;
-                pm.next_attempt_after = next_attempt_after;
-            }
+            Ok(Some(num_retries)) => num_retries,
             r => {
-                trace!(message_id = ?pm.message.id(), result = ?r, "Failed to read retry count from HyperlaneDB for message.")
+                trace!(message_id = ?message.id(), result = ?r, "Failed to read retry count from HyperlaneDB for message.");
+                0
             }
+        };
+
+        let mut pm = Self::new(message, ctx, message_status, app_context);
+        if num_retries > 0 {
+            let next_attempt_after =
+                PendingMessage::calculate_msg_backoff(num_retries).map(|dur| Instant::now() + dur);
+            pm.num_retries = num_retries;
+            pm.next_attempt_after = next_attempt_after;
         }
         pm
     }
@@ -629,10 +667,10 @@ impl PendingMessage {
                 let hour: u64 = 60 * 60;
                 // To be extra safe, `max` to make sure it's at least 1 hour.
                 let target = hour.max((num_retries - 47) as u64 * hour);
-                // Schedule it at some random point in the next hour to
+                // Schedule it at some random point in the next 6 hours to
                 // avoid scheduling messages with the same # of retries
-                // at the exact same time.
-                target + (rand::random::<u64>() % hour)
+                // at the exact same time and starve new messages.
+                target + (rand::random::<u64>() % (6 * hour))
             }
         }))
     }
