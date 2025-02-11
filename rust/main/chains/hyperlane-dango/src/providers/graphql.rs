@@ -2,7 +2,7 @@ use {
     super::DangoProvider,
     crate::{BlockOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
-    grug::{Addr, ContractInfo, Denom, Hash256, Signer, Uint128},
+    grug::{Addr, ContractInfo, Denom, Hash256, QueryRequest, Signer, Uint128},
     serde::{de::DeserializeOwned, Serialize},
 };
 
@@ -27,24 +27,21 @@ impl DangoProvider for GraphQlProvider {
         unimplemented!()
     }
 
-    async fn query_wasm_smart<M, R>(
+    async fn query_wasm_smart<R>(
         &self,
         _contract: Addr,
-        _msg: &M,
+        _req: R,
         _height: Option<u64>,
-    ) -> DangoResult<R>
+    ) -> DangoResult<R::Response>
     where
-        M: Serialize + Send + Sync,
-        R: DeserializeOwned,
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned,
     {
         unimplemented!()
     }
 
-    async fn send_message<S>(
-        &self,
-        _signer: &mut S,
-        _msg: grug::Message,
-    ) -> DangoResult<Hash256>
+    async fn send_message<S>(&self, _signer: &mut S, _msg: grug::Message) -> DangoResult<Hash256>
     where
         S: Signer + Send + Sync,
     {

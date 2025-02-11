@@ -1,17 +1,16 @@
 use {
     crate::{
-        provider::HyperlaneDangoProvider, ConnectionConf, DangoSigner, HashConvertor,
-        DangoResult, TryHashConvertor,
+        hyperlane_contract, provider::HyperlaneDangoProvider, ConnectionConf, DangoResult,
+        DangoSigner, HashConvertor, TryHashConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
     grug::{Coins, HexByteArray, Inner, Message},
     hyperlane_core::{
         Announcement, ChainCommunicationError, ChainResult, ContractLocator, FixedPointNumber,
-        HyperlaneChain, HyperlaneContract, HyperlaneDomain, HyperlaneProvider, SignedType,
-        TxOutcome, ValidatorAnnounce, H256, U256,
+        SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
     },
-    std::collections::{BTreeMap, BTreeSet},
+    std::collections::BTreeSet,
     tokio::time::{sleep, Duration},
 };
 
@@ -34,21 +33,7 @@ impl DangoValidatorAnnounce {
     }
 }
 
-impl HyperlaneContract for DangoValidatorAnnounce {
-    fn address(&self) -> H256 {
-        self.address
-    }
-}
-
-impl HyperlaneChain for DangoValidatorAnnounce {
-    fn domain(&self) -> &HyperlaneDomain {
-        self.provider.domain()
-    }
-
-    fn provider(&self) -> Box<dyn HyperlaneProvider> {
-        self.provider.provider()
-    }
-}
+hyperlane_contract!(DangoValidatorAnnounce);
 
 #[async_trait]
 impl ValidatorAnnounce for DangoValidatorAnnounce {
@@ -64,9 +49,9 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
 
         let response = self
             .provider
-            .query_wasm_smart::<_, BTreeMap<HexByteArray<20>, BTreeSet<String>>>(
+            .query_wasm_smart(
                 self.address.try_convert()?,
-                &QueryAnnouncedStorageLocationsRequest { validators },
+                QueryAnnouncedStorageLocationsRequest { validators },
                 None,
             )
             .await?;

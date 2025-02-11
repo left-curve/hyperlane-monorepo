@@ -6,19 +6,17 @@ use {
     },
     anyhow::anyhow,
     async_trait::async_trait,
-    dango_types::{
-        account::spot,
-        auth::{Metadata, Nonce},
-    },
+    dango_types::{account::spot, auth::Metadata},
     grug::{
-        Addr, Coin, ContractInfo, Defined, Denom, Hash256, Inner, JsonDeExt, Message, Signer, SigningClient, Uint128
+        Addr, Coin, ContractInfo, Defined, Denom, Hash256, Inner, JsonDeExt, Message, QueryRequest,
+        Signer, SigningClient, Uint128,
     },
     hyperlane_core::{
         BlockInfo, ChainInfo, ChainResult, HyperlaneChain, HyperlaneDomain, HyperlaneProvider,
         TxnInfo, H256, H512, U256,
     },
     serde::{de::DeserializeOwned, Serialize},
-    std::{collections::BTreeSet, fmt::Debug, ops::DerefMut, str::FromStr},
+    std::{fmt::Debug, ops::DerefMut, str::FromStr},
 };
 
 #[derive(Debug, Clone)]
@@ -156,17 +154,18 @@ impl HyperlaneDangoProvider {
     }
 
     /// Query a wasm smart contract.
-    pub async fn query_wasm_smart<M, R>(
+    pub async fn query_wasm_smart<R>(
         &self,
         contract: Addr,
-        msg: &M,
+        req: R,
         height: Option<u64>,
-    ) -> DangoResult<R>
+    ) -> DangoResult<R::Response>
     where
-        M: Serialize + Send + Sync,
-        R: DeserializeOwned,
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned,
     {
-        self.provider.query_wasm_smart(contract, msg, height).await
+        self.provider.query_wasm_smart(contract, req, height).await
     }
 
     /// Sign and broadcast a message.
@@ -178,9 +177,9 @@ impl HyperlaneDangoProvider {
 
         let nonce = self
             .provider
-            .query_wasm_smart::<_, BTreeSet<Nonce>>(
+            .query_wasm_smart(
                 signer.read().await.address,
-                &spot::QueryMsg::SeenNonces {},
+                spot::QuerySeenNoncesRequest {},
                 None,
             )
             .await?
@@ -240,22 +239,23 @@ impl DangoProvider for ProviderWrapper {
     }
 
     /// Query a wasm smart contract.
-    async fn query_wasm_smart<M, R>(
+    async fn query_wasm_smart<R>(
         &self,
         contract: Addr,
-        msg: &M,
+        req: R,
         height: Option<u64>,
-    ) -> DangoResult<R>
+    ) -> DangoResult<R::Response>
     where
-        M: Serialize + Send + Sync,
-        R: DeserializeOwned,
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned,
     {
         match self {
             ProviderWrapper::Rpc(provider) => {
-                provider.query_wasm_smart(contract, msg, height).await
+                provider.query_wasm_smart(contract, req, height).await
             }
             ProviderWrapper::GraphQl(provider) => {
-                provider.query_wasm_smart(contract, msg, height).await
+                provider.query_wasm_smart(contract, req, height).await
             }
         }
     }

@@ -3,10 +3,11 @@ use {
     crate::{BlockOutcome, DangoResult, SearchTxOutcome, TryHashConvertor},
     async_trait::async_trait,
     grug::{
-        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, Signer, SigningClient,
-        Tx, TxOutcome, Uint128,
+        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, QueryRequest, Signer,
+        SigningClient, Tx, TxOutcome, Uint128,
     },
     serde::{de::DeserializeOwned, Serialize},
+    std::ops::Deref,
     tendermint::abci::Code,
 };
 
@@ -58,17 +59,18 @@ impl DangoProvider for SigningClient {
         Ok(self.query_contract(addr, None).await?)
     }
 
-    async fn query_wasm_smart<M, R>(
+    async fn query_wasm_smart<R>(
         &self,
         contract: Addr,
-        msg: &M,
+        req: R,
         height: Option<u64>,
-    ) -> DangoResult<R>
+    ) -> DangoResult<R::Response>
     where
-        M: Serialize + Send + Sync,
-        R: DeserializeOwned,
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned,
     {
-        Ok(self.query_wasm_smart(contract, msg, height).await?)
+        Ok(self.deref().query_wasm_smart(contract, req, height).await?)
     }
 
     async fn send_message<S>(&self, signer: &mut S, msg: Message) -> DangoResult<Hash256>

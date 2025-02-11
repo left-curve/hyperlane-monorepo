@@ -1,7 +1,7 @@
 use {
     crate::{BlockOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
-    grug::{Addr, ContractInfo, Denom, Hash256, Message, Signer, Uint128},
+    grug::{Addr, ContractInfo, Denom, Hash256, Message, QueryRequest, Signer, Uint128},
     serde::{de::DeserializeOwned, Serialize},
 };
 
@@ -20,15 +20,16 @@ pub trait DangoProvider {
     async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo>;
 
     /// Query a wasm smart contract.
-    async fn query_wasm_smart<M, R>(
+    async fn query_wasm_smart<R>(
         &self,
         contract: Addr,
-        msg: &M,
+        req: R,
         height: Option<u64>,
-    ) -> DangoResult<R>
+    ) -> DangoResult<R::Response>
     where
-        M: Serialize + Send + Sync,
-        R: DeserializeOwned;
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned;
 
     /// Sign and broadcast a message.
     async fn send_message<S>(&self, signer: &mut S, msg: Message) -> DangoResult<Hash256>

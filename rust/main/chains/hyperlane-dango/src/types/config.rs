@@ -1,5 +1,5 @@
 use {
-    crate::{provider::HyperlaneDangoProvider, DangoSigner, DangoResult},
+    crate::{provider::HyperlaneDangoProvider, DangoResult, DangoSigner},
     grug::{Coin, Denom},
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
@@ -27,6 +27,7 @@ pub struct RpcConfig {
     pub chain_id: String,
 }
 #[derive(Debug, Clone)]
+
 pub struct GraphQlConfig {}
 
 impl ConnectionConf {
@@ -37,9 +38,7 @@ impl ConnectionConf {
         signer: Option<DangoSigner>,
     ) -> DangoResult<Box<dyn HyperlaneProvider>> {
         Ok(Box::new(HyperlaneDangoProvider::from_config(
-            &self,
-            domain,
-            signer,
+            &self, domain, signer,
         )?))
     }
 
