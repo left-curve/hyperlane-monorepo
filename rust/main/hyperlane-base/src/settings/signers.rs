@@ -1,8 +1,10 @@
 use async_trait::async_trait;
+use dango_types::account_factory::Username;
 use ed25519_dalek::SecretKey;
 use ethers::prelude::{AwsSigner, LocalWallet};
 use ethers::utils::hex::ToHex;
 use eyre::{bail, Context, Report};
+use grug::{Addr, HexByteArray, Inner};
 use hyperlane_core::{AccountAddressType, H256};
 use hyperlane_sealevel::Keypair;
 use rusoto_core::Region;
@@ -36,6 +38,15 @@ pub enum SignerConf {
         prefix: String,
         /// Account address type for cosmos address
         account_address_type: AccountAddressType,
+    },
+    /// Dango Specific key
+    Dango {
+        /// Username
+        username: Username,
+        /// Private key in hex
+        key: HexByteArray<32>,
+        /// Account address
+        address: Addr,
     },
     /// Assume node will sign on RPC calls
     #[default]
@@ -89,6 +100,9 @@ impl BuildableWithSignerConf for hyperlane_ethereum::Signers {
                 bail!("cosmosKey signer is not supported by Ethereum")
             }
             SignerConf::Node => bail!("Node signer"),
+            SignerConf::Dango { .. } => {
+                bail!("dangoKey signer is not supported by Ethereum")
+            }
         })
     }
 }
@@ -164,5 +178,31 @@ impl BuildableWithSignerConf for hyperlane_cosmos::Signer {
 impl ChainSigner for hyperlane_cosmos::Signer {
     fn address_string(&self) -> String {
         self.address.clone()
+    }
+}
+
+#[async_trait]
+impl BuildableWithSignerConf for hyperlane_dango::DangoSigner {
+    async fn build(conf: &SignerConf) -> Result<Self, Report> {
+        if let SignerConf::Dango {
+            username,
+            key,
+            address,
+        } = conf
+        {
+            Ok(hyperlane_dango::DangoSigner::new(
+                username.to_string().as_str(),
+                key.into_inner(),
+                *address,
+            )?)
+        } else {
+            bail!("{conf:?} key is not supported by dango");
+        }
+    }
+}
+
+impl ChainSigner for hyperlane_dango::DangoSigner {
+    fn address_string(&self) -> String {
+        todo!()
     }
 }

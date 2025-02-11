@@ -1,6 +1,6 @@
 use {
-    crate::{provider::HyperlaneDangoProvider, HyperlaneDangoResult},
-    grug::{Coin, Denom, SigningClient},
+    crate::{provider::HyperlaneDangoProvider, DangoSigner, HyperlaneDangoResult},
+    grug::{Coin, Denom},
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
 
@@ -8,7 +8,7 @@ use {
 #[derive(Debug, Clone)]
 pub struct ConnectionConf {
     /// Provider configuration
-    provider_conf: ProviderConf,
+    pub provider_conf: ProviderConf,
     /// Canonical Assets Denom
     pub canonical_asset: Denom,
     // Gas price
@@ -34,16 +34,13 @@ impl ConnectionConf {
     pub fn build_provider(
         &self,
         domain: HyperlaneDomain,
+        signer: Option<DangoSigner>,
     ) -> HyperlaneDangoResult<Box<dyn HyperlaneProvider>> {
-        match &self.provider_conf {
-            ProviderConf::Rpc(config) => Ok(Box::new(HyperlaneDangoProvider {
-                domain,
-                connection_conf: self.clone(),
-                provider: SigningClient::connect(config.chain_id.clone(), config.url.as_str())?,
-            })),
-            // TODO: DANGO
-            ProviderConf::GraphQl(_) => unimplemented!(),
-        }
+        Ok(Box::new(HyperlaneDangoProvider::from_config(
+            &self,
+            domain,
+            signer,
+        )?))
     }
 
     /// Returns canonical asset.

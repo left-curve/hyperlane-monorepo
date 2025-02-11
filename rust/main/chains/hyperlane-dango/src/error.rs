@@ -23,6 +23,8 @@ pub enum HyperlaneDangoError {
         from: String,
         reason: String,
     },
+
+    
 }
 
 impl HyperlaneDangoError {

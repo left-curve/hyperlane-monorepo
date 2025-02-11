@@ -1,52 +1,46 @@
 use {
     crate::{
-        provider::HyperlaneDangoProvider, DangoProvider, HashConvertor, HyperlaneDangoResult,
-        TryHashConvertor,
+        provider::HyperlaneDangoProvider, ConnectionConf, DangoSigner, HashConvertor,
+        HyperlaneDangoResult, TryHashConvertor,
     },
     async_trait::async_trait,
-    dango_client::SingleSigner,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, Defined, HexByteArray, Inner, Message},
+    grug::{Coins, HexByteArray, Inner, Message},
     hyperlane_core::{
-        Announcement, ChainCommunicationError, ChainResult, FixedPointNumber, HyperlaneChain,
-        HyperlaneContract, HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome,
-        ValidatorAnnounce, H256, U256,
+        Announcement, ChainCommunicationError, ChainResult, ContractLocator, FixedPointNumber,
+        HyperlaneChain, HyperlaneContract, HyperlaneDomain, HyperlaneProvider, SignedType,
+        TxOutcome, ValidatorAnnounce, H256, U256,
     },
-    std::{
-        collections::{BTreeMap, BTreeSet},
-        fmt::Debug,
-        ops::DerefMut,
-        sync::Arc,
-    },
-    tokio::{
-        sync::RwLock,
-        time::{sleep, Duration},
-    },
+    std::collections::{BTreeMap, BTreeSet},
+    tokio::time::{sleep, Duration},
 };
 
 #[derive(Debug)]
-pub struct DangoValidatorAnnounce<P>
-where
-    P: DangoProvider,
-{
-    provider: HyperlaneDangoProvider<P>,
+pub struct DangoValidatorAnnounce {
+    provider: HyperlaneDangoProvider,
     address: H256,
-    signer: Arc<RwLock<SingleSigner<Defined<u32>>>>,
 }
 
-impl<P> HyperlaneContract for DangoValidatorAnnounce<P>
-where
-    P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-{
+impl DangoValidatorAnnounce {
+    pub fn new(
+        config: &ConnectionConf,
+        locator: &ContractLocator,
+        signer: Option<DangoSigner>,
+    ) -> HyperlaneDangoResult<Self> {
+        Ok(Self {
+            provider: HyperlaneDangoProvider::from_config(config, locator.domain.clone(), signer)?,
+            address: locator.address,
+        })
+    }
+}
+
+impl HyperlaneContract for DangoValidatorAnnounce {
     fn address(&self) -> H256 {
         self.address
     }
 }
 
-impl<P> HyperlaneChain for DangoValidatorAnnounce<P>
-where
-    P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-{
+impl HyperlaneChain for DangoValidatorAnnounce {
     fn domain(&self) -> &HyperlaneDomain {
         self.provider.domain()
     }
@@ -57,10 +51,7 @@ where
 }
 
 #[async_trait]
-impl<P> ValidatorAnnounce for DangoValidatorAnnounce<P>
-where
-    P: DangoProvider + Clone + Debug + Send + Sync + 'static,
-{
+impl ValidatorAnnounce for DangoValidatorAnnounce {
     /// Returns the announced storage locations for the provided validators.
     async fn get_announced_storage_locations(
         &self,
@@ -100,12 +91,7 @@ where
 
         let msg = Message::execute(self.address.try_convert()?, &msg, Coins::new()).unwrap();
 
-        let signer = self.signer.clone();
-
-        let hash = self
-            .provider
-            .send_message(signer.write().await.deref_mut(), msg)
-            .await?;
+        let hash = self.provider.send_message(msg).await?;
 
         for _ in 0..10 {
             if let Ok(response) = self.provider.search_tx(hash).await {
@@ -113,7 +99,7 @@ where
                     transaction_id: hash.convert(),
                     executed: response.outcome.result.is_ok(),
                     gas_used: response.outcome.gas_used.into(),
-                    gas_price: FixedPointNumber::from(self.provider.get_gas_price().amount.inner()),
+                    gas_price: FixedPointNumber::from(self.provider.gas_price().amount.inner()),
                 });
             } else {
                 sleep(Duration::from_secs(1)).await;
