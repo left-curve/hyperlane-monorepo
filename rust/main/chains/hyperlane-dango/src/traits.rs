@@ -1,6 +1,7 @@
 use {
-    grug::{Addr, EncodedBytes, Encoder, Hash256, Inner},
+    grug::{EncodedBytes, Encoder, Hash256, Inner},
     hyperlane_core::{ChainCommunicationError, ChainResult, H160, H256, H512},
+    tendermint::Hash as TmHash,
 };
 
 pub trait HashConvertor<T> {
@@ -96,5 +97,17 @@ where
         let mut bytes = [0u8; 20];
         bytes.copy_from_slice(&self[12..]);
         Ok(bytes.into())
+    }
+}
+
+impl TryHashConvertor<Hash256> for TmHash {
+    fn try_convert(self) -> ChainResult<Hash256> {
+        match self {
+            TmHash::Sha256(bytes) => Ok(Hash256::from_inner(bytes)),
+            TmHash::None => Err(ChainCommunicationError::ParseError {
+                msg: "invalid conversion from tendermint::Hash to Hash256. Hash is None."
+                    .to_string(),
+            }),
+        }
     }
 }

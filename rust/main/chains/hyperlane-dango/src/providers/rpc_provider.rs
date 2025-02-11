@@ -1,126 +1,93 @@
 use {
-    crate::HyperlaneDangoError,
+    super::DangoProvider,
+    crate::{BlockOutcome, SearchTxOutcome, TryHashConvertor},
+    async_trait::async_trait,
     grug::{
-        Addr, Coin, Denom, Hash256, Message, NonEmpty, Signer, SigningClient,
-        __private::serde::{de::DeserializeOwned, Serialize},
+        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, Signer, SigningClient,
+        Tx, TxOutcome, Uint128,
     },
-    hyperlane_core::{ChainResult, H256},
-    std::fmt::Debug,
-    tendermint_rpc::endpoint::{block, broadcast::tx_sync, tx},
-    url::Url,
+    serde::{de::DeserializeOwned, Serialize},
+    tendermint::abci::Code,
 };
 
-#[derive(Debug, Clone)]
-pub struct RpcProvider {
-    client: SigningClient,
-}
+const GAS_OPTION_SCALE: f64 = 1.2;
+const GAS_OPTION_FLAT_INCREASE: u64 = 100_000;
 
-impl RpcProvider {
-    /// Create new `RpcProvider`
-    pub async fn new(url: &Url, chain_id: &str) -> ChainResult<Self> {
-        let tendermint_url = tendermint_rpc::Url::try_from(url.to_owned())
-            .map_err(Into::<HyperlaneDangoError>::into)?;
-        let client = SigningClient::connect(chain_id, tendermint_url)
-            .map_err(Into::<HyperlaneDangoError>::into)?;
+#[async_trait]
+impl DangoProvider for SigningClient {
+    type Error = anyhow::Error;
 
-        return Ok(Self { client });
+    async fn get_block(&self, height: Option<u64>) -> Result<BlockOutcome, Self::Error> {
+        let response = self.query_block(height).await?;
+
+        Ok(BlockOutcome {
+            hash: response.block_id.hash.try_convert()?,
+            height: response.block.header.height.value(),
+            timestamp: response.block.header.time.unix_timestamp() as u64,
+            txs: response
+                .block
+                .data
+                .into_iter()
+                .map(|tx| tx.deserialize_json())
+                .collect::<Result<_, _>>()?,
+        })
     }
 
-    /// Request block by block height if height is provided, otherwise return the latest block.
-    pub async fn get_block(&self, height: Option<u64>) -> ChainResult<block::Response> {
-        Ok(self
-            .client
-            .query_block(height)
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
+    async fn search_tx(&self, hash: Hash256) -> Result<SearchTxOutcome, Self::Error> {
+        let response = self.query_tx(hash).await?;
+        let tx: Tx = response.tx.deserialize_json()?;
+
+        Ok(SearchTxOutcome {
+            tx,
+            outcome: TxOutcome {
+                gas_limit: response.tx_result.gas_wanted as u64,
+                gas_used: response.tx_result.gas_used as u64,
+                result: if response.tx_result.code == Code::Ok {
+                    Ok(())
+                } else {
+                    Err(response.tx_result.log)
+                },
+                events: response.tx_result.data.deserialize_json()?,
+            },
+        })
     }
 
-    // Get tx by hash.
-    pub async fn get_tx(&self, tx_hash: H256) -> ChainResult<tx::Response> {
-        Ok(self
-            .client
-            .query_tx(Hash256::from(*tx_hash.as_fixed_bytes()))
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
+    async fn balance(&self, addr: Addr, denom: Denom) -> Result<Uint128, Self::Error> {
+        Ok(self.query_balance(addr, denom, None).await?.amount)
     }
 
-    /// Return whether a contract exists at the provided address.
-    pub async fn is_contract(&self, address: Addr) -> ChainResult<bool> {
-        match self.client.query_contract(address, None).await {
-            Ok(_) => Ok(true),
-            Err(_) => Ok(false),
-        }
+    async fn contract_info(&self, addr: Addr) -> Result<ContractInfo, Self::Error> {
+        self.query_contract(addr, None).await
     }
 
-    /// Return the balance of an address for a specific coin.
-    pub async fn get_balance(&self, address: Addr, denom: Denom) -> ChainResult<Coin> {
-        Ok(self
-            .client
-            .query_balance(address, denom, None)
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
-    }
-
-    /// Query a contract on the chain.
-    pub async fn query_wasm_smart<M, R>(
+    async fn query_wasm_smart<M, R>(
         &self,
         contract: Addr,
         msg: &M,
         height: Option<u64>,
-    ) -> ChainResult<R>
+    ) -> Result<R, Self::Error>
     where
-        M: Serialize,
+        M: Serialize + Send + Sync,
         R: DeserializeOwned,
     {
-        Ok(self
-            .client
-            .query_wasm_smart(contract, msg, height)
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
+        Ok(self.query_wasm_smart(contract, msg, height).await?)
     }
 
-    /// Broadcast a transaction to the chain.
-    pub async fn send_messages<S>(
-        &self,
-        signer: &mut S,
-        msgs: NonEmpty<Vec<Message>>,
-    ) -> ChainResult<tx_sync::Response>
+    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> Result<Hash256, Self::Error>
     where
-        S: Signer,
+        S: Signer + Send + Sync,
     {
-        Ok(self
-            .client
-            .send_messages(
-                signer,
-                msgs,
-                grug::GasOption::Simulate {
-                    scale: 1.2,
-                    flat_increase: 0,
-                },
-            )
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
-    }
-
-    pub async fn send_message<S>(
-        &self,
-        signer: &mut S,
-        msg: Message,
-    ) -> ChainResult<tx_sync::Response>
-    where
-        S: Signer,
-    {
-        Ok(self
-            .client
+        let response = self
             .send_message(
                 signer,
                 msg,
-                grug::GasOption::Simulate {
-                    scale: 1.2,
-                    flat_increase: 0,
+                GasOption::Simulate {
+                    scale: GAS_OPTION_SCALE,
+                    flat_increase: GAS_OPTION_FLAT_INCREASE,
                 },
             )
-            .await
-            .map_err(Into::<HyperlaneDangoError>::into)?)
+            .await?;
+
+        Ok(response.hash.try_convert()?)
     }
 }

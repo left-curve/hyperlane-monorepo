@@ -15,6 +15,8 @@ use crate::{
     U256,
 };
 
+
+
 /// The result of interacting with a chain.
 pub type ChainResult<T> = Result<T, ChainCommunicationError>;
 
@@ -159,9 +161,6 @@ pub enum ChainCommunicationError {
     /// Invalid reorg period
     #[error("Invalid reorg period: {0:?}")]
     InvalidReorgPeriod(ReorgPeriod),
-    // GrugStd
-    #[error(transparent)]
-    GrugStd(#[from] grug::StdError),
 }
 
 impl ChainCommunicationError {

@@ -1,8 +1,7 @@
-
 pub mod providers;
-pub mod error;
+pub mod traits;
 pub mod types;
 pub mod va;
-pub mod traits;
+pub mod error;
 
-pub use self::{providers::*, error::*, types::*, va::*, traits::*};
+pub use self::{providers::*, traits::*, types::*, va::*, error::*};

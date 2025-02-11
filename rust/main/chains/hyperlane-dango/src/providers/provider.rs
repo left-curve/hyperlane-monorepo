@@ -3,7 +3,7 @@ use {
     crate::{DangoConnectionConf, HashConvertor, TryHashConvertor},
     async_trait::async_trait,
     dango_types::auth::Metadata,
-    grug::{Addr, Inner, JsonDeExt},
+    grug::{Addr, Coin, Inner, JsonDeExt},
     hyperlane_core::{
         BlockInfo, ChainCommunicationError, ChainInfo, ChainResult, HyperlaneChain,
         HyperlaneDomain, HyperlaneProvider, TxnInfo, H256, H512, U256,
@@ -44,12 +44,9 @@ where
     async fn get_block_by_height(&self, height: u64) -> ChainResult<BlockInfo> {
         let block = self.provider.get_block(Some(height)).await?;
 
-        let hash = H256::from_slice(&block.hash);
-        let time = block.timestamp.into_seconds();
-
         Ok(BlockInfo {
-            hash: hash.to_owned(),
-            timestamp: time as u64,
+            hash: block.hash.convert(),
+            timestamp: block.timestamp,
             number: block.height,
         })
     }
@@ -58,24 +55,19 @@ where
     async fn get_txn_by_hash(&self, hash: &H512) -> ChainResult<TxnInfo> {
         let tx = self.provider.search_tx(hash.try_convert()?).await?;
 
-        let data: Metadata = tx.data.deserialize_json().map_err(|err| {
-            ChainCommunicationError::from_other_str(&format!(
-                "failed to deserialize data with hash {:?}: {:?}",
-                hash, err
-            ))
-        })?;
+        let data: Metadata = tx.tx.data.deserialize_json()?;
 
-        // let gas_price = self.calculate_gas_price(&hash, &tx)?;
         Ok(TxnInfo {
             hash: *hash,
-            gas_limit: tx.gas_limit.into(),
+            gas_limit: tx.outcome.gas_limit.into(),
             max_priority_fee_per_gas: None,
             max_fee_per_gas: None,
             // TODO: is this needed?
+            // This function seems to used only by scraper
             gas_price: None,
             nonce: data.nonce.into(),
-            sender: tx.sender.convert(),
-            // TODO: is this needed?
+            sender: tx.tx.sender.convert(),
+            // TODO: is this needed (should be the contract)?
             recipient: None,
             receipt: None,
             raw_input_data: None,
@@ -84,11 +76,10 @@ where
 
     /// Returns whether a contract exists at the provided address
     async fn is_contract(&self, address: &H256) -> ChainResult<bool> {
-        Ok(self
-            .provider
-            .query_contract(address.try_convert()?)
-            .await
-            .is_ok())
+        match self.provider.contract_info(address.try_convert()?).await {
+            Ok(_) => Ok(true),
+            Err(_) => Ok(false),
+        }
     }
 
     /// Fetch the balance of the wallet address associated with the chain provider.
@@ -97,13 +88,10 @@ where
 
         let balance = self
             .provider
-            .query_balance(
-                address,
-                &self.connection_conf.get_canonical_asset().to_string(),
-            )
+            .balance(address, self.connection_conf.get_canonical_asset().clone())
             .await?;
 
-        Ok(U256::from_big_endian(&balance.inner().to_be_bytes()))
+        Ok(balance.into_inner().into())
     }
 
     /// Fetch metrics related to this chain
@@ -112,7 +100,7 @@ where
         return Ok(Some(ChainInfo {
             latest_block: BlockInfo {
                 hash: block.hash.convert(),
-                timestamp: block.timestamp.into_seconds() as u64,
+                timestamp: block.timestamp,
                 number: block.height,
             },
             min_gas_price: None,
@@ -128,5 +116,14 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.provider
+    }
+}
+
+impl<P> HyperlaneDangoProvider<P>
+where
+    P: DangoProvider,
+{
+    pub fn get_gas_price(&self) -> &Coin {
+        self.connection_conf.get_gas_price()
     }
 }

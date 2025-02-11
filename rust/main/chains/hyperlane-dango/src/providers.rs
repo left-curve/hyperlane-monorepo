@@ -1,4 +1,4 @@
-pub mod rpc_provider;
 pub mod provider;
+pub mod rpc_provider;
 pub mod traits;
-pub use {rpc_provider::*, traits::*};
+pub use traits::*;

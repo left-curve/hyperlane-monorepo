@@ -2,10 +2,11 @@ use {
     crate::{provider::HyperlaneDangoProvider, DangoProvider, HashConvertor, TryHashConvertor},
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, HexByteArray, Message, TestAccount},
+    grug::{Coins, HexByteArray, Inner, Message, TestAccount},
     hyperlane_core::{
-        Announcement, ChainCommunicationError, ChainResult, HyperlaneChain, HyperlaneContract,
-        HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome, ValidatorAnnounce, H256, U256,
+        Announcement, ChainCommunicationError, ChainResult, FixedPointNumber, HyperlaneChain,
+        HyperlaneContract, HyperlaneDomain, HyperlaneProvider, SignedType, TxOutcome,
+        ValidatorAnnounce, H256, U256,
     },
     std::{
         collections::{BTreeMap, BTreeSet},
@@ -13,7 +14,10 @@ use {
         ops::DerefMut,
         sync::Arc,
     },
-    tokio::sync::RwLock,
+    tokio::{
+        sync::RwLock,
+        time::{sleep, Duration},
+    },
 };
 
 #[derive(Debug)]
@@ -76,8 +80,8 @@ where
             .await?;
 
         Ok(response
-            .into_iter()
-            .map(|(_, v)| v.into_iter().collect())
+            .into_values()
+            .map(|v| v.into_iter().collect())
             .collect())
     }
 
@@ -97,16 +101,34 @@ where
 
         let signer = self.signer.clone();
 
-        let res = self
+        let hash = self
             .provider
             .send_message(signer.write().await.deref_mut(), msg)
             .await?;
 
-        todo!()
+        for _ in 0..10 {
+            if let Ok(response) = self.provider.search_tx(hash).await {
+                return Ok(TxOutcome {
+                    transaction_id: hash.convert(),
+                    executed: response.outcome.result.is_ok(),
+                    gas_used: response.outcome.gas_used.into(),
+                    gas_price: FixedPointNumber::from(self.provider.get_gas_price().amount.inner()),
+                });
+            } else {
+                sleep(Duration::from_secs(1)).await;
+            }
+        }
+
+        Err(ChainCommunicationError::TransactionDropped(hash.convert()))
     }
     /// Returns the number of additional tokens needed to pay for the announce
     /// transaction. Return `None` if the needed tokens cannot be determined.
-    async fn announce_tokens_needed(&self, announcement: SignedType<Announcement>) -> Option<U256> {
-        todo!()
+    async fn announce_tokens_needed(
+        &self,
+        _announcement: SignedType<Announcement>,
+    ) -> Option<U256> {
+        // TODO: Right now Dango has gas price = 0 so it doesn't need any tokens.
+        // If in the future the gas price will be > 0, we should simulate the tx.
+        Some(U256::zero())
     }
 }

@@ -1,14 +1,13 @@
 mod src;
 
 use {
-    grug::{Addr, Denom},
-    hyperlane_dango::RpcProvider,
+    grug::{Addr, Denom, ResultExt, SigningClient},
+    hyperlane_dango::DangoProvider,
     src::constants::{
         EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
         NOT_EXISTING_USER,
     },
     std::str::FromStr,
-    url::Url,
 };
 
 const RPC_URL: &str = "http://65.108.46.248:26657";
@@ -22,9 +21,7 @@ async fn rpc_test() {
     let existing_coin = Denom::from_str(EXISTING_COIN).unwrap();
     let not_existing_coin = Denom::from_str(NOT_EXISTING_COIN).unwrap();
 
-    let client = RpcProvider::new(&Url::parse(RPC_URL).unwrap(), "dango")
-        .await
-        .unwrap();
+    let client = SigningClient::connect("dango", RPC_URL).unwrap();
 
     // Get block.
     {
@@ -35,44 +32,50 @@ async fn rpc_test() {
         let new_block = client.get_block(None).await.unwrap();
 
         // Check that the new block is higher than the old block.
-        assert!(block.block.header.height < new_block.block.header.height);
+        assert!(block.height < new_block.height);
 
         // Get the block at a specific height.
         let height = 10;
         let block = client.get_block(Some(height)).await.unwrap();
-        assert!(block.block.header.height.value() == height);
+        assert!(block.height == height);
     }
 
     // Check if a contract exists.
     {
-        assert!(client.is_contract(existing_contract).await.unwrap());
-        assert!(!client.is_contract(not_existing_contract).await.unwrap());
+        client
+            .contract_info(existing_contract)
+            .await
+            .should_succeed();
+
+        client
+            .contract_info(not_existing_contract)
+            .await
+            .should_fail();
     }
 
     // Get the balance of an address.
     {
         // Get the balance of a coin for an address.
         let balance = client
-            .get_balance(existing_user, existing_coin.clone())
+            .balance(existing_user, existing_coin.clone())
             .await
             .unwrap();
 
-        assert!(balance.denom == existing_coin);
-        assert!(balance.amount > 0.into());
+        assert!(balance > 0.into());
 
         // Get the balance of a NOT existing coin for an address.
         let balance = client
-            .get_balance(existing_user, not_existing_coin)
+            .balance(existing_user, not_existing_coin)
             .await
             .unwrap();
-        assert!(balance.amount == 0.into());
+        assert!(balance == 0.into());
 
         // Get the balance of a coin for a NOT existing address.
         let balance = client
-            .get_balance(not_existing_user, existing_coin)
+            .balance(not_existing_user, existing_coin)
             .await
             .unwrap();
-        assert!(balance.amount == 0.into());
+        assert!(balance == 0.into());
     }
 
     // TODO add the test for tx.
