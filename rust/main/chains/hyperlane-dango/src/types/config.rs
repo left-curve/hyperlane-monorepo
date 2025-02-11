@@ -1,5 +1,5 @@
 use {
-    crate::{provider::HyperlaneDangoProvider, DangoSigner, HyperlaneDangoResult},
+    crate::{provider::HyperlaneDangoProvider, DangoSigner, DangoResult},
     grug::{Coin, Denom},
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
@@ -35,7 +35,7 @@ impl ConnectionConf {
         &self,
         domain: HyperlaneDomain,
         signer: Option<DangoSigner>,
-    ) -> HyperlaneDangoResult<Box<dyn HyperlaneProvider>> {
+    ) -> DangoResult<Box<dyn HyperlaneProvider>> {
         Ok(Box::new(HyperlaneDangoProvider::from_config(
             &self,
             domain,

@@ -1,5 +1,5 @@
 use {
-    crate::{HyperlaneDangoError, HyperlaneDangoResult},
+    crate::{DangoError, DangoResult},
     grug::{EncodedBytes, Encoder, Hash256, Inner},
     hyperlane_core::{H160, H256, H512},
     tendermint::Hash as TmHash,
@@ -61,13 +61,13 @@ where
 // ------------------------------ TryHashConvertor -----------------------------
 
 pub trait TryHashConvertor<T> {
-    fn try_convert(self) -> HyperlaneDangoResult<T>;
+    fn try_convert(self) -> DangoResult<T>;
 }
 
 impl TryHashConvertor<Hash256> for H512 {
-    fn try_convert(self) -> HyperlaneDangoResult<Hash256> {
+    fn try_convert(self) -> DangoResult<Hash256> {
         if self[..32] != [0; 32] {
-            return Err(HyperlaneDangoError::conversion::<Hash256, _, _>(
+            return Err(DangoError::conversion::<Hash256, _, _>(
                 self,
                 "first 32 bytes are not zero.",
             ));
@@ -83,9 +83,9 @@ impl<E> TryHashConvertor<EncodedBytes<[u8; 20], E>> for H256
 where
     E: Encoder,
 {
-    fn try_convert(self) -> HyperlaneDangoResult<EncodedBytes<[u8; 20], E>> {
+    fn try_convert(self) -> DangoResult<EncodedBytes<[u8; 20], E>> {
         if self[..12] != [0; 12] {
-            return Err(HyperlaneDangoError::conversion::<
+            return Err(DangoError::conversion::<
                 EncodedBytes<[u8; 20], E>,
                 _,
                 _,
@@ -99,10 +99,10 @@ where
 }
 
 impl TryHashConvertor<Hash256> for TmHash {
-    fn try_convert(self) -> HyperlaneDangoResult<Hash256> {
+    fn try_convert(self) -> DangoResult<Hash256> {
         match self {
             TmHash::Sha256(bytes) => Ok(Hash256::from_inner(bytes)),
-            TmHash::None => Err(HyperlaneDangoError::conversion::<Hash256, _, _>(
+            TmHash::None => Err(DangoError::conversion::<Hash256, _, _>(
                 self,
                 "hash is None.",
             )),

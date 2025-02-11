@@ -1,5 +1,5 @@
 use {
-    crate::HyperlaneDangoResult,
+    crate::DangoResult,
     dango_client::SingleSigner,
     grug::{Addr, Defined},
     std::{ops::Deref, sync::Arc},
@@ -10,7 +10,7 @@ use {
 pub struct DangoSigner(Arc<RwLock<SingleSigner<Defined<u32>>>>);
 
 impl DangoSigner {
-    pub fn new(username: &str, key: [u8; 32], address: Addr) -> HyperlaneDangoResult<Self> {
+    pub fn new(username: &str, key: [u8; 32], address: Addr) -> DangoResult<Self> {
         let sign = SingleSigner::from_private_key(username, address, key)?;
         Ok(Self(Arc::new(RwLock::new(sign.with_nonce(0)))))
     }

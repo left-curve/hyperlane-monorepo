@@ -1,6 +1,6 @@
 use {
     super::DangoProvider,
-    crate::{BlockOutcome, HyperlaneDangoResult, SearchTxOutcome},
+    crate::{BlockOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
     grug::{Addr, ContractInfo, Denom, Hash256, Signer, Uint128},
     serde::{de::DeserializeOwned, Serialize},
@@ -11,19 +11,19 @@ pub struct GraphQlProvider {}
 
 #[async_trait]
 impl DangoProvider for GraphQlProvider {
-    async fn get_block(&self, _height: Option<u64>) -> HyperlaneDangoResult<BlockOutcome> {
+    async fn get_block(&self, _height: Option<u64>) -> DangoResult<BlockOutcome> {
         unimplemented!()
     }
 
-    async fn search_tx(&self, _hash: Hash256) -> HyperlaneDangoResult<SearchTxOutcome> {
+    async fn search_tx(&self, _hash: Hash256) -> DangoResult<SearchTxOutcome> {
         unimplemented!()
     }
 
-    async fn balance(&self, _addr: Addr, _denom: Denom) -> HyperlaneDangoResult<Uint128> {
+    async fn balance(&self, _addr: Addr, _denom: Denom) -> DangoResult<Uint128> {
         unimplemented!()
     }
 
-    async fn contract_info(&self, _addr: Addr) -> HyperlaneDangoResult<ContractInfo> {
+    async fn contract_info(&self, _addr: Addr) -> DangoResult<ContractInfo> {
         unimplemented!()
     }
 
@@ -32,7 +32,7 @@ impl DangoProvider for GraphQlProvider {
         _contract: Addr,
         _msg: &M,
         _height: Option<u64>,
-    ) -> HyperlaneDangoResult<R>
+    ) -> DangoResult<R>
     where
         M: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -44,7 +44,7 @@ impl DangoProvider for GraphQlProvider {
         &self,
         _signer: &mut S,
         _msg: grug::Message,
-    ) -> HyperlaneDangoResult<Hash256>
+    ) -> DangoResult<Hash256>
     where
         S: Signer + Send + Sync,
     {

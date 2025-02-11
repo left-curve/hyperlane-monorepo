@@ -1,7 +1,7 @@
 use {
     crate::{
         provider::HyperlaneDangoProvider, ConnectionConf, DangoSigner, HashConvertor,
-        HyperlaneDangoResult, TryHashConvertor,
+        DangoResult, TryHashConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
@@ -26,7 +26,7 @@ impl DangoValidatorAnnounce {
         config: &ConnectionConf,
         locator: &ContractLocator,
         signer: Option<DangoSigner>,
-    ) -> HyperlaneDangoResult<Self> {
+    ) -> DangoResult<Self> {
         Ok(Self {
             provider: HyperlaneDangoProvider::from_config(config, locator.domain.clone(), signer)?,
             address: locator.address,
@@ -60,7 +60,7 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
         let validators = validators
             .iter()
             .map(|v| v.try_convert())
-            .collect::<HyperlaneDangoResult<BTreeSet<_>>>()?;
+            .collect::<DangoResult<BTreeSet<_>>>()?;
 
         let response = self
             .provider

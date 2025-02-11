@@ -1,8 +1,8 @@
 use {
     super::{graphql::GraphQlProvider, DangoProvider},
     crate::{
-        BlockOutcome, ConnectionConf, DangoSigner, HashConvertor, HyperlaneDangoResult,
-        IntoHyperlaneDangoError, ProviderConf, SearchTxOutcome, TryHashConvertor,
+        BlockOutcome, ConnectionConf, DangoSigner, HashConvertor, DangoResult,
+        IntoDangoError, ProviderConf, SearchTxOutcome, TryHashConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
@@ -36,7 +36,7 @@ impl HyperlaneDangoProvider {
         config: &ConnectionConf,
         domain: HyperlaneDomain,
         signer: Option<DangoSigner>,
-    ) -> HyperlaneDangoResult<Self> {
+    ) -> DangoResult<Self> {
         match &config.provider_conf {
             ProviderConf::Rpc(rpc_config) => Ok(HyperlaneDangoProvider {
                 domain,
@@ -138,22 +138,22 @@ impl HyperlaneProvider for HyperlaneDangoProvider {
 }
 
 impl HyperlaneDangoProvider {
-    pub async fn get_block(&self, height: Option<u64>) -> HyperlaneDangoResult<BlockOutcome> {
+    pub async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
         self.provider.get_block(height).await
     }
 
     /// Get transaction info for a given transaction hash.
-    pub async fn search_tx(&self, hash: Hash256) -> HyperlaneDangoResult<SearchTxOutcome> {
+    pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
         self.provider.search_tx(hash).await
     }
 
     /// Get the balance of an address for a given denom.
-    pub async fn balance(&self, addr: Addr, denom: Denom) -> HyperlaneDangoResult<Uint128> {
+    pub async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
         self.provider.balance(addr, denom).await
     }
 
     /// Get the contract info for a given contract address.
-    pub async fn contract_info(&self, addr: Addr) -> HyperlaneDangoResult<ContractInfo> {
+    pub async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
         self.provider.contract_info(addr).await
     }
 
@@ -163,7 +163,7 @@ impl HyperlaneDangoProvider {
         contract: Addr,
         msg: &M,
         height: Option<u64>,
-    ) -> HyperlaneDangoResult<R>
+    ) -> DangoResult<R>
     where
         M: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -172,7 +172,7 @@ impl HyperlaneDangoProvider {
     }
 
     /// Sign and broadcast a message.
-    pub async fn send_message(&self, msg: Message) -> HyperlaneDangoResult<Hash256> {
+    pub async fn send_message(&self, msg: Message) -> DangoResult<Hash256> {
         let signer = self
             .signer
             .clone()
@@ -201,7 +201,7 @@ pub enum ProviderWrapper {
 #[async_trait]
 impl DangoProvider for ProviderWrapper {
     /// Get block info for a given block height. If block height is None, return the latest block.
-    async fn get_block(&self, height: Option<u64>) -> HyperlaneDangoResult<BlockOutcome> {
+    async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
         match self {
             ProviderWrapper::Rpc(provider) => provider.get_block(height).await,
             ProviderWrapper::GraphQl(provider) => provider.get_block(height).await,
@@ -209,7 +209,7 @@ impl DangoProvider for ProviderWrapper {
     }
 
     /// Get transaction info for a given transaction hash.
-    async fn search_tx(&self, hash: Hash256) -> HyperlaneDangoResult<SearchTxOutcome> {
+    async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
         match self {
             ProviderWrapper::Rpc(provider) => provider.search_tx(hash).await,
             ProviderWrapper::GraphQl(provider) => provider.search_tx(hash).await,
@@ -217,7 +217,7 @@ impl DangoProvider for ProviderWrapper {
     }
 
     /// Get the balance of an address for a given denom.
-    async fn balance(&self, addr: Addr, denom: Denom) -> HyperlaneDangoResult<Uint128> {
+    async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
         match self {
             ProviderWrapper::Rpc(provider) => provider.balance(addr, denom).await,
             ProviderWrapper::GraphQl(provider) => provider.balance(addr, denom).await,
@@ -225,7 +225,7 @@ impl DangoProvider for ProviderWrapper {
     }
 
     /// Get the contract info for a given contract address.
-    async fn contract_info(&self, addr: Addr) -> HyperlaneDangoResult<ContractInfo> {
+    async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
         match self {
             ProviderWrapper::Rpc(provider) => provider.contract_info(addr).await,
             ProviderWrapper::GraphQl(provider) => provider.contract_info(addr).await,
@@ -238,7 +238,7 @@ impl DangoProvider for ProviderWrapper {
         contract: Addr,
         msg: &M,
         height: Option<u64>,
-    ) -> HyperlaneDangoResult<R>
+    ) -> DangoResult<R>
     where
         M: Serialize + Send + Sync,
         R: DeserializeOwned,
@@ -254,7 +254,7 @@ impl DangoProvider for ProviderWrapper {
     }
 
     /// Sign and broadcast a message.
-    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> HyperlaneDangoResult<Hash256>
+    async fn send_message<S>(&self, signer: &mut S, msg: Message) -> DangoResult<Hash256>
     where
         S: Signer + Send + Sync,
     {

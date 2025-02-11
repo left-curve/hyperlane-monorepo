@@ -2,11 +2,10 @@ use std::fmt::Debug;
 
 use hyperlane_core::ChainCommunicationError;
 
-pub type HyperlaneDangoResult<T> = Result<T, HyperlaneDangoError>;
+pub type DangoResult<T> = Result<T, DangoError>;
 
 #[derive(Debug, thiserror::Error)]
-pub enum HyperlaneDangoError {
-    /// Tendermint RPC Error
+pub enum DangoError {
     #[error(transparent)]
     TendermintError(#[from] tendermint_rpc::error::Error),
 
@@ -23,11 +22,9 @@ pub enum HyperlaneDangoError {
         from: String,
         reason: String,
     },
-
-    
 }
 
-impl HyperlaneDangoError {
+impl DangoError {
     pub fn conversion<T, F, R>(from: F, reason: R) -> Self
     where
         F: Debug,
@@ -42,21 +39,21 @@ impl HyperlaneDangoError {
     }
 }
 
-impl From<HyperlaneDangoError> for ChainCommunicationError {
-    fn from(value: HyperlaneDangoError) -> Self {
+impl From<DangoError> for ChainCommunicationError {
+    fn from(value: DangoError) -> Self {
         ChainCommunicationError::from_other(value)
     }
 }
 
-pub trait IntoHyperlaneDangoError<T> {
-    fn into_dango_error(self) -> Result<T, HyperlaneDangoError>;
+pub trait IntoDangoError<T> {
+    fn into_dango_error(self) -> Result<T, DangoError>;
 }
 
-impl<T, E> IntoHyperlaneDangoError<T> for Result<T, E>
+impl<T, E> IntoDangoError<T> for Result<T, E>
 where
-    HyperlaneDangoError: From<E>,
+    DangoError: From<E>,
 {
-    fn into_dango_error(self) -> Result<T, HyperlaneDangoError> {
-        self.map_err(HyperlaneDangoError::from)
+    fn into_dango_error(self) -> Result<T, DangoError> {
+        self.map_err(DangoError::from)
     }
 }
