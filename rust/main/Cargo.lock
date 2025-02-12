@@ -5671,7 +5671,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.7",
  "tokio",
  "tower-service",
  "tracing",
@@ -5804,7 +5804,7 @@ dependencies = [
  "hyperlane-fuel",
  "hyperlane-sealevel",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "maplit",
  "mockall",
  "paste",
@@ -5858,7 +5858,7 @@ dependencies = [
  "getrandom 0.2.15",
  "grug",
  "hex 0.4.3",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "num 0.4.3",
  "num-derive 0.4.2",
  "num-traits",
@@ -5899,7 +5899,7 @@ dependencies = [
  "ibc-proto",
  "injective-protobuf",
  "injective-std",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "once_cell",
  "protobuf",
  "ripemd",
@@ -5977,7 +5977,7 @@ dependencies = [
  "futures-util",
  "hex 0.4.3",
  "hyperlane-core",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "num 0.4.3",
  "num-traits",
  "reqwest",
@@ -8373,7 +8373,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -8386,7 +8386,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "157c5a9d7ea5c2ed2d9fb8f495b64759f7816c7eaea54ba3978f0d63000162e3"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "proc-macro2 1.0.93",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -8864,7 +8864,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "mockall",
  "num-derive 0.4.2",
  "num-traits",
@@ -9597,7 +9597,7 @@ dependencies = [
  "hyperlane-core",
  "hyperlane-ethereum",
  "hyperlane-test",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "migration",
  "num-bigint 0.4.6",
  "num-traits",
@@ -10436,7 +10436,7 @@ version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58267dd2fbaa6dceecba9e3e106d2d90a2b02497c0e8b01b8759beccf5113938"
 dependencies = [
- "num 0.4.3",
+ "num 0.2.1",
 ]
 
 [[package]]

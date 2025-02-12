@@ -15,7 +15,7 @@ use {
     },
     hyperlane_core::{
         BlockInfo, ChainInfo, ChainResult, HyperlaneChain, HyperlaneDomain, HyperlaneProvider,
-        TxnInfo, H256, H512, U256,
+        ReorgPeriod, TxnInfo, H256, H512, U256,
     },
     serde::{de::DeserializeOwned, Serialize},
     std::{
@@ -268,6 +268,28 @@ impl DangoProvider {
             .collect::<Vec<_>>();
 
         try_join_all(tasks).await
+    }
+
+    pub async fn get_block_height_for_reorg_period(
+        &self,
+        reorg_period: &ReorgPeriod,
+    ) -> DangoResult<Option<u64>> {
+        let block_height = match reorg_period {
+            ReorgPeriod::Blocks(blocks) => {
+                let last_block = self.get_block(None).await?;
+                let block_height = last_block.height - blocks.get() as u64;
+                Some(block_height)
+            }
+            ReorgPeriod::None => None,
+            ReorgPeriod::Tag(_) => {
+                return Err(anyhow::anyhow!(
+                    "Tag reorg period is not supported in Dango MerkleTreeHook"
+                )
+                .into())
+            }
+        };
+
+        Ok(block_height)
     }
 
     async fn get_block_logs(&self, height: u64) -> DangoResult<BlockLogs> {

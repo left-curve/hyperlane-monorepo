@@ -1,7 +1,7 @@
 use {
     crate::{
-        get_block_height_for_reorg_period, hyperlane_contract, provider::DangoProvider,
-        ConnectionConf, DangoResult, DangoSigner, HashConvertor, TryHashConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner,
+        HashConvertor, TryHashConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{hooks::merkle, IncrementalMerkleTree as DangoIncrementalMerkleTree},
@@ -75,7 +75,10 @@ impl DangoMerkleTreeHook {
         &self,
         reorg_period: &ReorgPeriod,
     ) -> DangoResult<DangoIncrementalMerkleTree> {
-        let block_height = get_block_height_for_reorg_period(&self.provider, reorg_period).await?;
+        let block_height = self
+            .provider
+            .get_block_height_for_reorg_period(reorg_period)
+            .await?;
 
         self.provider
             .query_wasm_smart(
