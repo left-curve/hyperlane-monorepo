@@ -1,14 +1,17 @@
 use {
     super::DangoProviderInterface,
-    crate::{BlockOutcome, DangoResult, SearchTxOutcome, TryHashConvertor},
+    crate::{
+        BlockOutcome, BlockResultOutcome, DangoError, DangoResult, SearchTxOutcome,
+        TryHashConvertor,
+    },
     async_trait::async_trait,
     grug::{
-        Addr, ContractInfo, Denom, GasOption, Hash256, JsonDeExt, Message, NonEmpty, QueryRequest,
-        Signer, SigningClient, Tx, TxOutcome, Uint128,
+        Addr, ContractInfo, CronOutcome, Denom, GasOption, Hash256, JsonDeExt, Message, NonEmpty,
+        QueryRequest, Signer, SigningClient, Tx, TxOutcome, Uint128,
     },
     serde::{de::DeserializeOwned, Serialize},
     std::ops::Deref,
-    tendermint::abci::Code,
+    tendermint::abci::{self, Code},
 };
 
 #[async_trait]
@@ -29,22 +32,33 @@ impl DangoProviderInterface for SigningClient {
         })
     }
 
+    async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
+        let response = self.query_block_result(height).await?;
+
+        Ok(BlockResultOutcome {
+            hash: Hash256::try_from(response.app_hash.as_bytes())?,
+            height: response.height.value(),
+            txs: response
+                .txs_results
+                .unwrap_or_default()
+                .into_iter()
+                .map(from_tm_tx_result)
+                .collect::<DangoResult<_>>()?,
+            cronjobs: response
+                .finalize_block_events
+                .into_iter()
+                .map(from_tm_cron_result)
+                .collect::<DangoResult<_>>()?,
+        })
+    }
+
     async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
         let response = self.query_tx(hash).await?;
         let tx: Tx = response.tx.deserialize_json()?;
 
         Ok(SearchTxOutcome {
             tx,
-            outcome: TxOutcome {
-                gas_limit: response.tx_result.gas_wanted as u64,
-                gas_used: response.tx_result.gas_used as u64,
-                result: if response.tx_result.code == Code::Ok {
-                    Ok(())
-                } else {
-                    Err(response.tx_result.log)
-                },
-                events: response.tx_result.data.deserialize_json()?,
-            },
+            outcome: from_tm_tx_result(response.tx_result)?,
         })
     }
 
@@ -91,4 +105,30 @@ impl DangoProviderInterface for SigningClient {
         let unsigned_tx = signer.unsigned_transaction(NonEmpty::new(vec![msg])?, &self.chain_id)?;
         Ok(self.simulate(&unsigned_tx).await?)
     }
+}
+
+fn from_tm_tx_result(tm_tx_result: abci::types::ExecTxResult) -> DangoResult<TxOutcome> {
+    Ok(TxOutcome {
+        gas_limit: tm_tx_result.gas_wanted as u64,
+        gas_used: tm_tx_result.gas_used as u64,
+        result: if tm_tx_result.code == Code::Ok {
+            Ok(())
+        } else {
+            Err(tm_tx_result.log)
+        },
+        events: tm_tx_result.data.deserialize_json()?,
+    })
+}
+
+fn from_tm_cron_result(tm_cron_result: abci::Event) -> DangoResult<CronOutcome> {
+    Ok(CronOutcome {
+        gas_limit: None,
+        gas_used: 0,
+        cron_event: tm_cron_result
+            .attributes
+            .first()
+            .ok_or(DangoError::CronEvtNotFound {})?
+            .value_str()?
+            .deserialize_json()?,
+    })
 }

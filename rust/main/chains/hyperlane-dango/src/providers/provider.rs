@@ -1,8 +1,8 @@
 use {
     super::{graphql::GraphQlProvider, DangoProviderInterface},
     crate::{
-        BlockOutcome, ConnectionConf, DangoResult, DangoSigner, HashConvertor, IntoDangoError,
-        ProviderConf, SearchTxOutcome, SimulateOutcome, TryHashConvertor,
+        BlockOutcome, BlockResultOutcome, ConnectionConf, DangoResult, DangoSigner, HashConvertor,
+        IntoDangoError, ProviderConf, SearchTxOutcome, SimulateOutcome, TryHashConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
@@ -18,7 +18,7 @@ use {
     serde::{de::DeserializeOwned, Serialize},
     std::{
         fmt::Debug,
-        ops::{Deref, DerefMut},
+        ops::{Deref, DerefMut, RangeInclusive},
         str::FromStr,
     },
 };
@@ -32,32 +32,6 @@ pub struct DangoProvider {
     pub connection_conf: ConnectionConf,
     pub signer: Option<DangoSigner>,
     pub provider: ProviderWrapper,
-}
-
-impl DangoProvider {
-    pub fn from_config(
-        config: &ConnectionConf,
-        domain: HyperlaneDomain,
-        signer: Option<DangoSigner>,
-    ) -> DangoResult<Self> {
-        match &config.provider_conf {
-            ProviderConf::Rpc(rpc_config) => Ok(DangoProvider {
-                domain,
-                provider: ProviderWrapper::Rpc(SigningClient::connect(
-                    rpc_config.chain_id.clone(),
-                    rpc_config.url.as_str(),
-                )?),
-                connection_conf: config.clone(),
-                signer,
-            }),
-            // TODO: DANGO
-            ProviderConf::GraphQl(_) => unimplemented!(),
-        }
-    }
-
-    pub fn gas_price(&self) -> &Coin {
-        &self.connection_conf.gas_price
-    }
 }
 
 impl HyperlaneChain for DangoProvider {
@@ -141,6 +115,30 @@ impl HyperlaneProvider for DangoProvider {
 }
 
 impl DangoProvider {
+    pub fn from_config(
+        config: &ConnectionConf,
+        domain: HyperlaneDomain,
+        signer: Option<DangoSigner>,
+    ) -> DangoResult<Self> {
+        match &config.provider_conf {
+            ProviderConf::Rpc(rpc_config) => Ok(DangoProvider {
+                domain,
+                provider: ProviderWrapper::Rpc(SigningClient::connect(
+                    rpc_config.chain_id.clone(),
+                    rpc_config.url.as_str(),
+                )?),
+                connection_conf: config.clone(),
+                signer,
+            }),
+            // TODO: DANGO
+            ProviderConf::GraphQl(_) => unimplemented!(),
+        }
+    }
+
+    pub fn gas_price(&self) -> &Coin {
+        &self.connection_conf.gas_price
+    }
+
     pub async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
         self.provider.get_block(height).await
     }
@@ -248,7 +246,7 @@ impl DangoProvider {
         })
     }
 
-    pub async fn extimate_costs(
+    pub async fn estimate_costs(
         &self,
         msg: Message,
     ) -> DangoResult<hyperlane_core::TxCostEstimate> {
@@ -259,6 +257,28 @@ impl DangoProvider {
             gas_price: self.gas_price().amount.inner().into(),
             l2_gas_limit: None,
         })
+    }
+
+    // pub async fn fetch_logs(&self, range: RangeInclusive<u32>) {
+    //     for i in range {
+    //         let block = sel
+    //         let logs = self.provider.get_block_result(i).await;
+    //     }
+    // }
+
+    async fn get_block_full(self, height: u64) -> DangoResult<Vec<SearchTxOutcome>>{
+        let block = self.provider.get_block(Some(height)).await?;
+        let block_result = self.provider.get_block_result(Some(height)).await?;
+        let mut txs = Vec::new();
+
+        block.txs.into_iter().zip(block_result.txs).map(|(tx,tx_outcome)| {
+            txs.push(SearchTxOutcome {
+                tx,
+                outcome: tx_outcome,
+            });
+        });
+
+        Ok(txs)
     }
 
     fn signer(&self) -> DangoResult<DangoSigner> {
@@ -281,6 +301,13 @@ impl ProviderWrapper {
         match self {
             ProviderWrapper::Rpc(provider) => provider.get_block(height).await,
             ProviderWrapper::GraphQl(provider) => provider.get_block(height).await,
+        }
+    }
+
+    pub async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
+        match self {
+            ProviderWrapper::Rpc(provider) => provider.get_block_result(height).await,
+            ProviderWrapper::GraphQl(provider) => provider.get_block_result(height).await,
         }
     }
 

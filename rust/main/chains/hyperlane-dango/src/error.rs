@@ -8,16 +8,19 @@ pub type DangoResult<T> = Result<T, DangoError>;
 #[derive(Debug, thiserror::Error)]
 pub enum DangoError {
     #[error(transparent)]
-    TendermintError(#[from] tendermint_rpc::error::Error),
+    TendermintRpc(#[from] tendermint_rpc::error::Error),
 
     #[error(transparent)]
-    AnyhowError(#[from] anyhow::Error),
+    Tendermint(#[from] tendermint::Error),
+
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
 
     #[error(transparent)]
     StdError(#[from] grug::StdError),
 
     #[error("failed to convert {ty_from} to {ty_to}: from {from}, reason: {reason}")]
-    ConversionError {
+    WrongConversion {
         ty_from: &'static str,
         ty_to: &'static str,
         from: String,
@@ -26,6 +29,9 @@ pub enum DangoError {
 
     #[error("transaction not found: {hash}")]
     TxNotFound { hash: Hash256 },
+
+    #[error("cron event not found")]
+    CronEvtNotFound {},
 }
 
 impl DangoError {
@@ -34,7 +40,7 @@ impl DangoError {
         F: Debug,
         R: ToString,
     {
-        Self::ConversionError {
+        Self::WrongConversion {
             ty_from: std::any::type_name::<F>(),
             ty_to: std::any::type_name::<T>(),
             from: format!("{:?}", from),

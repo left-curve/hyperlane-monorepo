@@ -1,11 +1,17 @@
 use {
-    crate::HashConvertor,
-    grug::{Coin, Hash256, Inner, Tx, TxOutcome},
+    crate::{DangoResult, HashConvertor},
+    grug::{Coin, CronOutcome, Hash256, HashExt, Inner, JsonSerExt, Tx, TxOutcome},
 };
 
 pub struct SearchTxOutcome {
     pub tx: Tx,
     pub outcome: TxOutcome,
+}
+
+impl SearchTxOutcome {
+    pub fn tx_hash(&self) -> DangoResult<Hash256> {
+        Ok(self.tx.to_json_vec()?.hash256())
+    }
 }
 
 impl SearchTxOutcome {
@@ -28,6 +34,13 @@ pub struct BlockOutcome {
     pub height: u64,
     pub timestamp: u64,
     pub txs: Vec<Tx>,
+}
+
+pub struct BlockResultOutcome {
+    pub hash: Hash256,
+    pub height: u64,
+    pub txs: Vec<TxOutcome>,
+    pub cronjobs: Vec<CronOutcome>,
 }
 
 pub struct SimulateOutcome {

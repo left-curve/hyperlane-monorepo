@@ -127,7 +127,7 @@ impl Mailbox for DangoMailbox {
     ) -> ChainResult<TxCostEstimate> {
         Ok(self
             .provider
-            .extimate_costs(
+            .estimate_costs(
                 Message::execute(
                     self.address.try_convert()?,
                     &mailbox::ExecuteMsg::Process {

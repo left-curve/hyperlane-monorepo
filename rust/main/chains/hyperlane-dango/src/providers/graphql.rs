@@ -1,6 +1,6 @@
 use {
     super::DangoProviderInterface,
-    crate::{BlockOutcome, DangoResult, SearchTxOutcome},
+    crate::{BlockOutcome, BlockResultOutcome, DangoResult, SearchTxOutcome},
     async_trait::async_trait,
     grug::{
         Addr, ContractInfo, Denom, GasOption, Hash256, Message, QueryRequest, Signer, TxOutcome,
@@ -15,6 +15,10 @@ pub struct GraphQlProvider {}
 #[async_trait]
 impl DangoProviderInterface for GraphQlProvider {
     async fn get_block(&self, _height: Option<u64>) -> DangoResult<BlockOutcome> {
+        unimplemented!()
+    }
+
+    async fn get_block_result(&self, _height: Option<u64>) -> DangoResult<BlockResultOutcome> {
         unimplemented!()
     }
 
