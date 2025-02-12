@@ -1,13 +1,14 @@
 use {
     crate::{
         get_block_height_for_reorg_period, hyperlane_contract, provider::DangoProvider,
-        DangoResult, HashConvertor, TryHashConvertor,
+        ConnectionConf, DangoResult, DangoSigner, HashConvertor, TryHashConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{hooks::merkle, IncrementalMerkleTree as DangoIncrementalMerkleTree},
     hyperlane_core::{
         accumulator::incremental::IncrementalMerkle, ChainCommunicationError, ChainResult,
-        Checkpoint, HyperlaneContract, HyperlaneDomain, MerkleTreeHook, ReorgPeriod, H256,
+        Checkpoint, ContractLocator, HyperlaneContract, HyperlaneDomain, MerkleTreeHook,
+        ReorgPeriod, H256,
     },
 };
 
@@ -56,6 +57,18 @@ impl MerkleTreeHook for DangoMerkleTreeHook {
 }
 
 impl DangoMerkleTreeHook {
+    pub fn new(
+        config: &ConnectionConf,
+        locator: &ContractLocator,
+        signer: Option<DangoSigner>,
+    ) -> DangoResult<Self> {
+        Ok(Self {
+            provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
+            address: locator.address,
+            domain: locator.domain.clone(),
+        })
+    }
+
     async fn tree_raw(
         &self,
         reorg_period: &ReorgPeriod,

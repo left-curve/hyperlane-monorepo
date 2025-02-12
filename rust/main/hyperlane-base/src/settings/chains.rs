@@ -302,8 +302,13 @@ impl ChainConf {
 
                 Ok(Box::new(hook) as Box<dyn MerkleTreeHook>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                Ok(
+                    Box::new(h_dango::DangoMerkleTreeHook::new(conf, &locator, signer)?)
+                        as Box<dyn MerkleTreeHook>,
+                )
+            }
         }
         .context(ctx)
     }
