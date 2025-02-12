@@ -2,8 +2,8 @@ use {
     super::{graphql::GraphQlProvider, DangoProviderInterface},
     crate::{
         BlockLogs, BlockOutcome, BlockResultOutcome, ConnectionConf, DangoResult, DangoSigner,
-        HashConvertor, IntoDangoError, ProviderConf, SearchTxOutcome, SimulateOutcome,
-        TryHashConvertor,
+        ExecutionBlock, HashConvertor, IntoDangoError, ProviderConf, SearchTxOutcome,
+        SimulateOutcome, TryHashConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
@@ -290,6 +290,18 @@ impl DangoProvider {
         };
 
         Ok(block_height)
+    }
+
+    pub async fn get_block_height_fot_execution_block(
+        &self,
+        execution_block: &ExecutionBlock,
+    ) -> DangoResult<Option<u64>> {
+        match execution_block {
+            ExecutionBlock::ReorgPeriod(reorg_period) => {
+                self.get_block_height_for_reorg_period(&reorg_period).await
+            }
+            ExecutionBlock::Defined(height) => Ok(Some(*height)),
+        }
     }
 
     async fn get_block_logs(&self, height: u64) -> DangoResult<BlockLogs> {

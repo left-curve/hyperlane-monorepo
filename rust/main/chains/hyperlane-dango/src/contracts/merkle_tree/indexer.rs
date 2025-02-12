@@ -1,11 +1,11 @@
 use {
     super::DangoMerkleTreeHook,
-    crate::{provider::DangoProvider, HashConvertor, SearchLog, TryHashConvertor},
+    crate::{provider::DangoProvider, ExecutionBlock, HashConvertor, SearchLog, TryHashConvertor},
     async_trait::async_trait,
     dango_hyperlane_types::hooks::merkle,
     hyperlane_core::{
-        ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeHook,
-        MerkleTreeInsertion, ReorgPeriod, SequenceAwareIndexer, H512,
+        ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeInsertion,
+        SequenceAwareIndexer, H512,
     },
     std::ops::RangeInclusive,
 };
@@ -58,10 +58,12 @@ fn search_fn(event: merkle::PostDispatch) -> Indexed<MerkleTreeInsertion> {
 impl SequenceAwareIndexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
     /// Return the latest finalized sequence (if any) and block number
     async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
-        let block = self.provider.get_block(None).await?;
-        // TODO: This is not 100% correct.
-        // Its better to query che contract a this specific block height.
-        let sequence = self.merkle_tree.count(&ReorgPeriod::None).await?;
-        return Ok((Some(sequence), block.height as u32));
+        let last_height = self.provider.get_block(None).await?.height;
+        let dango_tree = self
+            .merkle_tree
+            .dango_tree(&ExecutionBlock::Defined(last_height))
+            .await?;
+
+        return Ok((Some(dango_tree.count as u32), last_height as u32));
     }
 }
