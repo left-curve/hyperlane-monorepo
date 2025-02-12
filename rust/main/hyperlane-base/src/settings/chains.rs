@@ -354,8 +354,13 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                let indexer = Box::new(h_dango::DangoMailboxDispatchIndexer::new(
+                    conf, &locator, signer,
+                )?);
+                Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
+            }
         }
         .context(ctx)
     }

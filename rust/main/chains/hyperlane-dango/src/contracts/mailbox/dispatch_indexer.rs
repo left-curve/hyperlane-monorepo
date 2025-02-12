@@ -1,11 +1,15 @@
 use {
     super::DangoMailbox,
-    crate::{provider::DangoProvider, HashConvertor, SearchLog, TryHashConvertor},
+    crate::{
+        provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, HashConvertor,
+        SearchLog, TryHashConvertor,
+    },
     async_trait::async_trait,
     dango_hyperlane_types::mailbox,
     grug::Inner,
     hyperlane_core::{
-        ChainResult, HyperlaneContract, HyperlaneMessage, Indexed, Indexer, LogMeta, H512,
+        ChainResult, ContractLocator, HyperlaneContract, HyperlaneMessage, Indexed, Indexer,
+        LogMeta, SequenceAwareIndexer, H512,
     },
     std::ops::RangeInclusive,
 };
@@ -14,6 +18,23 @@ use {
 pub struct DangoMailboxDispatchIndexer {
     mailbox: DangoMailbox,
     provider: Box<DangoProvider>,
+}
+
+impl DangoMailboxDispatchIndexer {
+    pub fn new(
+        config: &ConnectionConf,
+        locator: &ContractLocator,
+        signer: Option<DangoSigner>,
+    ) -> DangoResult<Self> {
+        Ok(Self {
+            mailbox: DangoMailbox::new(config, locator, signer.clone())?,
+            provider: Box::new(DangoProvider::from_config(
+                config,
+                locator.domain.clone(),
+                signer,
+            )?),
+        })
+    }
 }
 
 #[async_trait]
@@ -64,4 +85,20 @@ fn search_fn(event: mailbox::Dispatch) -> Indexed<HyperlaneMessage> {
         body: event.0.body.into_inner(),
     }
     .into()
+}
+
+#[async_trait]
+impl SequenceAwareIndexer<HyperlaneMessage> for DangoMailboxDispatchIndexer {
+    async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
+        let last_height = self.provider.get_block(None).await?.height;
+        let nonce = self
+            .provider
+            .query_wasm_smart(
+                self.mailbox.address().try_convert()?,
+                mailbox::QueryNonceRequest {},
+                Some(last_height),
+            )
+            .await?;
+        Ok((Some(nonce), last_height as u32))
+    }
 }
