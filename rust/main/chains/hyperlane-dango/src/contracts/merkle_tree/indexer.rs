@@ -1,11 +1,14 @@
 use {
     super::DangoMerkleTreeHook,
-    crate::{provider::DangoProvider, ExecutionBlock, HashConvertor, SearchLog, TryHashConvertor},
+    crate::{
+        provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, ExecutionBlock,
+        HashConvertor, SearchLog, TryHashConvertor,
+    },
     async_trait::async_trait,
     dango_hyperlane_types::hooks::merkle,
     hyperlane_core::{
-        ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeInsertion,
-        SequenceAwareIndexer, H512,
+        ChainResult, ContractLocator, HyperlaneContract, Indexed, Indexer, LogMeta,
+        MerkleTreeInsertion, SequenceAwareIndexer, H512,
     },
     std::ops::RangeInclusive,
 };
@@ -14,6 +17,19 @@ use {
 pub struct DangoMerkleTreeIndexer {
     pub merkle_tree: DangoMerkleTreeHook,
     pub provider: DangoProvider,
+}
+
+impl DangoMerkleTreeIndexer {
+    pub fn new(
+        config: &ConnectionConf,
+        locator: &ContractLocator,
+        signer: Option<DangoSigner>,
+    ) -> DangoResult<Self> {
+        Ok(Self {
+            merkle_tree: DangoMerkleTreeHook::new(config, locator, signer.clone())?,
+            provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
+        })
+    }
 }
 
 #[async_trait]
