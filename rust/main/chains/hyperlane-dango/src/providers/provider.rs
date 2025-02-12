@@ -300,10 +300,7 @@ impl DangoProvider {
             .txs
             .into_iter()
             .zip(block_result.txs)
-            .map(|(tx, tx_outcome)| SearchTxOutcome {
-                tx,
-                outcome: tx_outcome,
-            })
+            .map(|(tx, tx_outcome)| SearchTxOutcome::new(height, tx, tx_outcome))
             .collect();
 
         Ok(BlockLogs::new(

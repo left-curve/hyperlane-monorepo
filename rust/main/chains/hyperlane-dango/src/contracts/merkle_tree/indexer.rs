@@ -1,6 +1,6 @@
 use {
     super::DangoMerkleTreeHook,
-    crate::{provider::DangoProvider, HashConvertor, TryHashConvertor},
+    crate::{provider::DangoProvider, HashConvertor, SearchLog, TryHashConvertor},
     async_trait::async_trait,
     dango_hyperlane_types::hooks::merkle,
     hyperlane_core::{
@@ -23,22 +23,11 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
         &self,
         range: RangeInclusive<u32>,
     ) -> ChainResult<Vec<(Indexed<MerkleTreeInsertion>, LogMeta)>> {
-        self.provider.fetch_logs(range).await?.into_iter().try_fold(
-            vec![],
-            |mut buff, log| -> ChainResult<_> {
-                buff.extend(
-                    log.search_contract_log::<merkle::PostDispatch>(
-                        self.merkle_tree.address().try_convert()?,
-                    )?
-                    .finalize(|event| {
-                        MerkleTreeInsertion::new(event.index as u32, event.message_id.convert())
-                            .into()
-                    }),
-                );
-
-                Ok(buff)
-            },
-        )
+        Ok(self
+            .provider
+            .fetch_logs(range)
+            .await?
+            .search_contract_log(self.merkle_tree.address().try_convert()?, search_fn)?)
     }
 
     /// Get the chain's latest block number that has reached finality
@@ -49,10 +38,20 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
     /// Fetch list of logs emitted in a transaction with the given hash.
     async fn fetch_logs_by_tx_hash(
         &self,
-        _tx_hash: H512,
+        tx_hash: H512,
     ) -> ChainResult<Vec<(Indexed<MerkleTreeInsertion>, LogMeta)>> {
-        Ok(vec![])
+        Ok(self
+            .provider
+            .search_tx(tx_hash.try_convert()?)
+            .await?
+            .with_block_hash(&self.provider)
+            .await?
+            .search_contract_log(self.merkle_tree.address().try_convert()?, search_fn)?)
     }
+}
+
+fn search_fn(event: merkle::PostDispatch) -> Indexed<MerkleTreeInsertion> {
+    MerkleTreeInsertion::new(event.index as u32, event.message_id.convert()).into()
 }
 
 #[async_trait]

@@ -7,7 +7,7 @@ use {
     dango_hyperlane_types::{hooks::merkle, IncrementalMerkleTree as DangoIncrementalMerkleTree},
     hyperlane_core::{
         accumulator::incremental::IncrementalMerkle, ChainCommunicationError, ChainResult,
-        Checkpoint, ContractLocator, HyperlaneContract, HyperlaneDomain, MerkleTreeHook,
+        Checkpoint, ContractLocator, HyperlaneContract, MerkleTreeHook,
         ReorgPeriod, H256,
     },
 };
@@ -15,7 +15,6 @@ use {
 #[derive(Debug)]
 pub struct DangoMerkleTreeHook {
     address: H256,
-    domain: HyperlaneDomain,
     provider: DangoProvider,
 }
 
@@ -49,7 +48,7 @@ impl MerkleTreeHook for DangoMerkleTreeHook {
 
         Ok(Checkpoint {
             merkle_tree_hook_address: self.address(),
-            mailbox_domain: self.domain.id(),
+            mailbox_domain: self.provider.domain.id(),
             root: dango_tree.root().convert(),
             index: dango_tree.count as u32,
         })
@@ -65,7 +64,6 @@ impl DangoMerkleTreeHook {
         Ok(Self {
             provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
             address: locator.address,
-            domain: locator.domain.clone(),
         })
     }
 
