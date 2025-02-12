@@ -24,7 +24,7 @@ hyperlane_contract!(DangoMerkleTreeHook);
 #[async_trait]
 impl MerkleTreeHook for DangoMerkleTreeHook {
     async fn tree(&self, reorg_period: &ReorgPeriod) -> ChainResult<IncrementalMerkle> {
-        let dango_tree = self.tree_raw(reorg_period).await?;
+        let dango_tree = self.dango_tree(reorg_period).await?;
 
         Ok(IncrementalMerkle::new(
             dango_tree
@@ -41,11 +41,11 @@ impl MerkleTreeHook for DangoMerkleTreeHook {
     }
 
     async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32> {
-        Ok(self.tree_raw(reorg_period).await?.count as u32)
+        Ok(self.dango_tree(reorg_period).await?.count as u32)
     }
 
     async fn latest_checkpoint(&self, reorg_period: &ReorgPeriod) -> ChainResult<Checkpoint> {
-        let dango_tree = self.tree_raw(reorg_period).await?;
+        let dango_tree = self.dango_tree(reorg_period).await?;
 
         Ok(Checkpoint {
             merkle_tree_hook_address: self.address(),
@@ -69,7 +69,9 @@ impl DangoMerkleTreeHook {
         })
     }
 
-    async fn tree_raw(
+    /// Query the chain and return the DangoTree (same as IncrementalMerkleTree
+    /// but with different values types).
+    async fn dango_tree(
         &self,
         reorg_period: &ReorgPeriod,
     ) -> DangoResult<DangoIncrementalMerkleTree> {
