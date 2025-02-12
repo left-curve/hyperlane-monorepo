@@ -1,9 +1,13 @@
 use {
     super::DangoMailbox,
-    crate::provider::DangoProvider,
+    crate::{provider::DangoProvider, HashConvertor, TryHashConvertor},
     async_trait::async_trait,
-    hyperlane_core::{ChainResult, HyperlaneMessage, Indexed, Indexer, LogMeta, H512},
-    std::{io::Cursor, ops::RangeInclusive},
+    dango_hyperlane_types::mailbox,
+    grug::Inner,
+    hyperlane_core::{
+        ChainResult, HyperlaneContract, HyperlaneMessage, Indexed, Indexer, LogMeta, H512,
+    },
+    std::ops::RangeInclusive,
 };
 
 #[derive(Debug)]
@@ -19,7 +23,30 @@ impl Indexer<HyperlaneMessage> for DangoMailboxDispatchIndexer {
         &self,
         range: RangeInclusive<u32>,
     ) -> ChainResult<Vec<(Indexed<HyperlaneMessage>, LogMeta)>> {
-        todo!()
+        self.provider.fetch_logs(range).await?.into_iter().try_fold(
+            vec![],
+            |mut buff, log| -> ChainResult<_> {
+                buff.extend(
+                    log.search_contract_log::<mailbox::Dispatch>(
+                        self.mailbox.address().try_convert()?,
+                    )?
+                    .finalize(|event| {
+                        HyperlaneMessage {
+                            version: event.0.version,
+                            nonce: event.0.nonce,
+                            origin: event.0.origin_domain,
+                            sender: event.0.sender.convert(),
+                            destination: event.0.destination_domain,
+                            recipient: event.0.recipient.convert(),
+                            body: event.0.body.into_inner(),
+                        }
+                        .into()
+                    }),
+                );
+
+                Ok(buff)
+            },
+        )
     }
 
     /// Get the chain's latest block number that has reached finality

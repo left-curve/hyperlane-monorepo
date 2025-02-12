@@ -1,21 +1,37 @@
 use {
     crate::{DangoError, DangoResult},
+    dango_hyperlane_types::Addr32,
     grug::{EncodedBytes, Encoder, Hash256, Inner},
     hyperlane_core::{H160, H256, H512},
     tendermint::Hash as TmHash,
 };
 
+type Dango20<E> = EncodedBytes<[u8; 20], E>;
+type Dango32<E> = EncodedBytes<[u8; 32], E>;
+
 pub trait HashConvertor<T> {
     fn convert(self) -> T;
 }
 
-impl HashConvertor<H256> for Hash256 {
+impl<E> HashConvertor<H256> for Dango32<E>
+where
+    E: Encoder,
+{
     fn convert(self) -> H256 {
         H256::from_slice(&self)
     }
 }
 
-impl HashConvertor<H512> for Hash256 {
+impl HashConvertor<H256> for Addr32 {
+    fn convert(self) -> H256 {
+        H256::from_slice(self.inner())
+    }
+}
+
+impl<E> HashConvertor<H512> for Dango32<E>
+where
+    E: Encoder,
+{
     fn convert(self) -> H512 {
         let mut bytes = [0u8; 64];
         bytes[32..].copy_from_slice(&self);
@@ -23,13 +39,16 @@ impl HashConvertor<H512> for Hash256 {
     }
 }
 
-impl HashConvertor<Hash256> for H256 {
-    fn convert(self) -> Hash256 {
-        Hash256::from_inner(self.to_fixed_bytes())
+impl<E> HashConvertor<Dango32<E>> for H256
+where
+    E: Encoder,
+{
+    fn convert(self) -> Dango32<E> {
+        EncodedBytes::from_inner(self.to_fixed_bytes())
     }
 }
 
-impl<E> HashConvertor<H256> for EncodedBytes<[u8; 20], E>
+impl<E> HashConvertor<H256> for Dango20<E>
 where
     E: Encoder,
 {
@@ -40,7 +59,7 @@ where
     }
 }
 
-impl<E> HashConvertor<H160> for EncodedBytes<[u8; 20], E>
+impl<E> HashConvertor<H160> for Dango20<E>
 where
     E: Encoder,
 {
@@ -49,7 +68,7 @@ where
     }
 }
 
-impl<E> HashConvertor<EncodedBytes<[u8; 20], E>> for H160
+impl<E> HashConvertor<Dango20<E>> for H160
 where
     E: Encoder,
 {
@@ -79,17 +98,16 @@ impl TryHashConvertor<Hash256> for H512 {
     }
 }
 
-impl<E> TryHashConvertor<EncodedBytes<[u8; 20], E>> for H256
+impl<E> TryHashConvertor<Dango20<E>> for H256
 where
     E: Encoder,
 {
     fn try_convert(self) -> DangoResult<EncodedBytes<[u8; 20], E>> {
         if self[..12] != [0; 12] {
-            return Err(DangoError::conversion::<
-                EncodedBytes<[u8; 20], E>,
-                _,
-                _,
-            >(self, "first 12 bytes are not zero."));
+            return Err(DangoError::conversion::<EncodedBytes<[u8; 20], E>, _, _>(
+                self,
+                "first 12 bytes are not zero.",
+            ));
         }
 
         let mut bytes = [0u8; 20];

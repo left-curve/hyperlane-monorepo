@@ -6,4 +6,4 @@ pub mod traits;
 pub mod types;
 pub mod utils;
 
-pub use self::{contracts::*, error::*, providers::*, signer::*, traits::*, types::*, utils::*};
+pub use self::{contracts::*, error::*, providers::*, signer::*, traits::*, types::*};

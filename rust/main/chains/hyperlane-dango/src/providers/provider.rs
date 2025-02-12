@@ -1,12 +1,14 @@
 use {
     super::{graphql::GraphQlProvider, DangoProviderInterface},
     crate::{
-        BlockOutcome, BlockResultOutcome, ConnectionConf, DangoResult, DangoSigner, HashConvertor,
-        IntoDangoError, ProviderConf, SearchTxOutcome, SimulateOutcome, TryHashConvertor,
+        BlockLogs, BlockOutcome, BlockResultOutcome, ConnectionConf, DangoResult, DangoSigner,
+        HashConvertor, IntoDangoError, ProviderConf, SearchTxOutcome, SimulateOutcome,
+        TryHashConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
     dango_types::{account::spot, auth::Metadata},
+    futures_util::future::try_join_all,
     grug::{
         Addr, Coin, ContractInfo, Defined, Denom, GasOption, Hash256, Inner, JsonDeExt, Message,
         QueryRequest, Signer, SigningClient, TxOutcome, Uint128,
@@ -259,26 +261,35 @@ impl DangoProvider {
         })
     }
 
-    // pub async fn fetch_logs(&self, range: RangeInclusive<u32>) {
-    //     for i in range {
-    //         let block = sel
-    //         let logs = self.provider.get_block_result(i).await;
-    //     }
-    // }
+    pub async fn fetch_logs(&self, range: RangeInclusive<u32>) -> DangoResult<Vec<BlockLogs>> {
+        let tasks = range
+            .into_iter()
+            .map(|i| async move { self.get_block_logs(i as u64).await })
+            .collect::<Vec<_>>();
 
-    async fn get_block_full(self, height: u64) -> DangoResult<Vec<SearchTxOutcome>>{
+        try_join_all(tasks).await
+    }
+
+    async fn get_block_logs(&self, height: u64) -> DangoResult<BlockLogs> {
         let block = self.provider.get_block(Some(height)).await?;
         let block_result = self.provider.get_block_result(Some(height)).await?;
-        let mut txs = Vec::new();
 
-        block.txs.into_iter().zip(block_result.txs).map(|(tx,tx_outcome)| {
-            txs.push(SearchTxOutcome {
+        let txs = block
+            .txs
+            .into_iter()
+            .zip(block_result.txs)
+            .map(|(tx, tx_outcome)| SearchTxOutcome {
                 tx,
                 outcome: tx_outcome,
-            });
-        });
+            })
+            .collect();
 
-        Ok(txs)
+        Ok(BlockLogs::new(
+            block.height,
+            block.hash,
+            txs,
+            block_result.cronjobs,
+        ))
     }
 
     fn signer(&self) -> DangoResult<DangoSigner> {
