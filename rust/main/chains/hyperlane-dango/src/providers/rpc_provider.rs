@@ -56,10 +56,11 @@ impl DangoProviderInterface for SigningClient {
         let response = self.query_tx(hash).await?;
         let tx: Tx = response.tx.deserialize_json()?;
 
-        Ok(SearchTxOutcome {
+        Ok(SearchTxOutcome::new(
+            response.height.value(),
             tx,
-            outcome: from_tm_tx_result(response.tx_result)?,
-        })
+            from_tm_tx_result(response.tx_result)?,
+        ))
     }
 
     async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
