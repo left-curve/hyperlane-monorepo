@@ -9,11 +9,11 @@ use {
 type Dango20<E> = EncodedBytes<[u8; 20], E>;
 type Dango32<E> = EncodedBytes<[u8; 32], E>;
 
-pub trait HashConvertor<T> {
+pub trait DangoConvertor<T> {
     fn convert(self) -> T;
 }
 
-impl<E> HashConvertor<H256> for Dango32<E>
+impl<E> DangoConvertor<H256> for Dango32<E>
 where
     E: Encoder,
 {
@@ -22,13 +22,13 @@ where
     }
 }
 
-impl HashConvertor<H256> for Addr32 {
+impl DangoConvertor<H256> for Addr32 {
     fn convert(self) -> H256 {
         H256::from_slice(self.inner())
     }
 }
 
-impl<E> HashConvertor<H512> for Dango32<E>
+impl<E> DangoConvertor<H512> for Dango32<E>
 where
     E: Encoder,
 {
@@ -39,7 +39,7 @@ where
     }
 }
 
-impl<E> HashConvertor<Dango32<E>> for H256
+impl<E> DangoConvertor<Dango32<E>> for H256
 where
     E: Encoder,
 {
@@ -48,7 +48,7 @@ where
     }
 }
 
-impl<E> HashConvertor<H256> for Dango20<E>
+impl<E> DangoConvertor<H256> for Dango20<E>
 where
     E: Encoder,
 {
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<E> HashConvertor<H160> for Dango20<E>
+impl<E> DangoConvertor<H160> for Dango20<E>
 where
     E: Encoder,
 {
@@ -68,7 +68,7 @@ where
     }
 }
 
-impl<E> HashConvertor<Dango20<E>> for H160
+impl<E> DangoConvertor<Dango20<E>> for H160
 where
     E: Encoder,
 {
@@ -77,13 +77,13 @@ where
     }
 }
 
-// ------------------------------ TryHashConvertor -----------------------------
+// ----------------------------- TryDangoConvertor -----------------------------
 
-pub trait TryHashConvertor<T> {
+pub trait TryDangoConvertor<T> {
     fn try_convert(self) -> DangoResult<T>;
 }
 
-impl TryHashConvertor<Hash256> for H512 {
+impl TryDangoConvertor<Hash256> for H512 {
     fn try_convert(self) -> DangoResult<Hash256> {
         if self[..32] != [0; 32] {
             return Err(DangoError::conversion::<Hash256, _, _>(
@@ -98,7 +98,7 @@ impl TryHashConvertor<Hash256> for H512 {
     }
 }
 
-impl<E> TryHashConvertor<Dango20<E>> for H256
+impl<E> TryDangoConvertor<Dango20<E>> for H256
 where
     E: Encoder,
 {
@@ -116,7 +116,7 @@ where
     }
 }
 
-impl TryHashConvertor<Hash256> for TmHash {
+impl TryDangoConvertor<Hash256> for TmHash {
     fn try_convert(self) -> DangoResult<Hash256> {
         match self {
             TmHash::Sha256(bytes) => Ok(Hash256::from_inner(bytes)),

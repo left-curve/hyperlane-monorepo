@@ -1,4 +1,4 @@
-mod dispatch_indexer;
-mod mailbox;
+mod indexer;
+mod core;
 
-pub use {dispatch_indexer::*, mailbox::*};
+pub use {indexer::*, core::*};

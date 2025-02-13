@@ -1,5 +1,5 @@
 use {
-    crate::{provider::DangoProvider, DangoResult, DangoSigner},
+    crate::{DangoProvider, DangoResult, DangoSigner},
     grug::{Coin, Denom},
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };

@@ -1,7 +1,7 @@
 use {
     crate::{
         hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult,
-        DangoSigner, HashConvertor, IntoDangoError, TryHashConvertor,
+        DangoSigner, DangoConvertor, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},

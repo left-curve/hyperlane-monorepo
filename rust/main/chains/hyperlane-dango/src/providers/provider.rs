@@ -1,9 +1,9 @@
 use {
     super::{graphql::GraphQlProvider, DangoProviderInterface},
     crate::{
-        BlockLogs, BlockOutcome, BlockResultOutcome, ConnectionConf, DangoResult, DangoSigner,
-        ExecutionBlock, HashConvertor, IntoDangoError, ProviderConf, SearchTxOutcome,
-        SimulateOutcome, TryHashConvertor,
+        BlockLogs, BlockOutcome, BlockResultOutcome, ConnectionConf, DangoConvertor, DangoResult,
+        DangoSigner, ExecutionBlock, IntoDangoError, ProviderConf, SearchTxOutcome,
+        SimulateOutcome, TryDangoConvertor,
     },
     anyhow::anyhow,
     async_trait::async_trait,
@@ -145,6 +145,40 @@ impl DangoProvider {
         self.provider.get_block(height).await
     }
 
+    pub async fn get_block_height_by_reorg_period(
+        &self,
+        reorg_period: ReorgPeriod,
+    ) -> DangoResult<Option<u64>> {
+        let block_height = match reorg_period {
+            ReorgPeriod::Blocks(blocks) => {
+                let last_block = self.get_block(None).await?;
+                let block_height = last_block.height - blocks.get() as u64;
+                Some(block_height)
+            }
+            ReorgPeriod::None => None,
+            ReorgPeriod::Tag(_) => {
+                return Err(anyhow::anyhow!(
+                    "Tag reorg period is not supported in Dango MerkleTreeHook"
+                )
+                .into())
+            }
+        };
+
+        Ok(block_height)
+    }
+
+    pub async fn get_block_height_by_execution_block(
+        &self,
+        execution_block: ExecutionBlock,
+    ) -> DangoResult<Option<u64>> {
+        match execution_block {
+            ExecutionBlock::ReorgPeriod(reorg_period) => {
+                self.get_block_height_by_reorg_period(reorg_period).await
+            }
+            ExecutionBlock::Defined(height) => Ok(Some(height)),
+        }
+    }
+
     /// Get transaction info for a given transaction hash.
     pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
         self.provider.search_tx(hash).await
@@ -268,40 +302,6 @@ impl DangoProvider {
             .collect::<Vec<_>>();
 
         try_join_all(tasks).await
-    }
-
-    pub async fn get_block_height_for_reorg_period(
-        &self,
-        reorg_period: &ReorgPeriod,
-    ) -> DangoResult<Option<u64>> {
-        let block_height = match reorg_period {
-            ReorgPeriod::Blocks(blocks) => {
-                let last_block = self.get_block(None).await?;
-                let block_height = last_block.height - blocks.get() as u64;
-                Some(block_height)
-            }
-            ReorgPeriod::None => None,
-            ReorgPeriod::Tag(_) => {
-                return Err(anyhow::anyhow!(
-                    "Tag reorg period is not supported in Dango MerkleTreeHook"
-                )
-                .into())
-            }
-        };
-
-        Ok(block_height)
-    }
-
-    pub async fn get_block_height_fot_execution_block(
-        &self,
-        execution_block: &ExecutionBlock,
-    ) -> DangoResult<Option<u64>> {
-        match execution_block {
-            ExecutionBlock::ReorgPeriod(reorg_period) => {
-                self.get_block_height_for_reorg_period(&reorg_period).await
-            }
-            ExecutionBlock::Defined(height) => Ok(Some(*height)),
-        }
     }
 
     async fn get_block_logs(&self, height: u64) -> DangoResult<BlockLogs> {

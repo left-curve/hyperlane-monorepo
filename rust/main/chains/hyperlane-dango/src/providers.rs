@@ -3,4 +3,4 @@ pub mod rpc_provider;
 pub mod traits;
 pub mod graphql;
 
-pub use traits::*;
+pub use {traits::*, provider::*};

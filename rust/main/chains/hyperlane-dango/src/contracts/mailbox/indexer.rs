@@ -1,8 +1,8 @@
 use {
     super::DangoMailbox,
     crate::{
-        provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, HashConvertor,
-        SearchLog, TryHashConvertor,
+        provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, DangoConvertor,
+        SearchLog, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::mailbox,

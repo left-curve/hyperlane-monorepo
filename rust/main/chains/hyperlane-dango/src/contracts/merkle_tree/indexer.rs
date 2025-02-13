@@ -2,7 +2,7 @@ use {
     super::DangoMerkleTreeHook,
     crate::{
         provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, ExecutionBlock,
-        HashConvertor, SearchLog, TryHashConvertor,
+        DangoConvertor, SearchLog, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::hooks::merkle,
@@ -77,7 +77,7 @@ impl SequenceAwareIndexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
         let last_height = self.provider.get_block(None).await?.height;
         let dango_tree = self
             .merkle_tree
-            .dango_tree(&ExecutionBlock::Defined(last_height))
+            .dango_tree(ExecutionBlock::Defined(last_height))
             .await?;
 
         return Ok((Some(dango_tree.count as u32), last_height as u32));

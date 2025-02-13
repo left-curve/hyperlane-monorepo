@@ -1,5 +1,5 @@
 use {
-    crate::{provider::DangoProvider, DangoResult, HashConvertor},
+    crate::{provider::DangoProvider, DangoResult, DangoConvertor},
     grug::{Coin, CronOutcome, Defined, Hash256, Inner, Tx, TxOutcome, Undefined},
 };
 

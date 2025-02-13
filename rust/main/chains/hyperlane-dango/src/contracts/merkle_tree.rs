@@ -1,4 +1,4 @@
 mod indexer;
-mod merkle_tree_hook;
+mod core;
 
-pub use {indexer::*, merkle_tree_hook::*};
+pub use {indexer::*, core::*};

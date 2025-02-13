@@ -1,24 +1,21 @@
 mod config;
+mod convertor;
+mod error;
 mod log;
 mod outcome;
-use hyperlane_core::ReorgPeriod;
-pub use {config::*, log::*, outcome::*};
+mod signer;
+
+pub use {config::*, convertor::*, error::*, log::*, outcome::*, signer::*};
 
 pub enum ExecutionBlock {
     /// Default reorg period of Hyperlane
-    ReorgPeriod(ReorgPeriod),
+    ReorgPeriod(hyperlane_core::ReorgPeriod),
     /// Execute query at specific block height.
     Defined(u64),
 }
 
-impl Into<ExecutionBlock> for ReorgPeriod {
-    fn into(self) -> ExecutionBlock {
-        ExecutionBlock::ReorgPeriod(self)
-    }
-}
-
-impl From<&ReorgPeriod> for ExecutionBlock {
-    fn from(period: &ReorgPeriod) -> ExecutionBlock {
-        ExecutionBlock::ReorgPeriod(period.clone())
+impl From<hyperlane_core::ReorgPeriod> for ExecutionBlock {
+    fn from(period: hyperlane_core::ReorgPeriod) -> ExecutionBlock {
+        ExecutionBlock::ReorgPeriod(period)
     }
 }

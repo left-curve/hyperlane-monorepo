@@ -1,7 +1,7 @@
 use {
     crate::{
-        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner,
-        ExecutionBlock, HashConvertor, TryHashConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoConvertor, DangoResult,
+        DangoSigner, ExecutionBlock, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{hooks::merkle, IncrementalMerkleTree as DangoIncrementalMerkleTree},
@@ -22,7 +22,7 @@ hyperlane_contract!(DangoMerkleTreeHook);
 #[async_trait]
 impl MerkleTreeHook for DangoMerkleTreeHook {
     async fn tree(&self, reorg_period: &ReorgPeriod) -> ChainResult<IncrementalMerkle> {
-        let dango_tree = self.dango_tree(&reorg_period.into()).await?;
+        let dango_tree = self.dango_tree(reorg_period.clone().into()).await?;
 
         Ok(IncrementalMerkle::new(
             dango_tree
@@ -39,11 +39,11 @@ impl MerkleTreeHook for DangoMerkleTreeHook {
     }
 
     async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32> {
-        Ok(self.dango_tree(&reorg_period.into()).await?.count as u32)
+        Ok(self.dango_tree(reorg_period.clone().into()).await?.count as u32)
     }
 
     async fn latest_checkpoint(&self, reorg_period: &ReorgPeriod) -> ChainResult<Checkpoint> {
-        let dango_tree = self.dango_tree(&reorg_period.into()).await?;
+        let dango_tree = self.dango_tree(reorg_period.clone().into()).await?;
         let index = if dango_tree.count == 0 {
             0
         } else {
@@ -75,11 +75,11 @@ impl DangoMerkleTreeHook {
     /// but with different values types).
     pub async fn dango_tree(
         &self,
-        execution_block: &ExecutionBlock,
+        execution_block: ExecutionBlock,
     ) -> DangoResult<DangoIncrementalMerkleTree> {
         let block_height = self
             .provider
-            .get_block_height_fot_execution_block(execution_block)
+            .get_block_height_by_execution_block(execution_block)
             .await?;
 
         self.provider

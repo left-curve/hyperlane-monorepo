@@ -1,7 +1,7 @@
 use {
     crate::{
         hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner,
-        HashConvertor, IntoDangoError, TryHashConvertor,
+        DangoConvertor, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{mailbox, recipients::RecipientQuery},

@@ -2,7 +2,7 @@ use {
     super::DangoProviderInterface,
     crate::{
         BlockOutcome, BlockResultOutcome, DangoError, DangoResult, SearchTxOutcome,
-        TryHashConvertor,
+        TryDangoConvertor,
     },
     async_trait::async_trait,
     grug::{

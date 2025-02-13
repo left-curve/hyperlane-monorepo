@@ -1,6 +1,6 @@
 use {
     super::SearchTxOutcome,
-    crate::{DangoResult, HashConvertor},
+    crate::{DangoResult, DangoConvertor},
     grug::{
         Addr, Addressable, CheckedContractEvent, CronOutcome, Defined, EventFilter, EventId,
         Hash256, HashExt, JsonDeExt, SearchEvent, StdResult, Tx, Undefined,
