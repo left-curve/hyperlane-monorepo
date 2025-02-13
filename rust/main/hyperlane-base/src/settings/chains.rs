@@ -800,8 +800,10 @@ impl ChainConf {
                     Box::new(conf.build::<h_sealevel::Keypair>().await?)
                 }
                 ChainConnectionConf::Cosmos(_) => Box::new(conf.build::<h_cosmos::Signer>().await?),
-                // TODO: DANGO
-                ChainConnectionConf::Dango(_) => todo!(),
+
+                ChainConnectionConf::Dango(_) => {
+                    Box::new(conf.build::<h_dango::DangoSigner>().await?)
+                }
             };
             Ok(Some(chain_signer))
         } else {
