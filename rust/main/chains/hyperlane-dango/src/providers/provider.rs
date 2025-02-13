@@ -10,7 +10,7 @@ use {
     dango_types::{account::spot, auth::Metadata},
     futures_util::future::try_join_all,
     grug::{
-        Addr, Coin, ContractInfo, Defined, Denom, GasOption, Hash256, Inner, JsonDeExt, Message,
+        Addr, ContractInfo, Defined, Denom, GasOption, Hash256, Inner, JsonDeExt, Message,
         QueryRequest, SigningClient, Uint128,
     },
     hyperlane_core::{
@@ -25,13 +25,12 @@ use {
     },
 };
 
-macro_rules! provider_wrapper {
-    ($method:ident ($($args:expr),*)) => {
-
-            match &self.provider {
-                ProviderWrapper::Rpc(provider) => provider.$method($($args),*).await,
-                ProviderWrapper::GraphQl(provider) => provider.$method($($args),*).await,
-            }
+macro_rules! use_provider {
+    ($self:ident, $method:ident ($($args:expr),*)) => {
+        match &$self.provider {
+            ProviderWrapper::Rpc(provider) => provider.$method($($args),*).await,
+            ProviderWrapper::GraphQl(provider) => provider.$method($($args),*).await,
+        }
 
     };
 }
@@ -148,43 +147,29 @@ impl DangoProvider {
 
     /// Get block info for a given block height. If block height is None, return the latest block.
     pub async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
-        // match &self.provider {
-        //     ProviderWrapper::Rpc(provider) => provider.get_block(height).await,
-        //     ProviderWrapper::GraphQl(provider) => provider.get_block(height).await,
-        // }
-        provider_wrapper!(get_block(height))
+        use_provider!(self, get_block(height))
     }
 
     /// Get block result for a given block height. If block height is None, return the latest block.
     pub async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => provider.get_block_result(height).await,
-            ProviderWrapper::GraphQl(provider) => provider.get_block_result(height).await,
-        }
+        use_provider!(self, get_block_result(height))
     }
 
     /// Get the balance of an address for a given denom.
     pub async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => provider.balance(addr, denom).await,
-            ProviderWrapper::GraphQl(provider) => provider.balance(addr, denom).await,
-        }
+        use_provider!(self, balance(addr, denom))
     }
 
     /// Get transaction info for a given transaction hash.
     pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => provider.search_tx(hash).await,
-            ProviderWrapper::GraphQl(provider) => provider.search_tx(hash).await,
-        }
+        use_provider!(self, search_tx(hash))
     }
 
+    /// Get transaction info for a given transaction hash and retry if it is not found.
     pub async fn search_tx_loop(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
         for _ in 0..self.connection_conf.search_retry_attempts {
-            let search_result = self.search_tx(hash).await?;
-
-            if search_result.outcome.result.is_ok() {
-                return Ok(search_result);
+            if let Ok(result) = self.search_tx(hash).await {
+                return Ok(result);
             }
 
             tokio::time::sleep(tokio::time::Duration::from_secs(
@@ -198,10 +183,7 @@ impl DangoProvider {
 
     /// Get the contract info for a given contract address.
     pub async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => provider.contract_info(addr).await,
-            ProviderWrapper::GraphQl(provider) => provider.contract_info(addr).await,
-        }
+        use_provider!(self, contract_info(addr))
     }
 
     /// Query a wasm smart contract.
@@ -216,14 +198,7 @@ impl DangoProvider {
         R::Message: Serialize + Send + Sync + 'static,
         R::Response: DeserializeOwned,
     {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => {
-                provider.query_wasm_smart(contract, req, height).await
-            }
-            ProviderWrapper::GraphQl(provider) => {
-                provider.query_wasm_smart(contract, req, height).await
-            }
-        }
+        use_provider!(self, query_wasm_smart(contract, req, height))
     }
 
     /// Query the chain config.
@@ -231,26 +206,15 @@ impl DangoProvider {
     where
         T: DeserializeOwned,
     {
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => provider.query_app_config().await,
-            ProviderWrapper::GraphQl(provider) => provider.query_app_config().await,
-        }
+        use_provider!(self, query_app_config())
     }
 
     /// Simulate a message.
     pub async fn simulate_message(&self, msg: Message) -> DangoResult<SimulateOutcome> {
-        let tx_outcome = match &self.provider {
-            ProviderWrapper::Rpc(provider) => {
-                provider
-                    .simulate_message(self.signer()?.read().await.deref(), msg)
-                    .await
-            }
-            ProviderWrapper::GraphQl(provider) => {
-                provider
-                    .simulate_message(self.signer()?.read().await.deref(), msg)
-                    .await
-            }
-        }?;
+        let tx_outcome = use_provider!(
+            self,
+            simulate_message(self.signer()?.read().await.deref(), msg)
+        )?;
 
         Ok(SimulateOutcome {
             gas_adjusted: (tx_outcome.gas_used as f64 * self.connection_conf.gas_scale) as u64
@@ -301,26 +265,10 @@ impl DangoProvider {
             }
         };
 
-        match &self.provider {
-            ProviderWrapper::Rpc(provider) => {
-                DangoProviderInterface::send_message(
-                    provider,
-                    signer.write().await.deref_mut(),
-                    msg,
-                    gas,
-                )
-                .await
-            }
-            ProviderWrapper::GraphQl(provider) => {
-                DangoProviderInterface::send_message(
-                    provider,
-                    signer.write().await.deref_mut(),
-                    msg,
-                    gas,
-                )
-                .await
-            }
-        }
+        use_provider!(
+            self,
+            broadcast_message(signer.write().await.deref_mut(), msg, gas)
+        )
     }
 
     /// Sign and broadcast a message.

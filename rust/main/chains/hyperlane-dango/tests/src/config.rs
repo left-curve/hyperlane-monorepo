@@ -1,7 +1,7 @@
 use {
-    dango_types::account_factory::Username,
+    dango_types::{account_factory::Username, config::AppConfig},
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
-    grug::{Addr, Coin, Defined, HexByteArray, MathError, MaybeDefined, Undefined},
+    grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
     hyperlane_base::settings::{
         ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings,
     },
@@ -11,6 +11,7 @@ use {
 };
 
 const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
+
 const RPC_PROVIDER: LazyLock<RpcConfig> = LazyLock::new(|| RpcConfig {
     url: "".to_string(),
     chain_id: "dango".to_string(),
@@ -86,6 +87,13 @@ where
             provider_conf: Defined::new(ProviderConf::Rpc(RPC_PROVIDER.clone().to_owned())),
         }
     }
+
+    pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+        ChainConfBuilder {
+            addresses: self.addresses,
+            provider_conf: Defined::new(ProviderConf::GraphQl(GRAPHQL_PROVIDER.clone().to_owned())),
+        }
+    }
 }
 
 // impl<T> ChainConfBuilder<T, Defined<ProviderConf>>
@@ -99,8 +107,8 @@ where
 //             addresses
 //         } else {
 //             let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, None).unwrap();
-//             let res = provider.query_app_config().await.unwrap();
-//             todo!()
+//             let res: AppConfig = provider.query_app_config().await.unwrap();
+//             re
 //         };
 
 //         todo!()

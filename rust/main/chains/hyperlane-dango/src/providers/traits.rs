@@ -42,7 +42,7 @@ pub trait DangoProviderInterface {
         T: DeserializeOwned;
 
     /// Sign and broadcast a message.
-    async fn send_message<S>(
+    async fn broadcast_message<S>(
         &self,
         signer: &mut S,
         msg: Message,

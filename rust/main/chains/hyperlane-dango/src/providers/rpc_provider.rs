@@ -96,7 +96,7 @@ impl DangoProviderInterface for SigningClient {
             .deserialize_json()?)
     }
 
-    async fn send_message<S>(
+    async fn broadcast_message<S>(
         &self,
         signer: &mut S,
         msg: Message,

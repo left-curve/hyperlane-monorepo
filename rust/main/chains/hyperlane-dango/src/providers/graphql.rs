@@ -55,7 +55,7 @@ impl DangoProviderInterface for GraphQlProvider {
         unimplemented!()
     }
 
-    async fn send_message<S>(
+    async fn broadcast_message<S>(
         &self,
         _signer: &mut S,
         _msg: grug::Message,
