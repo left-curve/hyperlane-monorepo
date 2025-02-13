@@ -25,9 +25,6 @@ use {
     },
 };
 
-const MAX_SEARCH_TX_ATTEMPTS: u64 = 10;
-const SEARC_SLEEP_DURATION: u64 = 1;
-
 #[derive(Debug, Clone)]
 pub struct DangoProvider {
     pub domain: HyperlaneDomain,
@@ -185,14 +182,17 @@ impl DangoProvider {
     }
 
     pub async fn search_tx_loop(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
-        for _ in 0..MAX_SEARCH_TX_ATTEMPTS {
+        for _ in 0..self.connection_conf.search_retry_attempts {
             let search_result = self.search_tx(hash).await?;
 
             if search_result.outcome.result.is_ok() {
                 return Ok(search_result);
             }
 
-            tokio::time::sleep(tokio::time::Duration::from_secs(SEARC_SLEEP_DURATION)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(
+                self.connection_conf.search_sleep_duration,
+            ))
+            .await;
         }
 
         Err(crate::DangoError::TxNotFound { hash })

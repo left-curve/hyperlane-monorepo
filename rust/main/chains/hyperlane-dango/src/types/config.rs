@@ -17,6 +17,10 @@ pub struct ConnectionConf {
     pub gas_scale: f64,
     /// Flat gas increase
     pub flat_gas_increase: u64,
+    /// Search sleep duration in seconds
+    pub search_sleep_duration: u64,
+    /// Search retry attempts
+    pub search_retry_attempts: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -41,9 +45,7 @@ impl ConnectionConf {
         domain: HyperlaneDomain,
         signer: Option<DangoSigner>,
     ) -> DangoResult<Box<dyn HyperlaneProvider>> {
-        Ok(Box::new(DangoProvider::from_config(
-            &self, domain, signer,
-        )?))
+        Ok(Box::new(DangoProvider::from_config(&self, domain, signer)?))
     }
 
     /// Returns canonical asset.
