@@ -93,7 +93,7 @@ impl HyperlaneProvider for DangoProvider {
 
         let balance = self
             .provider
-            .balance(address, self.connection_conf.get_canonical_asset().clone())
+            .balance(address, self.connection_conf.gas_price.denom.clone())
             .await?;
 
         Ok(balance.into_inner().into())

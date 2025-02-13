@@ -1,6 +1,6 @@
 use {
     crate::{DangoProvider, DangoResult, DangoSigner},
-    grug::{Coin, Denom},
+    grug::Coin,
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
 };
 
@@ -9,8 +9,6 @@ use {
 pub struct ConnectionConf {
     /// Provider configuration
     pub provider_conf: ProviderConf,
-    /// Canonical Assets Denom
-    pub canonical_asset: Denom,
     // Gas price
     pub gas_price: Coin,
     /// Gas scale
@@ -46,11 +44,6 @@ impl ConnectionConf {
         signer: Option<DangoSigner>,
     ) -> DangoResult<Box<dyn HyperlaneProvider>> {
         Ok(Box::new(DangoProvider::from_config(&self, domain, signer)?))
-    }
-
-    /// Returns canonical asset.
-    pub fn get_canonical_asset(&self) -> &Denom {
-        &self.canonical_asset
     }
 
     /// Returns gas price.

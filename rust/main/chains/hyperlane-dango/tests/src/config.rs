@@ -8,7 +8,6 @@ pub const DANGO_CONF_RPC: LazyLock<ConnectionConf> = LazyLock::new(|| Connection
         url: "".to_string(),
         chain_id: "dango".to_string(),
     }),
-    canonical_asset: todo!(),
     gas_price: Coin::new("uusdc", 0).unwrap(),
     gas_scale: 1.2,
     flat_gas_increase: 100_000,
