@@ -48,6 +48,13 @@ impl DangoProviderInterface for GraphQlProvider {
         unimplemented!()
     }
 
+    async fn query_app_config<T>(&self) -> DangoResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        unimplemented!()
+    }
+
     async fn send_message<S>(
         &self,
         _signer: &mut S,

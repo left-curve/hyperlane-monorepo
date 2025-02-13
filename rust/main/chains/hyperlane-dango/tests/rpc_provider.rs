@@ -1,5 +1,4 @@
 mod src;
-
 use {
     grug::{Addr, Denom, ResultExt, SigningClient},
     hyperlane_dango::DangoProviderInterface,

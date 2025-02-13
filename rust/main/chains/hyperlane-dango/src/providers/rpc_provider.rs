@@ -7,7 +7,7 @@ use {
     async_trait::async_trait,
     grug::{
         Addr, ContractInfo, CronOutcome, Denom, GasOption, Hash256, JsonDeExt, Message, NonEmpty,
-        QueryRequest, Signer, SigningClient, Tx, TxOutcome, Uint128,
+        Query, QueryRequest, Signer, SigningClient, Tx, TxOutcome, Uint128,
     },
     serde::{de::DeserializeOwned, Serialize},
     std::ops::Deref,
@@ -83,6 +83,17 @@ impl DangoProviderInterface for SigningClient {
         R::Response: DeserializeOwned,
     {
         Ok(self.deref().query_wasm_smart(contract, req, height).await?)
+    }
+
+    async fn query_app_config<T>(&self) -> DangoResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        Ok(self
+            .query_app(&Query::app_config(), None)
+            .await?
+            .as_app_config()
+            .deserialize_json()?)
     }
 
     async fn send_message<S>(

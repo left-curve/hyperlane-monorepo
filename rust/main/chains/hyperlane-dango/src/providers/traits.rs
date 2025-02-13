@@ -37,6 +37,10 @@ pub trait DangoProviderInterface {
         R::Message: Serialize + Send + Sync + 'static,
         R::Response: DeserializeOwned;
 
+    async fn query_app_config<T>(&self) -> DangoResult<T>
+    where
+        T: DeserializeOwned;
+
     /// Sign and broadcast a message.
     async fn send_message<S>(
         &self,

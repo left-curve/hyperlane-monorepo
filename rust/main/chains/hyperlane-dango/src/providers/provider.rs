@@ -11,7 +11,7 @@ use {
     futures_util::future::try_join_all,
     grug::{
         Addr, Coin, ContractInfo, Defined, Denom, GasOption, Hash256, Inner, JsonDeExt, Message,
-        QueryRequest, Signer, SigningClient, TxOutcome, Uint128,
+        QueryRequest, SigningClient, Uint128,
     },
     hyperlane_core::{
         BlockInfo, ChainInfo, ChainResult, HyperlaneChain, HyperlaneDomain, HyperlaneProvider,
@@ -24,6 +24,17 @@ use {
         str::FromStr,
     },
 };
+
+macro_rules! provider_wrapper {
+    ($method:ident ($($args:expr),*)) => {
+
+            match &self.provider {
+                ProviderWrapper::Rpc(provider) => provider.$method($($args),*).await,
+                ProviderWrapper::GraphQl(provider) => provider.$method($($args),*).await,
+            }
+
+    };
+}
 
 #[derive(Debug, Clone)]
 pub struct DangoProvider {
@@ -47,7 +58,7 @@ impl HyperlaneChain for DangoProvider {
 impl HyperlaneProvider for DangoProvider {
     /// Get block info for a given block height
     async fn get_block_by_height(&self, height: u64) -> ChainResult<BlockInfo> {
-        let block = self.provider.get_block(Some(height)).await?;
+        let block = self.get_block(Some(height)).await?;
 
         Ok(BlockInfo {
             hash: block.hash.convert(),
@@ -58,7 +69,7 @@ impl HyperlaneProvider for DangoProvider {
 
     /// Get txn info for a given txn hash
     async fn get_txn_by_hash(&self, hash: &H512) -> ChainResult<TxnInfo> {
-        let tx = self.provider.search_tx(hash.try_convert()?).await?;
+        let tx = self.search_tx(hash.try_convert()?).await?;
 
         let data: Metadata = tx.tx.data.deserialize_json().into_dango_error()?;
 
@@ -81,7 +92,7 @@ impl HyperlaneProvider for DangoProvider {
 
     /// Returns whether a contract exists at the provided address
     async fn is_contract(&self, address: &H256) -> ChainResult<bool> {
-        match self.provider.contract_info(address.try_convert()?).await {
+        match self.contract_info(address.try_convert()?).await {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
@@ -92,7 +103,6 @@ impl HyperlaneProvider for DangoProvider {
         let address = Addr::from_str(&address).into_dango_error()?;
 
         let balance = self
-            .provider
             .balance(address, self.connection_conf.gas_price.denom.clone())
             .await?;
 
@@ -101,7 +111,7 @@ impl HyperlaneProvider for DangoProvider {
 
     /// Fetch metrics related to this chain
     async fn get_chain_metrics(&self) -> ChainResult<Option<ChainInfo>> {
-        let block = self.provider.get_block(None).await?;
+        let block = self.get_block(None).await?;
         return Ok(Some(ChainInfo {
             latest_block: BlockInfo {
                 hash: block.hash.convert(),
@@ -134,14 +144,199 @@ impl DangoProvider {
         }
     }
 
-    pub fn gas_price(&self) -> &Coin {
-        &self.connection_conf.gas_price
-    }
+    // Query
 
+    /// Get block info for a given block height. If block height is None, return the latest block.
     pub async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
-        self.provider.get_block(height).await
+        // match &self.provider {
+        //     ProviderWrapper::Rpc(provider) => provider.get_block(height).await,
+        //     ProviderWrapper::GraphQl(provider) => provider.get_block(height).await,
+        // }
+        provider_wrapper!(get_block(height))
     }
 
+    /// Get block result for a given block height. If block height is None, return the latest block.
+    pub async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => provider.get_block_result(height).await,
+            ProviderWrapper::GraphQl(provider) => provider.get_block_result(height).await,
+        }
+    }
+
+    /// Get the balance of an address for a given denom.
+    pub async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => provider.balance(addr, denom).await,
+            ProviderWrapper::GraphQl(provider) => provider.balance(addr, denom).await,
+        }
+    }
+
+    /// Get transaction info for a given transaction hash.
+    pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => provider.search_tx(hash).await,
+            ProviderWrapper::GraphQl(provider) => provider.search_tx(hash).await,
+        }
+    }
+
+    pub async fn search_tx_loop(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
+        for _ in 0..self.connection_conf.search_retry_attempts {
+            let search_result = self.search_tx(hash).await?;
+
+            if search_result.outcome.result.is_ok() {
+                return Ok(search_result);
+            }
+
+            tokio::time::sleep(tokio::time::Duration::from_secs(
+                self.connection_conf.search_sleep_duration,
+            ))
+            .await;
+        }
+
+        Err(crate::DangoError::TxNotFound { hash })
+    }
+
+    /// Get the contract info for a given contract address.
+    pub async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => provider.contract_info(addr).await,
+            ProviderWrapper::GraphQl(provider) => provider.contract_info(addr).await,
+        }
+    }
+
+    /// Query a wasm smart contract.
+    pub async fn query_wasm_smart<R>(
+        &self,
+        contract: Addr,
+        req: R,
+        height: Option<u64>,
+    ) -> DangoResult<R::Response>
+    where
+        R: QueryRequest + Send + Sync + 'static,
+        R::Message: Serialize + Send + Sync + 'static,
+        R::Response: DeserializeOwned,
+    {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => {
+                provider.query_wasm_smart(contract, req, height).await
+            }
+            ProviderWrapper::GraphQl(provider) => {
+                provider.query_wasm_smart(contract, req, height).await
+            }
+        }
+    }
+
+    /// Query the chain config.
+    pub async fn query_app_config<T>(&self) -> DangoResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => provider.query_app_config().await,
+            ProviderWrapper::GraphQl(provider) => provider.query_app_config().await,
+        }
+    }
+
+    /// Simulate a message.
+    pub async fn simulate_message(&self, msg: Message) -> DangoResult<SimulateOutcome> {
+        let tx_outcome = match &self.provider {
+            ProviderWrapper::Rpc(provider) => {
+                provider
+                    .simulate_message(self.signer()?.read().await.deref(), msg)
+                    .await
+            }
+            ProviderWrapper::GraphQl(provider) => {
+                provider
+                    .simulate_message(self.signer()?.read().await.deref(), msg)
+                    .await
+            }
+        }?;
+
+        Ok(SimulateOutcome {
+            gas_adjusted: (tx_outcome.gas_used as f64 * self.connection_conf.gas_scale) as u64
+                + self.connection_conf.flat_gas_increase,
+            outcome: tx_outcome,
+        })
+    }
+
+    /// Estimate the costs of a message.
+    pub async fn estimate_costs(
+        &self,
+        msg: Message,
+    ) -> DangoResult<hyperlane_core::TxCostEstimate> {
+        let outcome = self.simulate_message(msg).await?;
+
+        Ok(hyperlane_core::TxCostEstimate {
+            gas_limit: outcome.gas_adjusted.into(),
+            gas_price: self.connection_conf.gas_price.amount.inner().into(),
+            l2_gas_limit: None,
+        })
+    }
+
+    // Execute
+
+    /// Sign and broadcast a message.
+    pub async fn send_message(&self, msg: Message, gas_limit: Option<u64>) -> DangoResult<Hash256> {
+        let signer = self.signer()?;
+
+        let nonce = self
+            .query_wasm_smart(
+                signer.read().await.address,
+                spot::QuerySeenNoncesRequest {},
+                None,
+            )
+            .await?
+            .last()
+            .map(|newest_nonce| newest_nonce + 1)
+            .unwrap_or(0);
+
+        signer.write().await.nonce = Defined::new(nonce);
+
+        let gas = if let Some(gas_limit) = gas_limit {
+            GasOption::Predefined { gas_limit }
+        } else {
+            GasOption::Simulate {
+                scale: self.connection_conf.gas_scale,
+                flat_increase: self.connection_conf.flat_gas_increase,
+            }
+        };
+
+        match &self.provider {
+            ProviderWrapper::Rpc(provider) => {
+                DangoProviderInterface::send_message(
+                    provider,
+                    signer.write().await.deref_mut(),
+                    msg,
+                    gas,
+                )
+                .await
+            }
+            ProviderWrapper::GraphQl(provider) => {
+                DangoProviderInterface::send_message(
+                    provider,
+                    signer.write().await.deref_mut(),
+                    msg,
+                    gas,
+                )
+                .await
+            }
+        }
+    }
+
+    /// Sign and broadcast a message.
+    pub async fn send_message_and_find(
+        &self,
+        msg: Message,
+        gas_limit: Option<u64>,
+    ) -> DangoResult<hyperlane_core::TxOutcome> {
+        let hash = self.send_message(msg, gas_limit).await?;
+        let outcome = self.search_tx_loop(hash).await?;
+        return Ok(outcome.into_hyperlane_outcome(hash, &self.connection_conf.gas_price));
+    }
+
+    // Utility
+
+    /// Get the block height for a given reorg period.
     pub async fn get_block_height_by_reorg_period(
         &self,
         reorg_period: ReorgPeriod,
@@ -164,6 +359,7 @@ impl DangoProvider {
         Ok(block_height)
     }
 
+    /// Get the block height for a given execution block.
     pub async fn get_block_height_by_execution_block(
         &self,
         execution_block: ExecutionBlock,
@@ -176,125 +372,6 @@ impl DangoProvider {
         }
     }
 
-    /// Get transaction info for a given transaction hash.
-    pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
-        self.provider.search_tx(hash).await
-    }
-
-    pub async fn search_tx_loop(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
-        for _ in 0..self.connection_conf.search_retry_attempts {
-            let search_result = self.search_tx(hash).await?;
-
-            if search_result.outcome.result.is_ok() {
-                return Ok(search_result);
-            }
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(
-                self.connection_conf.search_sleep_duration,
-            ))
-            .await;
-        }
-
-        Err(crate::DangoError::TxNotFound { hash })
-    }
-
-    /// Get the balance of an address for a given denom.
-    pub async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
-        self.provider.balance(addr, denom).await
-    }
-
-    /// Get the contract info for a given contract address.
-    pub async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
-        self.provider.contract_info(addr).await
-    }
-
-    /// Query a wasm smart contract.
-    pub async fn query_wasm_smart<R>(
-        &self,
-        contract: Addr,
-        req: R,
-        height: Option<u64>,
-    ) -> DangoResult<R::Response>
-    where
-        R: QueryRequest + Send + Sync + 'static,
-        R::Message: Serialize + Send + Sync + 'static,
-        R::Response: DeserializeOwned,
-    {
-        self.provider.query_wasm_smart(contract, req, height).await
-    }
-
-    /// Sign and broadcast a message.
-    pub async fn send_message(&self, msg: Message, gas_limit: Option<u64>) -> DangoResult<Hash256> {
-        let signer = self.signer()?;
-
-        let nonce = self
-            .provider
-            .query_wasm_smart(
-                signer.read().await.address,
-                spot::QuerySeenNoncesRequest {},
-                None,
-            )
-            .await?
-            .last()
-            .map(|newest_nonce| newest_nonce + 1)
-            .unwrap_or(0);
-
-        signer.write().await.nonce = Defined::new(nonce);
-
-        let gas = if let Some(gas_limit) = gas_limit {
-            GasOption::Predefined { gas_limit }
-        } else {
-            GasOption::Simulate {
-                scale: self.connection_conf.gas_scale,
-                flat_increase: self.connection_conf.flat_gas_increase,
-            }
-        };
-
-        let response = self
-            .provider
-            .send_message(signer.write().await.deref_mut(), msg, gas)
-            .await?;
-
-        Ok(response)
-    }
-
-    /// Sign and broadcast a message.
-    pub async fn send_message_and_find(
-        &self,
-        msg: Message,
-        gas_limit: Option<u64>,
-    ) -> DangoResult<hyperlane_core::TxOutcome> {
-        let hash = self.send_message(msg, gas_limit).await?;
-        let outcome = self.search_tx_loop(hash).await?;
-        return Ok(outcome.into_hyperlane_outcome(hash, self.gas_price()));
-    }
-
-    pub async fn simulate_message(&self, msg: Message) -> DangoResult<SimulateOutcome> {
-        let tx_outcome = self
-            .provider
-            .simulate_message(self.signer()?.read().await.deref(), msg)
-            .await?;
-
-        Ok(SimulateOutcome {
-            gas_adjusted: (tx_outcome.gas_used as f64 * self.connection_conf.gas_scale) as u64
-                + self.connection_conf.flat_gas_increase,
-            outcome: tx_outcome,
-        })
-    }
-
-    pub async fn estimate_costs(
-        &self,
-        msg: Message,
-    ) -> DangoResult<hyperlane_core::TxCostEstimate> {
-        let outcome = self.simulate_message(msg).await?;
-
-        Ok(hyperlane_core::TxCostEstimate {
-            gas_limit: outcome.gas_adjusted.into(),
-            gas_price: self.gas_price().amount.inner().into(),
-            l2_gas_limit: None,
-        })
-    }
-
     pub async fn fetch_logs(&self, range: RangeInclusive<u32>) -> DangoResult<Vec<BlockLogs>> {
         let tasks = range
             .into_iter()
@@ -305,8 +382,8 @@ impl DangoProvider {
     }
 
     async fn get_block_logs(&self, height: u64) -> DangoResult<BlockLogs> {
-        let block = self.provider.get_block(Some(height)).await?;
-        let block_result = self.provider.get_block_result(Some(height)).await?;
+        let block = self.get_block(Some(height)).await?;
+        let block_result = self.get_block_result(Some(height)).await?;
 
         let txs = block
             .txs
@@ -335,95 +412,4 @@ impl DangoProvider {
 pub enum ProviderWrapper {
     Rpc(SigningClient),
     GraphQl(GraphQlProvider),
-}
-
-impl ProviderWrapper {
-    /// Get block info for a given block height. If block height is None, return the latest block.
-    pub async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.get_block(height).await,
-            ProviderWrapper::GraphQl(provider) => provider.get_block(height).await,
-        }
-    }
-
-    pub async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.get_block_result(height).await,
-            ProviderWrapper::GraphQl(provider) => provider.get_block_result(height).await,
-        }
-    }
-
-    /// Get transaction info for a given transaction hash.
-    pub async fn search_tx(&self, hash: Hash256) -> DangoResult<SearchTxOutcome> {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.search_tx(hash).await,
-            ProviderWrapper::GraphQl(provider) => provider.search_tx(hash).await,
-        }
-    }
-
-    /// Get the balance of an address for a given denom.
-    pub async fn balance(&self, addr: Addr, denom: Denom) -> DangoResult<Uint128> {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.balance(addr, denom).await,
-            ProviderWrapper::GraphQl(provider) => provider.balance(addr, denom).await,
-        }
-    }
-
-    /// Get the contract info for a given contract address.
-    pub async fn contract_info(&self, addr: Addr) -> DangoResult<ContractInfo> {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.contract_info(addr).await,
-            ProviderWrapper::GraphQl(provider) => provider.contract_info(addr).await,
-        }
-    }
-
-    /// Query a wasm smart contract.
-    pub async fn query_wasm_smart<R>(
-        &self,
-        contract: Addr,
-        req: R,
-        height: Option<u64>,
-    ) -> DangoResult<R::Response>
-    where
-        R: QueryRequest + Send + Sync + 'static,
-        R::Message: Serialize + Send + Sync + 'static,
-        R::Response: DeserializeOwned,
-    {
-        match self {
-            ProviderWrapper::Rpc(provider) => {
-                provider.query_wasm_smart(contract, req, height).await
-            }
-            ProviderWrapper::GraphQl(provider) => {
-                provider.query_wasm_smart(contract, req, height).await
-            }
-        }
-    }
-
-    /// Sign and broadcast a message.
-    pub async fn send_message<S>(
-        &self,
-        signer: &mut S,
-        msg: Message,
-        gas: GasOption,
-    ) -> DangoResult<Hash256>
-    where
-        S: Signer + Send + Sync,
-    {
-        match self {
-            ProviderWrapper::Rpc(provider) => {
-                DangoProviderInterface::send_message(provider, signer, msg, gas).await
-            }
-            ProviderWrapper::GraphQl(provider) => provider.send_message(signer, msg, gas).await,
-        }
-    }
-
-    pub async fn simulate_message<S>(&self, signer: &S, msg: Message) -> DangoResult<TxOutcome>
-    where
-        S: Signer + Send + Sync,
-    {
-        match self {
-            ProviderWrapper::Rpc(provider) => provider.simulate_message(signer, msg).await,
-            ProviderWrapper::GraphQl(provider) => provider.simulate_message(signer, msg).await,
-        }
-    }
 }
