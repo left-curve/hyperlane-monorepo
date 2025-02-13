@@ -45,9 +45,4 @@ impl ConnectionConf {
     ) -> DangoResult<Box<dyn HyperlaneProvider>> {
         Ok(Box::new(DangoProvider::from_config(&self, domain, signer)?))
     }
-
-    /// Returns gas price.
-    pub fn get_gas_price(&self) -> &Coin {
-        &self.gas_price
-    }
 }
