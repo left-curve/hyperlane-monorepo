@@ -6,7 +6,9 @@ use {
         ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings,
     },
     hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, H256},
-    hyperlane_dango::{ConnectionConf, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig},
+    hyperlane_dango::{
+        ConnectionConf, DangoConvertor, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig,
+    },
     std::{collections::HashMap, num::NonZero, str::FromStr, sync::LazyLock},
 };
 
@@ -96,21 +98,32 @@ where
     }
 }
 
-// impl<T> ChainConfBuilder<T, Defined<ProviderConf>>
-// where
-//     T: MaybeDefined<CoreContractAddresses>,
-// {
-//     pub async fn build(self) -> ChainConf {
-//         let connection = build_connection_conf(self.provider_conf.into_inner());
+impl<T> ChainConfBuilder<T, Defined<ProviderConf>>
+where
+    T: MaybeDefined<CoreContractAddresses>,
+{
+    pub async fn build(self) -> ChainConf {
+        let connection = build_connection_conf(self.provider_conf.into_inner());
 
-//         let addresses = if let Some(addresses) = self.addresses.maybe_into_inner() {
-//             addresses
-//         } else {
-//             let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, None).unwrap();
-//             let res: AppConfig = provider.query_app_config().await.unwrap();
-//             re
-//         };
+        let addresses = if let Some(addresses) = self.addresses.maybe_into_inner() {
+            addresses
+        } else {
+            let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, None).unwrap();
+            let addresses = provider
+                .query_app_config::<AppConfig>()
+                .await
+                .unwrap()
+                .addresses
+                .hyperlane;
 
-//         todo!()
-//     }
-// }
+            CoreContractAddresses {
+                mailbox: addresses.mailbox.convert(),
+                interchain_gas_paymaster: addresses.fee.convert(),
+                validator_announce: addresses.va.convert(),
+                merkle_tree_hook: addresses.merkle.convert(),
+            }
+        };
+
+        todo!()
+    }
+}
