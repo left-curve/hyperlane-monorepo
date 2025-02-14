@@ -3,9 +3,10 @@ use {
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
     grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
     hyperlane_base::settings::{
-        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings,
+        parser::h_cosmos::Signer, ChainConf, ChainConnectionConf, CoreContractAddresses,
+        IndexSettings, SignerConf,
     },
-    hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, H256},
+    hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
     hyperlane_dango::{
         ConnectionConf, DangoConvertor, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig,
     },
@@ -60,56 +61,84 @@ pub fn build_chain_conf(connection: ConnectionConf) -> ChainConf {
     }
 }
 
-pub struct ChainConfBuilder<T = Undefined<CoreContractAddresses>, P = Undefined<ProviderConf>>
+pub struct ChainConfBuilder<T, P, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
     P: MaybeDefined<ProviderConf>,
+    S: MaybeDefined<SignerConf>,
 {
     addresses: T,
     provider_conf: P,
+    signer: S,
 }
 
-impl ChainConfBuilder<Undefined<CoreContractAddresses>, Undefined<ProviderConf>> {
+impl
+    ChainConfBuilder<
+        Undefined<CoreContractAddresses>,
+        Undefined<ProviderConf>,
+        Undefined<SignerConf>,
+    >
+{
     pub fn new() -> Self {
         Self {
             addresses: Undefined::new(),
             provider_conf: Undefined::new(),
+            signer: Undefined::new(),
         }
     }
 }
 
-impl<T> ChainConfBuilder<T, Undefined<ProviderConf>>
+impl<T, S> ChainConfBuilder<T, Undefined<ProviderConf>, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
+    S: MaybeDefined<SignerConf>,
 {
     pub fn with_provider_conf(
         self,
         provider_conf: ProviderConf,
-    ) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    ) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(provider_conf),
+            signer: self.signer,
         }
     }
 
-    pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(ProviderConf::Rpc(RPC_PROVIDER.clone().to_owned())),
+            signer: self.signer,
         }
     }
 
-    pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(ProviderConf::GraphQl(GRAPHQL_PROVIDER.clone().to_owned())),
+            signer: self.signer,
         }
     }
 }
 
-impl<T> ChainConfBuilder<T, Defined<ProviderConf>>
+impl<T, P> ChainConfBuilder<T, P, Undefined<SignerConf>>
 where
     T: MaybeDefined<CoreContractAddresses>,
+    P: MaybeDefined<ProviderConf>,
+{
+    pub fn with_signer(self, signer: SignerConf) -> ChainConfBuilder<T, P, Defined<SignerConf>> {
+        ChainConfBuilder {
+            addresses: self.addresses,
+            provider_conf: self.provider_conf,
+            signer: Defined::new(signer),
+        }
+    }
+}
+
+impl<T, S> ChainConfBuilder<T, Defined<ProviderConf>, S>
+where
+    T: MaybeDefined<CoreContractAddresses>,
+    S: MaybeDefined<SignerConf>,
 {
     pub async fn build(self) -> ChainConf {
         let connection = build_connection_conf(self.provider_conf.into_inner());
@@ -118,36 +147,36 @@ where
             addresses
         } else {
             let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, None).unwrap();
-            let res: AppConfig = provider.query_app_config().await.unwrap();
-            let hyperlane_adddresses = res.addresses.hyperlane;
+            let addresses = provider
+                .query_app_config::<AppConfig>()
+                .await
+                .unwrap()
+                .addresses
+                .hyperlane;
 
             CoreContractAddresses {
-                mailbox: hyperlane_adddresses.mailbox.convert(),
-                interchain_gas_paymaster: hyperlane_adddresses.fee.convert(),
-                validator_announce: hyperlane_adddresses.va.convert(),
-                merkle_tree_hook: hyperlane_adddresses.merkle.convert(),
+                mailbox: addresses.mailbox.convert(),
+                interchain_gas_paymaster: addresses.fee.convert(),
+                validator_announce: addresses.va.convert(),
+                merkle_tree_hook: addresses.merkle.convert(),
             }
         };
 
         ChainConf {
             domain: DANGO_DOMAIN,
-            signer: Some(hyperlane_base::settings::SignerConf::Dango {
-                username: Username::from_str("username").unwrap(),
-                key: HexByteArray::from_inner([0; 32]),
-                address: Addr::from_str("0xcf8c496fb3ff6abd98f2c2b735a0a148fed04b54").unwrap(),
-            }),
-            reorg_period: hyperlane_core::ReorgPeriod::Blocks(NonZero::new(32).unwrap()),
+            signer: self.signer.maybe_into_inner(),
+            reorg_period: ReorgPeriod::None,
             addresses,
-            connection: ChainConnectionConf::Dango(connection),
-            metrics_conf: PrometheusMiddlewareConf {
-                contracts: HashMap::new(),
-                chain: None,
-            },
-            index: IndexSettings {
-                from: 0,
-                chunk_size: 10,
-                mode: hyperlane_core::IndexMode::Block,
-            },
+            connection: ChainConnectionConf::Dango(ConnectionConf {
+                provider_conf: self.provider_conf.into_inner(),
+                gas_price: (),
+                gas_scale: (),
+                flat_gas_increase: (),
+                search_sleep_duration: (),
+                search_retry_attempts: (),
+            }),
+            metrics_conf: todo!(),
+            index: todo!(),
         }
     }
 }
