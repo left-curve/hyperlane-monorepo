@@ -1,7 +1,4 @@
-use std::fmt::Debug;
-
-use grug::Hash256;
-use hyperlane_core::ChainCommunicationError;
+use {grug::Hash256, hyperlane_core::ChainCommunicationError, std::fmt::Debug};
 
 pub type DangoResult<T> = Result<T, DangoError>;
 

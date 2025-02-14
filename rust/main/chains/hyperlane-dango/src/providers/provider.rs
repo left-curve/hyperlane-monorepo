@@ -31,7 +31,6 @@ macro_rules! use_provider {
             ProviderWrapper::Rpc(provider) => provider.$method($($args),*).await,
             ProviderWrapper::GraphQl(provider) => provider.$method($($args),*).await,
         }
-
     };
 }
 

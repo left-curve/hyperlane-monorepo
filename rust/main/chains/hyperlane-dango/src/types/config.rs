@@ -32,8 +32,8 @@ pub struct RpcConfig {
     pub url: String,
     pub chain_id: String,
 }
-#[derive(Debug, Clone)]
 
+#[derive(Debug, Clone)]
 pub struct GraphQlConfig {}
 
 impl ConnectionConf {
