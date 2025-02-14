@@ -3,9 +3,9 @@ use {
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
     grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
     hyperlane_base::settings::{
-        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings,
+        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
     },
-    hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, H256},
+    hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
     hyperlane_dango::{
         ConnectionConf, DangoConvertor, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig,
     },
@@ -60,47 +60,68 @@ pub fn build_chain_conf(connection: ConnectionConf) -> ChainConf {
     }
 }
 
-pub struct ChainConfBuilder<T = Undefined<CoreContractAddresses>, P = Undefined<ProviderConf>>
+pub struct ChainConfBuilder<T, P, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
     P: MaybeDefined<ProviderConf>,
+    S: MaybeDefined<SignerConf>,
 {
     addresses: T,
     provider_conf: P,
+    signer: S,
 }
 
-impl<T> ChainConfBuilder<T, Undefined<ProviderConf>>
+impl<T, S> ChainConfBuilder<T, Undefined<ProviderConf>, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
+    S: MaybeDefined<SignerConf>,
 {
     pub fn with_provider_conf(
         self,
         provider_conf: ProviderConf,
-    ) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    ) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(provider_conf),
+            signer: self.signer,
         }
     }
 
-    pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(ProviderConf::Rpc(RPC_PROVIDER.clone().to_owned())),
+            signer: self.signer,
         }
     }
 
-    pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>> {
+    pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
             provider_conf: Defined::new(ProviderConf::GraphQl(GRAPHQL_PROVIDER.clone().to_owned())),
+            signer: self.signer,
         }
     }
 }
 
-impl<T> ChainConfBuilder<T, Defined<ProviderConf>>
+impl <T, P> ChainConfBuilder<T, P, Undefined<SignerConf>>
+where 
+    T: MaybeDefined<CoreContractAddresses>,
+    P: MaybeDefined<ProviderConf>,
+{
+    pub fn with_signer(self, signer: SignerConf) -> ChainConfBuilder<T, P, Defined<SignerConf>> {
+        ChainConfBuilder {
+            addresses: self.addresses,
+            provider_conf: self.provider_conf,
+            signer: Defined::new(signer),
+        }
+    }
+}
+
+impl<T, S> ChainConfBuilder<T, Defined<ProviderConf>, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
+    S: MaybeDefined<SignerConf>,
 {
     pub async fn build(self) -> ChainConf {
         let connection = build_connection_conf(self.provider_conf.into_inner());
@@ -124,6 +145,21 @@ where
             }
         };
 
-        todo!()
+        ChainConf {
+            domain: DANGO_DOMAIN,
+            signer: self.signer.maybe_into_inner(),
+            reorg_period: ReorgPeriod::None,
+            addresses,
+            connection: ChainConnectionConf::Dango(ConnectionConf {
+                provider_conf: self.provider_conf.into_inner(),
+                gas_price: (),
+                gas_scale: (),
+                flat_gas_increase: (),
+                search_sleep_duration: (),
+                search_retry_attempts: (),
+            }),
+            metrics_conf: todo!(),
+            index: todo!(),
+        }
     }
 }
