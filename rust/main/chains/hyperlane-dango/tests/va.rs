@@ -8,11 +8,11 @@ use {
     },
     hyperlane_core::{Announcement, HyperlaneSigner, HyperlaneSignerExt, H256},
     hyperlane_dango::DangoConvertor,
-    src::config::ChainConfBuilder,
+    utils::config::ChainConfBuilder,
     std::str::FromStr,
 };
 
-mod src;
+pub mod utils;
 
 pub const MNEMONIC: &str = "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform";
 pub const ADDRESS: &str = "0x76e21577e7df18de93bbe82779bf3a16b2bacfd9";

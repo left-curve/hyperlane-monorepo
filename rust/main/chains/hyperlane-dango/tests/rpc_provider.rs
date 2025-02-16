@@ -1,13 +1,14 @@
-mod src;
 use {
     grug::{Addr, Denom, ResultExt, SigningClient},
     hyperlane_dango::DangoProviderInterface,
-    src::constants::{
+    std::str::FromStr,
+    utils::constants::{
         EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
         NOT_EXISTING_USER,
     },
-    std::str::FromStr,
 };
+
+pub mod utils;
 
 const RPC_URL: &str = "http://65.108.46.248:26657";
 
