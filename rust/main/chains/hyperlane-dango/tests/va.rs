@@ -8,7 +8,7 @@ use {
     },
     hyperlane_core::{Announcement, HyperlaneSigner, HyperlaneSignerExt, H256},
     hyperlane_dango::DangoConvertor,
-    src::ChainConfBuilder,
+    src::config::ChainConfBuilder,
     std::str::FromStr,
 };
 
