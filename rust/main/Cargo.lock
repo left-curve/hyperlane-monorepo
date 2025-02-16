@@ -6051,6 +6051,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bip32",
  "dango-client",
  "dango-types",
  "ethers-prometheus",
@@ -6060,6 +6061,7 @@ dependencies = [
  "hyperlane-base",
  "hyperlane-core",
  "hyperlane-types",
+ "prometheus",
  "serde",
  "tendermint",
  "tendermint-rpc",

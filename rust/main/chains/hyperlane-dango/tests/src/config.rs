@@ -3,8 +3,7 @@ use {
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
     grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
     hyperlane_base::settings::{
-        parser::h_cosmos::Signer, ChainConf, ChainConnectionConf, CoreContractAddresses,
-        IndexSettings, SignerConf,
+        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
     },
     hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
     hyperlane_dango::{
@@ -16,7 +15,7 @@ use {
 const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
 
 const RPC_PROVIDER: LazyLock<RpcConfig> = LazyLock::new(|| RpcConfig {
-    url: "".to_string(),
+    url: "http://localhost:26657".to_string(),
     chain_id: "dango".to_string(),
 });
 
@@ -167,16 +166,33 @@ where
             signer: self.signer.maybe_into_inner(),
             reorg_period: ReorgPeriod::None,
             addresses,
-            connection: ChainConnectionConf::Dango(ConnectionConf {
-                provider_conf: self.provider_conf.into_inner(),
-                gas_price: (),
-                gas_scale: (),
-                flat_gas_increase: (),
-                search_sleep_duration: (),
-                search_retry_attempts: (),
-            }),
-            metrics_conf: todo!(),
-            index: todo!(),
+            connection: ChainConnectionConf::Dango(connection),
+            metrics_conf: PrometheusMiddlewareConf {
+                contracts: HashMap::new(),
+                chain: None,
+            },
+            index: IndexSettings {
+                from: 0,
+                chunk_size: 10,
+                mode: hyperlane_core::IndexMode::Block,
+            },
+        }
+    }
+}
+
+impl<P, S> ChainConfBuilder<Undefined<CoreContractAddresses>, P, S>
+where
+    P: MaybeDefined<ProviderConf>,
+    S: MaybeDefined<SignerConf>,
+{
+    pub fn with_addresses(
+        self,
+        addresses: CoreContractAddresses,
+    ) -> ChainConfBuilder<Defined<CoreContractAddresses>, P, S> {
+        ChainConfBuilder {
+            addresses: Defined::new(addresses),
+            provider_conf: self.provider_conf,
+            signer: self.signer,
         }
     }
 }

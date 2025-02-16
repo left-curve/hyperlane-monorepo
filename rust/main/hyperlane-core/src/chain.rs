@@ -290,7 +290,7 @@ impl HyperlaneDomainProtocol {
             Sealevel => format!("{:?}", addr),
             Cosmos => format!("{:?}", addr),
             // TODO: DANGO
-            Dango => todo!(),
+            Dango => format!("{:?}", addr),
         }
     }
 }

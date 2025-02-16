@@ -28,3 +28,5 @@ url = { workspace = true }
 [dev-dependencies]
 hyperlane-base = { path = "../../hyperlane-base" }
 ethers-prometheus = { path = "../../ethers-prometheus" }
+prometheus = { workspace = true }
+bip32 = "0.5.3"
