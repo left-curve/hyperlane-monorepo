@@ -27,7 +27,7 @@ pub fn build_connection_conf(provider_conf: ProviderConf) -> ConnectionConf {
         gas_price: Coin::new("uusdc", 0).unwrap(),
         gas_scale: 1.2,
         flat_gas_increase: 100_000,
-        search_sleep_duration: 60,
+        search_sleep_duration: 2,
         search_retry_attempts: 5,
     }
 }

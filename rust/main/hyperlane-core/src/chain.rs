@@ -138,7 +138,7 @@ pub enum KnownHyperlaneDomain {
     Celo = 42220,
     Cheesechain = 383353,
     Cyber = 7560,
-    Dango = 69,
+    Dango = 88888888,
     DegenChain = 666666666,
     EclipseMainnet = 1408864445,
     Endurance = 648,
