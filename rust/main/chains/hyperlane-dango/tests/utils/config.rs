@@ -2,17 +2,24 @@ use {
     dango_types::{account_factory::Username, config::AppConfig},
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
     grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
-    hyperlane_base::settings::{
-        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
+    hyperlane_base::{
+        settings::{
+            ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
+        },
+        CoreMetrics,
     },
     hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
     hyperlane_dango::{
-        ConnectionConf, DangoConvertor, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig,
+        ConnectionConf, DangoConvertor, DangoProvider, DangoSigner, GraphQlConfig, ProviderConf,
+        RpcConfig,
     },
     std::{collections::HashMap, num::NonZero, str::FromStr, sync::LazyLock},
 };
 
 const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
+
+pub const EMPTY_METRICS: LazyLock<CoreMetrics> =
+    LazyLock::new(|| CoreMetrics::new("dango", 9090, prometheus::Registry::new()).unwrap());
 
 const RPC_PROVIDER: LazyLock<RpcConfig> = LazyLock::new(|| RpcConfig {
     url: "http://localhost:26657".to_string(),
@@ -139,29 +146,35 @@ where
     T: MaybeDefined<CoreContractAddresses>,
     S: MaybeDefined<SignerConf>,
 {
-    pub async fn build(self) -> ChainConf {
+    pub async fn build(self) -> TestSuite {
         let connection = build_connection_conf(self.provider_conf.into_inner());
+        let signer = if let Some(signer_conf) = self.signer.maybe_inner() {
+            Some(signer_conf.build::<DangoSigner>().await.unwrap())
+        } else {
+            None
+        };
+        let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, signer).unwrap();
 
+        // Query chain to retrieve the dango addresses (warp and hyperlane).
+        let app_addresses = provider
+            .query_app_config::<AppConfig>()
+            .await
+            .unwrap()
+            .addresses;
+
+        // If the addresses are provided, use them; otherwise, query the app config.
         let addresses = if let Some(addresses) = self.addresses.maybe_into_inner() {
             addresses
         } else {
-            let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, None).unwrap();
-            let addresses = provider
-                .query_app_config::<AppConfig>()
-                .await
-                .unwrap()
-                .addresses
-                .hyperlane;
-
             CoreContractAddresses {
-                mailbox: addresses.mailbox.convert(),
-                interchain_gas_paymaster: addresses.fee.convert(),
-                validator_announce: addresses.va.convert(),
-                merkle_tree_hook: addresses.merkle.convert(),
+                mailbox: app_addresses.hyperlane.mailbox.convert(),
+                interchain_gas_paymaster: app_addresses.hyperlane.fee.convert(),
+                validator_announce: app_addresses.hyperlane.va.convert(),
+                merkle_tree_hook: app_addresses.hyperlane.merkle.convert(),
             }
         };
 
-        ChainConf {
+        let chain_conf = ChainConf {
             domain: DANGO_DOMAIN,
             signer: self.signer.maybe_into_inner(),
             reorg_period: ReorgPeriod::None,
@@ -176,6 +189,12 @@ where
                 chunk_size: 10,
                 mode: hyperlane_core::IndexMode::Block,
             },
+        };
+
+        TestSuite {
+            chain_conf,
+            dango_provider: provider,
+            warp_address: app_addresses.warp,
         }
     }
 }
@@ -195,4 +214,10 @@ where
             signer: self.signer,
         }
     }
+}
+
+pub struct TestSuite {
+    pub chain_conf: ChainConf,
+    pub dango_provider: DangoProvider,
+    pub warp_address: Addr,
 }

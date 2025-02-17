@@ -3,19 +3,18 @@ use {
     dango_client::{SigningKey, SingleSigner},
     grug::{Addr, HexByteArray},
     hyperlane_base::{
-        settings::{parser::h_eth::SingletonSigner, CoreContractAddresses, SignerConf},
+        settings::{parser::h_eth::SingletonSigner, SignerConf},
         CoreMetrics,
     },
     hyperlane_core::{Announcement, HyperlaneSigner, HyperlaneSignerExt, H256},
-    hyperlane_dango::DangoConvertor,
-    utils::config::ChainConfBuilder,
     std::str::FromStr,
+    utils::config::ChainConfBuilder,
 };
 
 pub mod utils;
 
 pub const MNEMONIC: &str = "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform";
-pub const ADDRESS: &str = "0x76e21577e7df18de93bbe82779bf3a16b2bacfd9";
+pub const ADDRESS: &str = "0xa4f1194e28a176c15ec2fe499fec873ce4756f14";
 pub const USERNAME: &str = "user_1";
 pub const COIN_TYPE: usize = 60;
 
@@ -31,29 +30,17 @@ async fn validator() {
     )
     .unwrap();
 
-    let chain_conf = ChainConfBuilder::new()
+    let test_suite = ChainConfBuilder::new()
         .with_default_rpc_provider()
         .with_signer(SignerConf::Dango {
             username: user.username,
             key,
             address: user.address,
         })
-        .with_addresses(CoreContractAddresses {
-            mailbox: Addr::from_str("0x51e5de0593d0ea0647a93925c91dafb98c36738f")
-                .unwrap()
-                .convert(),
-            interchain_gas_paymaster: Addr::from_str("0x938f2cab274baff29ed1515f205df1c58464afc9")
-                .unwrap()
-                .convert(),
-            validator_announce: Addr::from_str("0x938f2cab274baff29ed1515f205df1c58464afc9")
-                .unwrap()
-                .convert(),
-            merkle_tree_hook: Addr::from_str("0x938f2cab274baff29ed1515f205df1c58464afc9")
-                .unwrap()
-                .convert(),
-        })
         .build()
         .await;
+
+    let chain_conf = test_suite.chain_conf;
 
     // Create a validator announce instance.
     let va = chain_conf
@@ -89,8 +76,6 @@ async fn validator() {
         mailbox_domain: chain_conf.domain.id(),
         storage_location: storage_location.clone(),
     };
-
-    println!("announcement: {:?}", announcement);
 
     let signed_announcement = signer.sign(announcement).await.unwrap();
 
