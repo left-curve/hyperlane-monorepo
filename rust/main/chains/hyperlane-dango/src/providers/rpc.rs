@@ -6,8 +6,9 @@ use {
     },
     async_trait::async_trait,
     grug::{
-        Addr, ContractInfo, CronOutcome, Denom, GasOption, Hash256, JsonDeExt, Message, NonEmpty,
-        Query, QueryRequest, Signer, SigningClient, Tx, TxOutcome, Uint128,
+        Addr, Base64Encoder, ContractInfo, CronOutcome, Denom, Encoder, GasOption, Hash256,
+        JsonDeExt, Message, NonEmpty, Query, QueryRequest, Signer, SigningClient, Tx, TxOutcome,
+        Uint128,
     },
     serde::{de::DeserializeOwned, Serialize},
     std::ops::Deref,
@@ -128,7 +129,11 @@ fn from_tm_tx_result(tm_tx_result: abci::types::ExecTxResult) -> DangoResult<TxO
         } else {
             Err(tm_tx_result.log)
         },
-        events: tm_tx_result.data.deserialize_json()?,
+        events: Base64Encoder::ENCODING
+            .decode(&tm_tx_result.data)
+            .unwrap()
+            .deserialize_json()
+            .unwrap(),
     })
 }
 
