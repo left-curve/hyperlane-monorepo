@@ -10,14 +10,13 @@ use {
         ConnectionConf, DangoConvertor, DangoProvider, GraphQlConfig, ProviderConf, RpcConfig,
     },
     std::{collections::HashMap, num::NonZero, str::FromStr, sync::LazyLock},
+    url::Url,
 };
 
 const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
 
-const RPC_PROVIDER: LazyLock<RpcConfig> = LazyLock::new(|| RpcConfig {
-    url: "http://localhost:26657".to_string(),
-    chain_id: "dango".to_string(),
-});
+const CHAIN_ID: &str = "dango";
+const URL: &str = "http://localhost:26657";
 
 const GRAPHQL_PROVIDER: LazyLock<GraphQlConfig> = LazyLock::new(|| GraphQlConfig {});
 
@@ -29,6 +28,8 @@ pub fn build_connection_conf(provider_conf: ProviderConf) -> ConnectionConf {
         flat_gas_increase: 100_000,
         search_sleep_duration: 2,
         search_retry_attempts: 5,
+        chain_id: CHAIN_ID.to_owned(),
+        rpcs: vec![Url::parse(URL).unwrap()],
     }
 }
 
@@ -106,7 +107,7 @@ where
     pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
             addresses: self.addresses,
-            provider_conf: Defined::new(ProviderConf::Rpc(RPC_PROVIDER.clone().to_owned())),
+            provider_conf: Defined::new(ProviderConf::Rpc(RpcConfig {})),
             signer: self.signer,
         }
     }

@@ -2,6 +2,8 @@ use {
     crate::{DangoProvider, DangoResult, DangoSigner},
     grug::Coin,
     hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
+    serde::{Deserialize, Serialize},
+    url::Url,
 };
 
 /// Dango connection configuration
@@ -19,21 +21,23 @@ pub struct ConnectionConf {
     pub search_sleep_duration: u64,
     /// Search retry attempts
     pub search_retry_attempts: u64,
+    pub chain_id: String,
+    pub rpcs: Vec<Url>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ProviderConf {
     Rpc(RpcConfig),
     GraphQl(GraphQlConfig),
 }
 
-#[derive(Debug, Clone)]
-pub struct RpcConfig {
-    pub url: String,
-    pub chain_id: String,
-}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
-#[derive(Debug, Clone)]
+pub struct RpcConfig {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct GraphQlConfig {}
 
 impl ConnectionConf {
