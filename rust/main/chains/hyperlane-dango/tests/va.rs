@@ -68,6 +68,17 @@ async fn validator() {
         singner_handler.run().await;
     });
 
+    // Assert that there is no announcement_location for this validator.
+    let validators: [H256; 1] = [signer.eth_address().into()];
+    if let Some(_) = va
+        .get_announced_storage_locations(&validators)
+        .await
+        .unwrap()
+        .first()
+    {
+        panic!("There should be no announcement onchain.");
+    };
+
     // Announce the validator.
     let storage_location = "Test/storage/location".to_string();
     let announcement = Announcement {
