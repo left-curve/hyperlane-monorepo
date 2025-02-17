@@ -1,0 +1,1 @@
+cargo run --bin validator -- --originChainName dango --checkpointSyncer.type localStorage --checkpointSyncer.path dango_local_ann --validator.type hexKey --validator.key 0x76e21577e7df18de93bbe82779bf3a16b2bacfd9

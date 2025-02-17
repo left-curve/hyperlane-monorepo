@@ -60,6 +60,8 @@ impl FromRawConf<RawValidatorSettings> for ValidatorSettings {
 
         let p = ValueParser::new(cwp.clone(), &raw.0);
 
+        println!("{p:?}");
+
         let origin_chain_name = p
             .chain(&mut err)
             .get_key("originChainName")
@@ -153,6 +155,8 @@ impl FromRawConf<RawValidatorSettings> for ValidatorSettings {
 fn parse_checkpoint_syncer(syncer: ValueParser) -> ConfigResult<CheckpointSyncerConf> {
     let mut err = ConfigParsingError::default();
     let syncer_type = syncer.chain(&mut err).get_key("type").parse_string().end();
+
+    println!("syncer_type: {:?}", syncer_type);
 
     match syncer_type {
         Some("localStorage") => {

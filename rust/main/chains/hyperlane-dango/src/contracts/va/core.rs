@@ -1,7 +1,7 @@
 use {
     crate::{
-        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult,
-        DangoSigner, DangoConvertor, IntoDangoError, TryDangoConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoConvertor, DangoResult,
+        DangoSigner, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
@@ -53,7 +53,8 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 QueryAnnouncedStorageLocationsRequest { validators },
                 None,
             )
-            .await?;
+            .await
+            .unwrap_or_default();
 
         Ok(response
             .into_values()

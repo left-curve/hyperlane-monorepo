@@ -1,6 +1,8 @@
 use {
+    dango_types::config::AppConfig,
     grug::{Addr, Denom, ResultExt, SigningClient},
-    hyperlane_dango::DangoProviderInterface,
+    hyperlane_core::H256,
+    hyperlane_dango::{DangoConvertor, DangoProviderInterface},
     std::str::FromStr,
     utils::constants::{
         EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
@@ -79,4 +81,18 @@ async fn rpc_test() {
     }
 
     // TODO add the test for tx.
+}
+
+#[tokio::test]
+async fn contracts() {
+    let client = SigningClient::connect("dango", "http://localhost:26657").unwrap();
+
+    let cfg: AppConfig = client.query_app_config().await.unwrap();
+
+    let mailbox: H256 = cfg.addresses.hyperlane.mailbox.convert();
+    println!("Mailbox: {:?}", mailbox);
+
+    let va: H256 = cfg.addresses.hyperlane.va.convert();
+    println!("VA: {:?}", va);
+
 }
