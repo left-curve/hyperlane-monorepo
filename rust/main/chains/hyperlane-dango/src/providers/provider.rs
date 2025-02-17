@@ -128,11 +128,15 @@ impl DangoProvider {
         signer: Option<DangoSigner>,
     ) -> DangoResult<Self> {
         match &config.provider_conf {
-            ProviderConf::Rpc(rpc_config) => Ok(DangoProvider {
+            ProviderConf::Rpc(_) => Ok(DangoProvider {
                 domain,
                 provider: ProviderWrapper::Rpc(SigningClient::connect(
-                    rpc_config.chain_id.clone(),
-                    rpc_config.url.as_str(),
+                    config.chain_id.clone(),
+                    config
+                        .rpcs
+                        .first()
+                        .ok_or(anyhow!("rpcs is empty"))?
+                        .as_str(),
                 )?),
                 connection_conf: config.clone(),
                 signer,

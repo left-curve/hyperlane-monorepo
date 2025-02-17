@@ -26,7 +26,10 @@ tokio = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-hyperlane-base = { path = "../../hyperlane-base" }
+bip32             = "0.5.3"
 ethers-prometheus = { path = "../../ethers-prometheus" }
-prometheus = { workspace = true }
-bip32 = "0.5.3"
+hyperlane-base    = { path = "../../hyperlane-base" }
+prometheus        = { workspace = true }
+relayer           = { path = "../../agents/relayer" }
+validator         = { path = "../../agents/validator" }
+
