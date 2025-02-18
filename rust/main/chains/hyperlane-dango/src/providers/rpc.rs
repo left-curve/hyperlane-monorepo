@@ -138,14 +138,10 @@ fn from_tm_tx_result(tm_tx_result: abci::types::ExecTxResult) -> DangoResult<TxO
 }
 
 fn from_tm_cron_result(tm_cron_result: abci::Event) -> DangoResult<CronOutcome> {
-    Ok(CronOutcome {
-        gas_limit: None,
-        gas_used: 0,
-        cron_event: tm_cron_result
-            .attributes
-            .first()
-            .ok_or(DangoError::CronEvtNotFound {})?
-            .value_str()?
-            .deserialize_json()?,
-    })
+    Ok(tm_cron_result
+        .attributes
+        .first()
+        .unwrap()
+        .value_bytes()
+        .deserialize_json()?)
 }
