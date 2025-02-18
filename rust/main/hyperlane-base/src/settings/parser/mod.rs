@@ -346,12 +346,40 @@ fn parse_signer(signer: ValueParser) -> ConfigResult<SignerConf> {
                 account_address_type,
             })
         }};
+        (dango) => {{
+            let key = signer
+                .chain(&mut err)
+                .get_key("key")
+                .parse_value::<grug::HexByteArray<32>>("fail deserialize dango key")
+                .end();
+
+            let username = signer
+                .chain(&mut err)
+                .get_key("username")
+                .parse_value::<dango_types::account_factory::Username>(
+                    "fail deserialize dango username",
+                )
+                .end();
+
+            let address = signer
+                .chain(&mut err)
+                .get_key("address")
+                .parse_value::<grug::Addr>("fail deserialize dango address")
+                .end();
+
+            err.into_result(SignerConf::Dango {
+                username: username.unwrap(),
+                key: key.unwrap(),
+                address: address.unwrap(),
+            })
+        }};
     }
 
     match signer_type {
         Some("hexKey") => parse_signer!(hexKey),
         Some("aws") => parse_signer!(aws),
         Some("cosmosKey") => parse_signer!(cosmosKey),
+        Some("dango") => parse_signer!(dango),
         Some(t) => {
             Err(eyre!("Unknown signer type `{t}`")).into_config_result(|| &signer.cwp + "type")
         }

@@ -8,7 +8,7 @@ use {
     },
     hyperlane_core::{Announcement, HyperlaneSigner, HyperlaneSignerExt, H256},
     std::str::FromStr,
-    utils::config::ChainConfBuilder,
+    utils::{config::ChainConfBuilder, constants::COIN_TYPE},
 };
 
 pub mod utils;
@@ -16,7 +16,6 @@ pub mod utils;
 pub const MNEMONIC: &str = "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform";
 pub const ADDRESS: &str = "0xa4f1194e28a176c15ec2fe499fec873ce4756f14";
 pub const USERNAME: &str = "user_1";
-pub const COIN_TYPE: usize = 60;
 
 #[tokio::test]
 async fn validator() {
@@ -192,4 +191,13 @@ async fn validator() {
     } else {
         panic!("No announcement location found");
     }
+}
+
+#[tokio::test]
+async fn private_key() {
+    let mnemonic = Mnemonic::new(MNEMONIC, Language::English).unwrap();
+    let singing_key = SigningKey::from_mnemonic(&mnemonic, COIN_TYPE).unwrap();
+    let key = HexByteArray::from(singing_key.private_key());
+
+    println!("{key}")
 }

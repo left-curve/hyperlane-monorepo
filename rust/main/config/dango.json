@@ -18,7 +18,7 @@
             "mailbox": "0x00000000000000000000000051e5de0593d0ea0647a93925c91dafb98c36738f",
             "interchainGasPaymaster": "0x3b6044acd6767f017e99318AA6Ef93b7B06A5a22",
             "validatorAnnounce": "0x000000000000000000000000938f2cab274baff29ed1515f205df1c58464afc9",
-            "merkleTreeHook": "0x748040afB89B8FdBb992799808215419d36A0930",
+            "merkleTreeHook": "0x0000000000000000000000000f4f47e2bd07b308bd1b3b4b93d72412e874ca8a",
             "chain_id": "dev-1",
             "provder_config": {
                 "rpc": {}
