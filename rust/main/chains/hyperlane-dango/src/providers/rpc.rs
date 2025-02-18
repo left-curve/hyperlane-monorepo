@@ -1,9 +1,6 @@
 use {
     super::DangoProviderInterface,
-    crate::{
-        BlockOutcome, BlockResultOutcome, DangoError, DangoResult, SearchTxOutcome,
-        TryDangoConvertor,
-    },
+    crate::{BlockOutcome, BlockResultOutcome, DangoResult, SearchTxOutcome, TryDangoConvertor},
     async_trait::async_trait,
     grug::{
         Addr, Base64Encoder, ContractInfo, CronOutcome, Denom, Encoder, GasOption, Hash256,

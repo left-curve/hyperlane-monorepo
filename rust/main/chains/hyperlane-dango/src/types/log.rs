@@ -3,7 +3,7 @@ use {
     crate::{DangoConvertor, DangoResult},
     grug::{
         Addr, Addressable, CheckedContractEvent, CronOutcome, Defined, EventFilter, EventId,
-        Hash256, HashExt, JsonDeExt, SearchEvent, StdResult, Tx, Undefined,
+        Hash256, HashExt, JsonDeExt, SearchEvent, Tx, Undefined,
     },
     hyperlane_core::LogMeta,
     serde::de::DeserializeOwned,
