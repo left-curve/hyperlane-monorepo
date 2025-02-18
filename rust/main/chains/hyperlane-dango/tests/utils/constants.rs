@@ -23,16 +23,20 @@ pub const OWNER: LazyLock<UserInfo> = LazyLock::new(|| {
 
 pub const USER_1: LazyLock<UserInfo> = LazyLock::new(|| {
     UserInfo::new(
+        "user_1",
+        "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform",
+        "0xa4f1194e28a176c15ec2fe499fec873ce4756f14",
+    )
+});
+
+pub const USER_2: LazyLock<UserInfo> = LazyLock::new(|| {
+    UserInfo::new(
         "user_2",
         "visit spend fatigue fork acid junk prize monitor bonus gym frog educate blouse mountain beyond loop nominee argue car shield mixed chunk current force",
         "0x1598c2b6ae4660c4001cd2bc0c96064d24198a82",
     )
 });
 
-pub const USER_2: LazyLock<UserInfo> = LazyLock::new(|| {
-    UserInfo::new(
-        "user_1",
-        "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform",
-        "0x7f1194e28a176c15ec2fe499fec873ce4756f14",
-    )
-});
+pub const LOCALHOST: &str = "http://localhost:26657";
+
+pub const CHAIN_ID: &str = "dango";
