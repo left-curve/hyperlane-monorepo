@@ -15,7 +15,7 @@ pub const COIN_TYPE: usize = 60;
 
 pub const OWNER: LazyLock<UserInfo> = LazyLock::new(|| {
     UserInfo::new(
-        "user_1",
+        "owner",
         "junior fault athlete legal inject duty board school anger mesh humor file desk element ticket shop engine paper question love castle ghost bring discover",
         "0xe430fa3a3f13c237fd2f20f8242857cef182b0bd",
     )

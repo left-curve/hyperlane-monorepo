@@ -55,10 +55,7 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
             )
             .await?;
 
-        Ok(response
-            .into_values()
-            .map(|v| v.into_iter().collect())
-            .collect())
+        Ok(response.into_values().collect())
     }
 
     /// Announce a storage location for a validator

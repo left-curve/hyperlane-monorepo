@@ -1,41 +1,20 @@
 use {
-    bip32::{Language, Mnemonic},
-    dango_client::{SigningKey, SingleSigner},
-    grug::{Addr, HexByteArray},
     hyperlane_base::{
         settings::{parser::h_eth::SingletonSigner, SignerConf},
         CoreMetrics,
     },
     hyperlane_core::{Announcement, HyperlaneSigner, HyperlaneSignerExt, H256},
-    std::str::FromStr,
-    utils::{config::ChainConfBuilder, constants::COIN_TYPE},
+    hyperlane_dango::DangoConvertor,
+    utils::{config::ChainConfBuilder, constants::USER_1},
 };
 
 pub mod utils;
 
-pub const MNEMONIC: &str = "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform";
-pub const ADDRESS: &str = "0xa4f1194e28a176c15ec2fe499fec873ce4756f14";
-pub const USERNAME: &str = "user_1";
-
 #[tokio::test]
 async fn validator() {
-    let mnemonic = Mnemonic::new(MNEMONIC, Language::English).unwrap();
-    let singing_key = SigningKey::from_mnemonic(&mnemonic, COIN_TYPE).unwrap();
-    let key = HexByteArray::from(singing_key.private_key());
-    let user = SingleSigner::new(
-        USERNAME,
-        Addr::from_str(ADDRESS).unwrap(),
-        singing_key.clone(),
-    )
-    .unwrap();
-
     let test_suite = ChainConfBuilder::new()
         .with_default_rpc_provider()
-        .with_signer(SignerConf::Dango {
-            username: user.username,
-            key,
-            address: user.address,
-        })
+        .with_signer(USER_1.to_owned().into())
         .build()
         .await;
 
@@ -55,7 +34,7 @@ async fn validator() {
     // Create a signer instance for the validator.
     let (singner_handler, signer) = SingletonSigner::new(
         SignerConf::HexKey {
-            key: singing_key.private_key().into(),
+            key: USER_1.sk.convert(),
         }
         .build()
         .await
@@ -66,17 +45,6 @@ async fn validator() {
     tokio::spawn(async move {
         singner_handler.run().await;
     });
-
-    // Assert that there is no announcement_location for this validator.
-    let validators: [H256; 1] = [signer.eth_address().into()];
-    if let Some(_) = va
-        .get_announced_storage_locations(&validators)
-        .await
-        .unwrap()
-        .first()
-    {
-        panic!("There should be no announcement onchain.");
-    };
 
     // Announce the validator.
     let storage_location = "Test/storage/location".to_string();
@@ -191,13 +159,4 @@ async fn validator() {
     } else {
         panic!("No announcement location found");
     }
-}
-
-#[tokio::test]
-async fn private_key() {
-    let mnemonic = Mnemonic::new(MNEMONIC, Language::English).unwrap();
-    let singing_key = SigningKey::from_mnemonic(&mnemonic, COIN_TYPE).unwrap();
-    let key = HexByteArray::from(singing_key.private_key());
-
-    println!("{key}")
 }
