@@ -1,6 +1,6 @@
 use {
     super::SearchTxOutcome,
-    crate::{DangoResult, DangoConvertor},
+    crate::{DangoConvertor, DangoResult},
     grug::{
         Addr, Addressable, CheckedContractEvent, CronOutcome, Defined, EventFilter, EventId,
         Hash256, HashExt, JsonDeExt, SearchEvent, StdResult, Tx, Undefined,
@@ -117,13 +117,19 @@ impl<H> SearchLog for BlockLogs<H> {
                 .take()
                 .all()
                 .into_iter()
-                .map(|e| e.event.data.deserialize_json().map(|c| (c, e.id)))
-                .collect::<StdResult<Vec<(E, _)>>>()
+                .filter_map(|filter_event| {
+                    if let Ok(event) = filter_event.event.data.deserialize_json::<E>() {
+                        Some((event, filter_event.id))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<(E, _)>>()
         };
 
         let mut outcome_tx = vec![];
         for (idx, tx) in self.txs.into_iter().enumerate() {
-            let res = filter_closure(tx.outcome.events.search_event::<CheckedContractEvent>())?;
+            let res = filter_closure(tx.outcome.events.search_event::<CheckedContractEvent>());
             if !res.is_empty() {
                 outcome_tx.push((idx as u32, tx.tx, res));
             }
@@ -131,7 +137,7 @@ impl<H> SearchLog for BlockLogs<H> {
 
         let mut cron_outcome = vec![];
         for (idx, cron) in self.crons.into_iter().enumerate() {
-            let res = filter_closure(cron.cron_event.search_event::<CheckedContractEvent>())?;
+            let res = filter_closure(cron.cron_event.search_event::<CheckedContractEvent>());
             if !res.is_empty() {
                 cron_outcome.push((idx as u32, res));
             }
