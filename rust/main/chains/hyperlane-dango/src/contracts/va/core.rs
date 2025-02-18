@@ -53,8 +53,7 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 QueryAnnouncedStorageLocationsRequest { validators },
                 None,
             )
-            .await
-            .unwrap_or_default();
+            .await?;
 
         Ok(response
             .into_values()
