@@ -1,45 +1,24 @@
 pub mod utils;
 
 use {
-    bip32::{Language, Mnemonic},
-    dango_client::{SigningKey, SingleSigner},
     dango_types::warp::{ExecuteMsg, Route},
-    grug::{Addr, Coin, Coins, Denom, HexByteArray, Message},
-    hyperlane_base::settings::SignerConf,
+    grug::{Coin, Coins, Denom, Message},
     hyperlane_core::ReorgPeriod,
     std::{str::FromStr, sync::LazyLock},
-    utils::config::{ChainConfBuilder, DANGO_DOMAIN, EMPTY_METRICS},
+    utils::{
+        config::{ChainConfBuilder, DANGO_DOMAIN, EMPTY_METRICS},
+        constants::OWNER,
+    },
 };
-
-pub const MNEMONIC: &str = "junior fault athlete legal inject duty board school anger mesh humor file desk element ticket shop engine paper question love castle ghost bring discover";
-pub const USER_ADDRESS: &str = "0xe430fa3a3f13c237fd2f20f8242857cef182b0bd";
-pub const USERNAME: &str = "owner";
-pub const COIN_TYPE: usize = 60;
-
-pub const WARP: &str = "0x00d4f0a556bfeaa12e1451d74830cf483153af91";
 
 pub const DANGO_DENOM: LazyLock<Denom> = LazyLock::new(|| Denom::from_str("udng").unwrap());
 pub const DESTINATION_DOMAIN: u32 = 1;
 
 #[tokio::test]
 async fn merkle_tree() {
-    let mnemonic = Mnemonic::new(MNEMONIC, Language::English).unwrap();
-    let singing_key = SigningKey::from_mnemonic(&mnemonic, COIN_TYPE).unwrap();
-    let key = HexByteArray::from(singing_key.private_key());
-    let user = SingleSigner::new(
-        USERNAME,
-        Addr::from_str(USER_ADDRESS).unwrap(),
-        singing_key.clone(),
-    )
-    .unwrap();
-
     let test_suite = ChainConfBuilder::new()
         .with_default_rpc_provider()
-        .with_signer(SignerConf::Dango {
-            username: user.username,
-            key,
-            address: user.address,
-        })
+        .with_signer(OWNER.to_owned().into())
         .build()
         .await;
 
@@ -65,7 +44,7 @@ async fn merkle_tree() {
             destination_domain: DESTINATION_DOMAIN,
             route: Route {
                 // The address is not important for the test.
-                address: Addr::from_str(USER_ADDRESS).unwrap().into(),
+                address: OWNER.address.into(),
                 fee: 0.into(),
             },
         },
@@ -119,7 +98,7 @@ async fn merkle_tree() {
         test_suite.warp_address,
         &ExecuteMsg::TransferRemote {
             destination_domain: 1,
-            recipient: Addr::from_str(USER_ADDRESS).unwrap().into(),
+            recipient: OWNER.address.into(),
             metadata: None,
         },
         Coin::new(DANGO_DENOM.clone(), 100).unwrap(),
