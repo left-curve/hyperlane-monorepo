@@ -17,7 +17,7 @@ use {
     url::Url,
 };
 
-const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
+pub const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
 
 pub const EMPTY_METRICS: LazyLock<CoreMetrics> =
     LazyLock::new(|| CoreMetrics::new("dango", 9090, prometheus::Registry::new()).unwrap());

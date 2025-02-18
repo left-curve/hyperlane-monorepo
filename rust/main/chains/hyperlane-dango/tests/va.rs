@@ -14,7 +14,7 @@ use {
 pub mod utils;
 
 pub const MNEMONIC: &str = "impulse youth electric wink tomorrow fruit squirrel practice effort mimic leave year visual calm surge system census tower involve wild symbol coral purchase uniform";
-pub const ADDRESS: &str = "0x76e21577e7df18de93bbe82779bf3a16b2bacfd9";
+pub const ADDRESS: &str = "0xa4f1194e28a176c15ec2fe499fec873ce4756f14";
 pub const USERNAME: &str = "user_1";
 pub const COIN_TYPE: usize = 60;
 
