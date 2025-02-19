@@ -16,10 +16,10 @@ use ratatui::{
 use super::scope_child::ScopeChild;
 
 pub struct Printer {
-    _handle: thread::JoinHandle<()>,
+    pub handle: thread::JoinHandle<()>,
     messages: Arc<Mutex<Vec<String>>>,
-    agent: Arc<Mutex<Option<ScopeChild>>>,
-    dango: Arc<Mutex<Option<ScopeChild>>>,
+    pub agent: Arc<Mutex<Option<ScopeChild>>>,
+    pub dango: Arc<Mutex<Option<ScopeChild>>>,
 }
 
 impl Printer {
@@ -40,39 +40,46 @@ impl Printer {
             let backend = CrosstermBackend::new(stdout);
             let mut terminal = Terminal::new(backend).unwrap();
 
-            let mut agent_messages = vec![];
-            let mut dango_messages = vec![];
+            let agent_messages: Arc<Mutex<Vec<String>>> = Default::default();
+            let dango_messages: Arc<Mutex<Vec<String>>> = Default::default();
+
+            let thread_agent_messages = agent_messages.clone();
+            let thread_dango_messages = dango_messages.clone();
+
+            thread::spawn(move || loop {
+                if let Some(agent) = thread_agent.lock().unwrap().as_deref_mut() {
+                    if let Some(std_out) = agent.stdout.take() {
+                        thread_agent_messages
+                            .lock()
+                            .unwrap()
+                            .push("build agent bin...".to_string());
+                        for line in std::io::BufReader::new(std_out).lines() {
+                            let line = line.unwrap();
+                            thread_agent_messages.lock().unwrap().push(line);
+                        }
+                    }
+                }
+            });
+
+            thread::spawn(move || loop {
+                if let Some(agent) = thread_dango.lock().unwrap().as_deref_mut() {
+                    if let Some(std_out) = agent.stdout.take() {
+                        for line in std::io::BufReader::new(std_out).lines() {
+                            let line = line.unwrap();
+                            thread_dango_messages.lock().unwrap().push(line);
+                        }
+                    }
+                }
+            });
 
             loop {
                 let messages: Vec<String> = thread_messages.lock().unwrap().clone();
 
-                if let Some(agent) = thread_agent.lock().unwrap().as_deref_mut() {
-                    if let Some(std_out) = agent.stdout.take() {
-                        let new_lines = std::io::BufReader::new(std_out)
-                            .lines()
-                            .collect::<Result<Vec<_>, _>>()
-                            .unwrap();
-
-                        agent_messages.extend(new_lines);
-                    }
-                }
-
-                if let Some(dango) = thread_dango.lock().unwrap().as_deref_mut() {
-                    if let Some(std_out) = dango.stdout.take() {
-                        let new_lines = std::io::BufReader::new(std_out)
-                            .lines()
-                            .collect::<Result<Vec<_>, _>>()
-                            .unwrap();
-
-                        dango_messages.extend(new_lines);
-                    }
-                }
-
                 draw(
                     &mut terminal,
                     messages,
-                    agent_messages.clone(),
-                    dango_messages.clone(),
+                    dango_messages.lock().unwrap().clone(),
+                    agent_messages.lock().unwrap().clone(),
                 );
 
                 sleep(Duration::from_millis(50));
@@ -80,7 +87,7 @@ impl Printer {
         });
 
         Self {
-            _handle,
+            handle: _handle,
             messages,
             agent,
             dango,
@@ -119,8 +126,10 @@ fn draw<B: ratatui::prelude::Backend>(
                 .split(main_chunks[1]);
 
             let mut main_state = ListState::default().with_selected(select_message(&main_messages));
+
             let mut dango_state =
                 ListState::default().with_selected(select_message(&dango_messages));
+
             let mut agent_state =
                 ListState::default().with_selected(select_message(&agent_messages));
 
@@ -141,7 +150,6 @@ fn draw<B: ratatui::prelude::Backend>(
 }
 
 fn select_message(messages: &[String]) -> Option<usize> {
-
     if messages.len() == 0 {
         return None;
     } else {

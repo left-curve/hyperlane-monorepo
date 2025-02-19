@@ -1,7 +1,6 @@
 use {
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     hyperlane_core::utils::hex_or_base58_to_h256,
-    std::io::{BufRead, BufReader},
     utils::{
         agent::{Agent, AgentBuilder},
         constants::{CHAIN_ID, LOCALHOST, USER_2},
@@ -12,7 +11,6 @@ use {
 
 pub mod utils;
 
-// cargo test --package hyperlane-dango --test integration -- run_validator --exact --nocapture
 #[tokio::test]
 async fn run_validator() {
     dangod_reset();
@@ -40,37 +38,7 @@ async fn run_validator() {
 
     printer.set_agent(agent);
 
-    printer.add_message("1");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("2");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("3");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("4");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("5");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("6");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("7");
-}
+    print!("waiting for agent to start...");
 
-// cargo test --package hyperlane-dango --test lol -- run_validator --exact --nocapture
-#[test]
-fn asd() {
-    let printer = Printer::new();
-
-    printer.add_message("1");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("2");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("3");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("4");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("5");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("6");
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    printer.add_message("7");
+    std::thread::sleep(std::time::Duration::from_secs(200));
 }
