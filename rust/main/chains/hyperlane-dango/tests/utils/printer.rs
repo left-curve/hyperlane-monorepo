@@ -1,6 +1,7 @@
 use {
     super::scope_child::ScopeChild,
     ansi_regex::ansi_regex,
+    crossterm::event::{Event, KeyCode},
     ratatui::{
         layout::{Constraint, Direction, Layout},
         widgets::{Block, Borders, List, ListState},
@@ -27,11 +28,6 @@ pub struct Printer {
 impl Printer {
     fn new() -> Self {
         let messages: Arc<Mutex<Vec<String>>> = Default::default();
-
-        // std::panic::set_hook(Box::new(|info| {
-        //     println!("🔥 Panic found: {}", info);
-        //     std::process::abort();
-        // }));
 
         let thread_messages = messages.clone();
 
@@ -146,6 +142,28 @@ impl Printer {
                 }
             });
 
+            let scroll: Arc<Mutex<usize>> = Default::default();
+
+            let scroll_thread = scroll.clone();
+
+            // scroll thread
+            thread::spawn(move || loop {
+                if let Event::Key(k) = crossterm::event::read().unwrap() {
+                    match k.code {
+                        KeyCode::Up => {
+                            let mut scroll = scroll_thread.lock().unwrap();
+                            *scroll += 1;
+                        }
+
+                        KeyCode::Down => {
+                            let mut scroll = scroll_thread.lock().unwrap();
+                            *scroll = scroll.saturating_sub(1);
+                        }
+                        _ => {}
+                    }
+                }
+            });
+
             loop {
                 for i in [
                     &thread_messages,
@@ -162,6 +180,7 @@ impl Printer {
                     dango_messages.lock().unwrap().clone(),
                     agent_ok_messages.lock().unwrap().clone(),
                     agent_err_messages.lock().unwrap().clone(),
+                    *scroll.lock().unwrap(),
                 );
 
                 sleep(Duration::from_millis(50));
@@ -222,6 +241,7 @@ fn draw<B: ratatui::prelude::Backend>(
     dango_messages: Vec<String>,
     agent_ok_messages: Vec<String>,
     agent_err_messages: Vec<String>,
+    scroll: usize,
 ) {
     terminal
         .draw(|f| {
@@ -247,6 +267,8 @@ fn draw<B: ratatui::prelude::Backend>(
 
             let mut agent_ok_state =
                 ListState::default().with_selected(select_message(&agent_ok_messages));
+
+            agent_ok_state.scroll_up_by(scroll as u16);
 
             let mut agent_err_state =
                 ListState::default().with_selected(select_message(&agent_err_messages));

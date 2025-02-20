@@ -72,12 +72,12 @@ async fn run_validator() {
 
     dprintln!("route setted!");
 
-    // let msg = PRINTER.block_for_agent_submsg("Waiting for");
+    let msg = PRINTER.block_for_agent_submsg("Waiting for");
 
-    // dprintln!("msg: {}", msg);
+    dprintln!("msg: {}", msg);
 
     // sleep 2 s
-    std::thread::sleep(std::time::Duration::from_secs(80));
+    // std::thread::sleep(std::time::Duration::from_secs(80));
 
     // perform a hyperlane transfer
 
