@@ -40,3 +40,4 @@ pub const USER_2: LazyLock<UserInfo> = LazyLock::new(|| {
 pub const LOCALHOST: &str = "http://localhost:26657";
 
 pub const CHAIN_ID: &str = "dango";
+

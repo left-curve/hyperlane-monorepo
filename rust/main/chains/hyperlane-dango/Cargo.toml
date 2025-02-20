@@ -34,4 +34,5 @@ relayer           = { path = "../../agents/relayer" }
 validator         = { path = "../../agents/validator" }
 ratatui = "0.29"
 crossterm = "0.28"
-
+dangod-types = { git = "https://github.com/Rhaki/dangod"}
+ansi-regex = "0.1.0"
