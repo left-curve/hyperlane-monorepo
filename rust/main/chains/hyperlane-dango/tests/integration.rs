@@ -1,5 +1,4 @@
 use {
-    core::panic,
     dango_types::{
         config::AppConfig,
         constants::DANGO_DENOM,
@@ -9,11 +8,11 @@ use {
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     hyperlane_core::utils::hex_or_base58_to_h256,
     hyperlane_dango::DangoProviderInterface,
+    process_terminal::{tprintln, KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
     utils::{
         agent::{Agent, AgentBuilder},
         constants::USER_2,
         dangod::{DangodBuilder, DangodEnv},
-        printer::PRINTER,
     },
 };
 
@@ -27,9 +26,14 @@ async fn run_validator() {
         client,
     } = DangodBuilder::new().start().await.unwrap();
 
-    PRINTER.set_dango(child);
+    process_terminal::add_process(
+        "Dango",
+        child,
+        ProcessSettings::new(MessageSettings::Output),
+    )
+    .unwrap();
 
-    let agent = AgentBuilder::new(Agent::Validator)
+    let child = AgentBuilder::new(Agent::Validator)
         .with_origin_chain_name("dango")
         .with_checkpoint_syncer(CheckpointSyncerConf::LocalStorage {
             path: "dango_1".into(),
@@ -40,7 +44,15 @@ async fn run_validator() {
         .with_chain_signer("dango", USER_2.clone().into())
         .launch();
 
-    PRINTER.set_agent(agent);
+    process_terminal::add_process(
+        "Validator",
+        child,
+        ProcessSettings::new_with_scroll(
+            MessageSettings::All,
+            ScrollSettings::enable(KeyCode::Up, KeyCode::Down),
+        ),
+    )
+    .unwrap();
 
     let app_cfg: AppConfig = client.query_app_config().await.unwrap();
 
@@ -70,16 +82,10 @@ async fn run_validator() {
 
     assert!(tx.code.is_ok(), "tx failed: {:?}", tx);
 
-    dprintln!("route setted!");
+    tprintln!("route setted!");
 
-    let msg = PRINTER.block_for_agent_submsg("Waiting for");
-
-    dprintln!("msg: {}", msg);
-
-    // sleep 2 s
-    // std::thread::sleep(std::time::Duration::from_secs(80));
-
-    // perform a hyperlane transfer
+    let msg = process_terminal::block_search_message("Validator", "Waiting for").unwrap();
+    tprintln!("msg: {}", msg);
 
     let tx = loop {
         match client
@@ -103,7 +109,7 @@ async fn run_validator() {
         {
             Ok(tx) => break tx,
             Err(_err) => {
-                dprintln!("Transfer remote broadcast fail!");
+                tprintln!("Transfer remote broadcast fail!");
                 std::thread::sleep(std::time::Duration::from_secs(2));
                 let sequence = accounts["user_1"].nonce.into_inner() - 1;
                 *&mut accounts["user_1"].nonce = Defined::new(sequence);
@@ -114,38 +120,12 @@ async fn run_validator() {
     assert!(tx.code.is_ok(), "tx failed: {:?}", tx);
 
     if tx.code.is_err() {
-        dprintln!("tx failed: {:?}", tx);
+        tprintln!("tx failed: {:?}", tx);
     };
 
-    dprintln!("Transfer remote broadcast success!");
+    tprintln!("Transfer remote broadcast success!");
 
     std::thread::sleep(std::time::Duration::from_secs(200));
 
-    // ratatui::restore();
-}
-
-#[tokio::test]
-async fn asd() {
-    let mut terminal = ratatui::init();
-
-    for i in 0..2 {
-        terminal
-            .draw(|frame: &mut ratatui::Frame| {
-                frame.render_widget(format!("hello world: {}", i), frame.area());
-            })
-            .unwrap();
-
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
-
-    panic!();
-}
-
-#[tokio::test]
-async fn asd1() {
-    dprintln!("hello");
-
-    std::thread::sleep(std::time::Duration::from_secs(2));
-
-    panic!("asd");
+    process_terminal::end_terminal();
 }

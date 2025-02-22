@@ -1,10 +1,9 @@
 use {
-    super::scope_child::ScopeChild,
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     std::{
         collections::BTreeMap,
         path::PathBuf,
-        process::{Command, Stdio},
+        process::{Child, Command, Stdio},
     },
 };
 
@@ -45,22 +44,20 @@ impl<'a> AgentBuilder<'a> {
         self
     }
 
-    pub fn launch(self) -> ScopeChild {
-        ScopeChild::new(
-            Command::new("cargo")
-                .args(&["run", "--bin"])
-                .args(self.agent.args())
-                .arg("--")
-                .args(self.origin_chain_name.args())
-                .args(self.checkpoint_syncer.args())
-                .args(self.chain_signers.args())
-                .args(self.validator_signer.args())
-                .current_dir(workspace())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-                .unwrap(),
-        )
+    pub fn launch(self) -> Child {
+        Command::new("cargo")
+            .args(&["run", "--bin"])
+            .args(self.agent.args())
+            .arg("--")
+            .args(self.origin_chain_name.args())
+            .args(self.checkpoint_syncer.args())
+            .args(self.chain_signers.args())
+            .args(self.validator_signer.args())
+            .current_dir(workspace())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap()
     }
 }
 

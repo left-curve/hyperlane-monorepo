@@ -1139,15 +1139,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ansi-regex"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74e74db1232b47053a58c3b009baf5d07cdb83354058af912eb6a30745c29081"
-dependencies = [
- "regex",
-]
-
-[[package]]
 name = "ansi_term"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7391,11 +7382,9 @@ dependencies = [
 name = "hyperlane-dango"
 version = "0.1.0"
 dependencies = [
- "ansi-regex",
  "anyhow",
  "async-trait",
  "bip32",
- "crossterm",
  "dango-client",
  "dango-types",
  "dangod-types",
@@ -7406,8 +7395,8 @@ dependencies = [
  "hyperlane-base",
  "hyperlane-core",
  "hyperlane-types",
+ "process-terminal",
  "prometheus",
- "ratatui",
  "relayer",
  "serde",
  "tendermint",
@@ -9951,6 +9940,18 @@ dependencies = [
  "syn 2.0.96",
  "version_check",
  "yansi",
+]
+
+[[package]]
+name = "process-terminal"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79050a628f0210e1b58c2a0f996a90cc07b5bd2737f3c8c189f3bbae3507af4c"
+dependencies = [
+ "anyhow",
+ "crossterm",
+ "ratatui",
+ "regex",
 ]
 
 [[package]]

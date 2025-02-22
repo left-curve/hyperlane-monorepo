@@ -27,12 +27,10 @@ url = { workspace = true }
 
 [dev-dependencies]
 bip32             = "0.5.3"
+dangod-types      = { git = "https://github.com/Rhaki/dangod"}
 ethers-prometheus = { path = "../../ethers-prometheus" }
 hyperlane-base    = { path = "../../hyperlane-base" }
 prometheus        = { workspace = true }
+process-terminal  = "0.1.1"
 relayer           = { path = "../../agents/relayer" }
 validator         = { path = "../../agents/validator" }
-ratatui = "0.29"
-crossterm = "0.28"
-dangod-types = { git = "https://github.com/Rhaki/dangod"}
-ansi-regex = "0.1.0"

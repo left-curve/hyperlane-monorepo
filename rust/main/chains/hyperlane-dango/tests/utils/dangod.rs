@@ -1,26 +1,23 @@
 use {
-    super::{
-        constants::{CHAIN_ID, COIN_TYPE, LOCALHOST},
-        scope_child::ScopeChild,
-    },
-    crate::dprintln,
+    super::constants::{CHAIN_ID, COIN_TYPE, LOCALHOST},
     dango_client::SingleSigner,
     dango_types::auth::Nonce,
     dangod_types::{home_dir, PathBuffExt, Writer},
     grug::{Client, Defined, MaybeDefined, Message, SigningClient, Undefined},
+    process_terminal::tprintln,
     std::{
         collections::BTreeMap,
         ops::{Deref, DerefMut, Index, IndexMut},
-        process::{Command, Stdio},
+        process::{Child, Command, Stdio},
     },
 };
 
 pub async fn await_until_chain_start(client: &Client) {
-    dprintln!("waiting for chain to start...");
+    tprintln!("waiting for chain to start...");
 
     loop {
         if client.query_block(None).await.is_ok() {
-            dprintln!("chain started!");
+            tprintln!("chain started!");
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(50));
@@ -139,13 +136,11 @@ where
 
         let genesis: dangod_types::Genesis = path_dangod_config.read()?;
 
-        let child = ScopeChild::new(
-            Command::new("dangod")
-                .arg("start")
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()?,
-        );
+        let child = Command::new("dangod")
+            .arg("start")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
 
         await_until_chain_start(&client).await;
 
@@ -175,7 +170,7 @@ where
 }
 
 pub struct DangodEnv {
-    pub child: ScopeChild,
+    pub child: Child,
     pub accounts: Accounts,
     pub client: SigningClient,
 }
