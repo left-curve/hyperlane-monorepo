@@ -124,6 +124,45 @@ async fn run_validator() {
     };
 
     tprintln!("Transfer remote broadcast success!");
+    tprintln!("Send another transfer in 10 seconds...");
+
+    std::thread::sleep(std::time::Duration::from_secs(10));
+
+    let tx = loop {
+        match client
+            .send_message(
+                &mut accounts["user_1"],
+                Message::execute(
+                    app_cfg.addresses.warp,
+                    &warp::ExecuteMsg::TransferRemote {
+                        destination_domain: 10,
+                        recipient: Addr::mock(3).into(),
+                        metadata: None,
+                    },
+                    Coins::one(DANGO_DENOM.clone(), 200).unwrap(),
+                )
+                .unwrap(),
+                GasOption::Predefined {
+                    gas_limit: 10_000_000,
+                },
+            )
+            .await
+        {
+            Ok(tx) => break tx,
+            Err(_err) => {
+                tprintln!("Transfer remote broadcast fail!");
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                let sequence = accounts["user_1"].nonce.into_inner() - 1;
+                *&mut accounts["user_1"].nonce = Defined::new(sequence);
+            }
+        }
+    };
+
+    assert!(tx.code.is_ok(), "tx failed: {:?}", tx);
+
+    if tx.code.is_err() {
+        tprintln!("tx failed: {:?}", tx);
+    };
 
     std::thread::sleep(std::time::Duration::from_secs(200));
 
