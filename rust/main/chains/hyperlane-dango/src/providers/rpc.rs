@@ -14,13 +14,7 @@ use {
 
 #[async_trait]
 impl DangoProviderInterface for SigningClient {
-    async fn get_block(&self, mut height: Option<u64>) -> DangoResult<BlockOutcome> {
-        if let Some(h) = height {
-            if h == 0 {
-                height = None;
-            }
-        }
-
+    async fn get_block(&self, height: Option<u64>) -> DangoResult<BlockOutcome> {
         let response = self.query_block(height).await?;
 
         Ok(BlockOutcome {
@@ -36,12 +30,7 @@ impl DangoProviderInterface for SigningClient {
         })
     }
 
-    async fn get_block_result(&self, mut height: Option<u64>) -> DangoResult<BlockResultOutcome> {
-        if let Some(h) = height {
-            if h == 0 {
-                height = None;
-            }
-        }
+    async fn get_block_result(&self, height: Option<u64>) -> DangoResult<BlockResultOutcome> {
         let response = self.query_block_result(height).await?;
 
         Ok(BlockResultOutcome {

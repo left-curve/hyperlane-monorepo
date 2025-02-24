@@ -33,6 +33,10 @@
             "search_retry_attempts": 10,
             "checkpointSyncer": {
                 "type": "localStorage"
+            },
+            "index": {
+                "chunk": 10,
+                "from": 1
             }
         }
     }
