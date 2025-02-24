@@ -24,7 +24,7 @@
                 "rpc": {}
             },
             "gas_price": {
-                "denom": "udng",
+                "denom": "dango",
                 "amount": "0"
             },
             "gas_scale": 1.2,
