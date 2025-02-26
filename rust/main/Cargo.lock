@@ -9944,9 +9944,9 @@ dependencies = [
 
 [[package]]
 name = "process-terminal"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79050a628f0210e1b58c2a0f996a90cc07b5bd2737f3c8c189f3bbae3507af4c"
+checksum = "1c7fcc7ea145f464e496e48c8ca76e0034a75462f8f9ef1de92ca9ea9dcd927b"
 dependencies = [
  "anyhow",
  "crossterm",

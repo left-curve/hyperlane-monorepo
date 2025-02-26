@@ -168,3 +168,8 @@ async fn run_validator() {
 
     process_terminal::end_terminal();
 }
+
+#[tokio::test]
+async fn relayer() {
+    
+}

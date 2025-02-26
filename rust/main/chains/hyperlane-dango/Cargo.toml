@@ -31,6 +31,6 @@ dangod-types      = { git = "https://github.com/Rhaki/dangod"}
 ethers-prometheus = { path = "../../ethers-prometheus" }
 hyperlane-base    = { path = "../../hyperlane-base" }
 prometheus        = { workspace = true }
-process-terminal  = "0.1.1"
+process-terminal  = "0.1.2"
 relayer           = { path = "../../agents/relayer" }
 validator         = { path = "../../agents/validator" }
