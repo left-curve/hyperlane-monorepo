@@ -191,7 +191,7 @@ fn build_dango_connection_conf(
     rpcs: &[Url],
     chain: &ValueParser,
     err: &mut ConfigParsingError,
-    _operation_batch: OperationBatchConfig,
+    operation_batch: OperationBatchConfig,
 ) -> Option<ChainConnectionConf> {
     let mut local_err = ConfigParsingError::default();
 
@@ -279,6 +279,7 @@ fn build_dango_connection_conf(
             search_retry_attempts: search_retry_attempts.unwrap(),
             chain_id: chain_id.unwrap().to_string(),
             rpcs: rpcs.to_owned(),
+            operation_batch
         }))
     }
 }

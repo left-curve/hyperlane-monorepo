@@ -34,14 +34,14 @@ async fn run_validator() {
     .unwrap();
 
     let child = AgentBuilder::new(Agent::Validator)
-        .with_origin_chain_name("dango")
+        .with_origin_chain_name("dango1")
         .with_checkpoint_syncer(CheckpointSyncerConf::LocalStorage {
             path: "dango_1".into(),
         })
         .with_validator_signer(SignerConf::HexKey {
             key: hex_or_base58_to_h256("0x76e21577e7df18de93bbe82779bf3a16b2bacfd9").unwrap(),
         })
-        .with_chain_signer("dango", USER_2.clone().into())
+        .with_chain_signer("dango1", USER_2.clone().into())
         .launch();
 
     process_terminal::add_process(

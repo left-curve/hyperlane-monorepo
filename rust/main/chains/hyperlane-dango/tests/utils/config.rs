@@ -37,6 +37,7 @@ pub fn build_connection_conf(provider_conf: ProviderConf) -> ConnectionConf {
         search_retry_attempts: 5,
         chain_id: CHAIN_ID.to_owned(),
         rpcs: vec![Url::parse(URL).unwrap()],
+        operation_batch: Default::default(),
     }
 }
 

@@ -1,7 +1,7 @@
 use {
     crate::{DangoProvider, DangoResult, DangoSigner},
     grug::Coin,
-    hyperlane_core::{HyperlaneDomain, HyperlaneProvider},
+    hyperlane_core::{config::OperationBatchConfig, HyperlaneDomain, HyperlaneProvider},
     serde::{Deserialize, Serialize},
     url::Url,
 };
@@ -23,6 +23,7 @@ pub struct ConnectionConf {
     pub search_retry_attempts: u64,
     pub chain_id: String,
     pub rpcs: Vec<Url>,
+    pub operation_batch: OperationBatchConfig
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

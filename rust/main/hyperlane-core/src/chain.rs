@@ -194,6 +194,8 @@ pub enum KnownHyperlaneDomain {
     SealevelTest2 = 13376,
     CosmosTest99990 = 99990,
     CosmosTest99991 = 99991,
+    Dango1 = 88888887,
+    Dango2 = 88888886,
 
     // -- Test chains --
     //
@@ -339,7 +341,7 @@ impl KnownHyperlaneDomain {
             ],
             LocalTestChain: [
                 Test1, Test2, Test3, FuelTest1, SealevelTest1, SealevelTest2, CosmosTest99990,
-                CosmosTest99991
+                CosmosTest99991, Dango1, Dango2
             ],
         })
     }
@@ -372,7 +374,7 @@ impl KnownHyperlaneDomain {
                 // Local chains
                 CosmosTest99990, CosmosTest99991,
             ],
-            HyperlaneDomainProtocol::Dango: [Dango],
+            HyperlaneDomainProtocol::Dango: [Dango, Dango1, Dango2],
         })
     }
 
@@ -406,7 +408,7 @@ impl KnownHyperlaneDomain {
 
                 // Local chains
                 CosmosTest99990, CosmosTest99991, FuelTest1, SealevelTest1, SealevelTest2, Test1,
-                Test2, Test3,
+                Test2, Test3, Dango1, Dango2,
 
                 // Test chains
                 Alfajores, BinanceSmartChainTestnet, Chiado, Fuji, Holesky, MoonbaseAlpha, ScrollSepolia,

@@ -38,8 +38,7 @@ impl Indexable for HyperlaneMessage {
             HyperlaneDomainProtocol::Fuel => todo!(),
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::SequenceAware,
-            // TODO: DANGO
-            HyperlaneDomainProtocol::Dango => todo!(),
+            HyperlaneDomainProtocol::Dango => CursorType::SequenceAware,
         }
     }
 
@@ -60,8 +59,7 @@ impl Indexable for InterchainGasPayment {
             HyperlaneDomainProtocol::Fuel => todo!(),
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::RateLimited,
-            // TODO: DANGO
-            HyperlaneDomainProtocol::Dango => todo!(),
+            HyperlaneDomainProtocol::Dango => CursorType::RateLimited,
         }
     }
 
@@ -77,8 +75,7 @@ impl Indexable for MerkleTreeInsertion {
             HyperlaneDomainProtocol::Fuel => todo!(),
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::SequenceAware,
-            // TODO: DANGO
-            HyperlaneDomainProtocol::Dango => todo!(),
+            HyperlaneDomainProtocol::Dango => CursorType::SequenceAware,
         }
     }
 

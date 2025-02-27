@@ -160,8 +160,7 @@ impl ChainConnectionConf {
             Self::Ethereum(conf) => Some(&conf.operation_batch),
             Self::Cosmos(conf) => Some(&conf.operation_batch),
             Self::Sealevel(conf) => Some(&conf.operation_batch),
-            // TODO: Dango
-            Self::Dango(_) => todo!(),
+            Self::Dango(conf) => Some(&conf.operation_batch),
             Self::Fuel(_) => None,
         }
     }
@@ -499,7 +498,10 @@ impl ChainConf {
                 Ok(indexer as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
             }
             // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let igp = h_dango::IGP::new(conf, locator.domain.clone())?;
+                Ok(Box::new(igp) as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
+            }
         }
         .context(ctx)
     }
