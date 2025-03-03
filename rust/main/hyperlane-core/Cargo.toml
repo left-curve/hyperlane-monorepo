@@ -48,6 +48,8 @@ solana-sdk = { workspace = true, optional = true }
 tiny-keccak = { workspace = true, features = ["keccak"] }
 uint.workspace = true
 
+hyperlane-application = { path = "../applications/hyperlane-application" }
+
 grug = { workspace = true }
 
 [dev-dependencies]
