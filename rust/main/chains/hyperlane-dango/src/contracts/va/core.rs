@@ -5,7 +5,7 @@ use {
     },
     async_trait::async_trait,
     dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, Message},
+    grug::{Coins, Inner, Message},
     hyperlane_core::{
         Announcement, ChainResult, ContractLocator, SignedType, TxOutcome, ValidatorAnnounce, H256,
         U256,
@@ -55,7 +55,11 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
             )
             .await?;
 
-        Ok(response.into_values().collect())
+        Ok(response
+            .into_values()
+            .into_iter()
+            .map(Inner::into_inner)
+            .collect())
     }
 
     /// Announce a storage location for a validator
