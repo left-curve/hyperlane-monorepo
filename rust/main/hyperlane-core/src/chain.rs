@@ -138,6 +138,7 @@ pub enum KnownHyperlaneDomain {
     Celo = 42220,
     Cheesechain = 383353,
     Cyber = 7560,
+    Dango = 88888888,
     DegenChain = 666666666,
     EclipseMainnet = 1408864445,
     Endurance = 648,
@@ -193,6 +194,8 @@ pub enum KnownHyperlaneDomain {
     SealevelTest2 = 13376,
     CosmosTest99990 = 99990,
     CosmosTest99991 = 99991,
+    Dango1 = 88888887,
+    Dango2 = 88888886,
 
     // -- Test chains --
     //
@@ -276,6 +279,8 @@ pub enum HyperlaneDomainProtocol {
     Sealevel,
     /// A Cosmos-based chain type which uses hyperlane-cosmos.
     Cosmos,
+    /// A Dango-based chain type which uses hyperlane-dango.
+    Dango,
 }
 
 impl HyperlaneDomainProtocol {
@@ -286,6 +291,7 @@ impl HyperlaneDomainProtocol {
             Fuel => format!("{:?}", addr),
             Sealevel => format!("{:?}", addr),
             Cosmos => format!("{:?}", addr),
+            Dango => format!("{:?}", addr),
         }
     }
 }
@@ -321,7 +327,7 @@ impl KnownHyperlaneDomain {
 
         many_to_one!(match self {
             Mainnet: [
-                Ancient8, Arbitrum, Avalanche, BinanceSmartChain, Blast, Bob, Celo, Cheesechain, Cyber,
+                Ancient8, Arbitrum, Avalanche, BinanceSmartChain, Blast, Bob, Celo, Dango, Cheesechain, Cyber,
                 DegenChain, EclipseMainnet, Endurance, Ethereum, Fraxtal, FuseMainnet, Gnosis,
                 InEvm, Injective, Kroma, Linea, Lisk, Lukso, MantaPacific, Mantle, Merlin,
                 Metis, Mint, Mode, Moonbeam, Neutron, Optimism, Osmosis, Polygon, ProofOfPlay,
@@ -330,11 +336,12 @@ impl KnownHyperlaneDomain {
             ],
             Testnet: [
                 Alfajores, BinanceSmartChainTestnet, Chiado, ConnextSepolia, Fuji, Holesky, MoonbaseAlpha,
-                PlumeTestnet, ScrollSepolia, Sepolia, SuperpositionTestnet, Abstracttestnet, Treasuretopaz
+                PlumeTestnet, ScrollSepolia, Sepolia, SuperpositionTestnet, Abstracttestnet, Treasuretopaz,
+
             ],
             LocalTestChain: [
                 Test1, Test2, Test3, FuelTest1, SealevelTest1, SealevelTest2, CosmosTest99990,
-                CosmosTest99991
+                CosmosTest99991, Dango1, Dango2
             ],
         })
     }
@@ -367,6 +374,9 @@ impl KnownHyperlaneDomain {
                 // Local chains
                 CosmosTest99990, CosmosTest99991,
             ],
+            HyperlaneDomainProtocol::Dango: [
+                Dango, Dango1, Dango2
+            ],
         })
     }
 
@@ -394,7 +404,7 @@ impl KnownHyperlaneDomain {
                 Abstracttestnet, Treasure, Treasuretopaz, Zeronetwork, Zklink, Zksync,
             ],
             HyperlaneDomainTechnicalStack::Other: [
-                Avalanche, BinanceSmartChain, Celo, EclipseMainnet, Endurance, Ethereum,
+                Avalanche, BinanceSmartChain, Celo, Dango, EclipseMainnet, Endurance, Ethereum,
                 FuseMainnet, Gnosis, Injective, Linea, Lukso, Neutron, Osmosis, Polygon,
                 Sei, SolanaMainnet, Taiko, Viction, Zetachain,
 
@@ -404,7 +414,7 @@ impl KnownHyperlaneDomain {
 
                 // Test chains
                 Alfajores, BinanceSmartChainTestnet, Chiado, Fuji, Holesky, MoonbaseAlpha, ScrollSepolia,
-                Sepolia
+                Sepolia, Dango1, Dango2
            ],
         })
     }
@@ -592,7 +602,7 @@ impl HyperlaneDomain {
         use HyperlaneDomainProtocol::*;
         let protocol = self.domain_protocol();
         many_to_one!(match protocol {
-            IndexMode::Block: [Ethereum, Cosmos],
+            IndexMode::Block: [Ethereum, Cosmos, Dango],
             IndexMode::Sequence : [Sealevel, Fuel],
         })
     }

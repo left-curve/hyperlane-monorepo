@@ -29,6 +29,8 @@ use hyperlane_sealevel::{
     SealevelRpcClient, TransactionSubmitter,
 };
 
+use hyperlane_dango as h_dango;
+
 use crate::{
     metrics::AgentMetricsConf,
     settings::signers::{BuildableWithSignerConf, SignerConf},
@@ -145,6 +147,8 @@ pub enum ChainConnectionConf {
     Sealevel(h_sealevel::ConnectionConf),
     /// Cosmos configuration.
     Cosmos(h_cosmos::ConnectionConf),
+    /// Dango configuration.
+    Dango(h_dango::ConnectionConf),
 }
 
 impl ChainConnectionConf {
@@ -155,6 +159,7 @@ impl ChainConnectionConf {
             Self::Fuel(_) => HyperlaneDomainProtocol::Fuel,
             Self::Sealevel(_) => HyperlaneDomainProtocol::Sealevel,
             Self::Cosmos(_) => HyperlaneDomainProtocol::Cosmos,
+            Self::Dango(_) => HyperlaneDomainProtocol::Dango,
         }
     }
 
@@ -225,6 +230,8 @@ impl ChainConf {
                 h_cosmos::application::CosmosApplicationOperationVerifier::new(),
             )
                 as Box<dyn ApplicationOperationVerifier>),
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => unimplemented!(),
         };
 
         result.context(ctx)
@@ -251,6 +258,9 @@ impl ChainConf {
             ChainConnectionConf::Cosmos(conf) => {
                 let provider = build_cosmos_provider(self, conf, metrics, &locator, None)?;
                 Ok(Box::new(provider) as Box<dyn HyperlaneProvider>)
+            }
+            ChainConnectionConf::Dango(connection_conf) => {
+                Ok(connection_conf.build_provider(locator.domain.clone(), None)?)
             }
         }
         .context(ctx)
@@ -298,6 +308,13 @@ impl ChainConf {
                     .map(|m| Box::new(m) as Box<dyn Mailbox>)
                     .map_err(Into::into)
             }
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                Ok(
+                    Box::new(h_dango::DangoMailbox::new(conf, &locator, signer)?)
+                        as Box<dyn Mailbox>,
+                )
+            }
         }
         .context(ctx)
     }
@@ -333,6 +350,13 @@ impl ChainConf {
                 let hook = h_cosmos::CosmosMerkleTreeHook::new(provider, locator.clone())?;
 
                 Ok(Box::new(hook) as Box<dyn MerkleTreeHook>)
+            }
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                Ok(
+                    Box::new(h_dango::DangoMerkleTreeHook::new(conf, &locator, signer)?)
+                        as Box<dyn MerkleTreeHook>,
+                )
             }
         }
         .context(ctx)
@@ -398,6 +422,13 @@ impl ChainConf {
                 );
                 Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
             }
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                let indexer = Box::new(h_dango::DangoMailboxDispatchIndexer::new(
+                    conf, &locator, signer,
+                )?);
+                Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
+            }
         }
         .context(ctx)
     }
@@ -453,6 +484,8 @@ impl ChainConf {
                 );
                 Ok(indexer as Box<dyn SequenceAwareIndexer<H256>>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -495,6 +528,8 @@ impl ChainConf {
                 )?);
                 Ok(paymaster as Box<dyn InterchainGasPaymaster>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -553,6 +588,10 @@ impl ChainConf {
                     wasm_provider,
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
+            }
+            ChainConnectionConf::Dango(conf) => {
+                let igp = h_dango::IGP::new(conf, locator.domain.clone())?;
+                Ok(Box::new(igp) as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
             }
         }
         .context(ctx)
@@ -618,6 +657,10 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
             }
+            ChainConnectionConf::Dango(conf) => {
+                let indexer = Box::new(h_dango::DangoMerkleTreeIndexer::new(conf, &locator, None)?);
+                Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
+            }
         }
         .context(ctx)
     }
@@ -653,6 +696,12 @@ impl ChainConf {
                 )?);
 
                 Ok(va as Box<dyn ValidatorAnnounce>)
+            }
+            ChainConnectionConf::Dango(conf) => {
+                let signer = self.dango_signer().await.context(ctx)?;
+                Ok(Box::new(h_dango::DangoValidatorAnnounce::new(
+                    conf, &locator, signer,
+                )?) as Box<dyn ValidatorAnnounce>)
             }
         }
         .context("Building ValidatorAnnounce")
@@ -699,6 +748,8 @@ impl ChainConf {
                 )?);
                 Ok(ism as Box<dyn InterchainSecurityModule>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -737,6 +788,8 @@ impl ChainConf {
                 let ism = Box::new(h_cosmos::CosmosMultisigIsm::new(provider, locator.clone())?);
                 Ok(ism as Box<dyn MultisigIsm>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -769,6 +822,8 @@ impl ChainConf {
                 let ism = Box::new(h_cosmos::CosmosRoutingIsm::new(provider, locator.clone())?);
                 Ok(ism as Box<dyn RoutingIsm>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -804,6 +859,8 @@ impl ChainConf {
 
                 Ok(ism as Box<dyn AggregationIsm>)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -832,6 +889,8 @@ impl ChainConf {
             ChainConnectionConf::Cosmos(_) => {
                 Err(eyre!("Cosmos does not support CCIP read ISM yet")).context(ctx)
             }
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
     }
@@ -856,6 +915,10 @@ impl ChainConf {
                     Box::new(conf.build::<h_sealevel::Keypair>().await?)
                 }
                 ChainConnectionConf::Cosmos(_) => Box::new(conf.build::<h_cosmos::Signer>().await?),
+
+                ChainConnectionConf::Dango(_) => {
+                    Box::new(conf.build::<h_dango::DangoSigner>().await?)
+                }
             };
             Ok(Some(chain_signer))
         } else {
@@ -878,6 +941,10 @@ impl ChainConf {
     }
 
     async fn cosmos_signer(&self) -> Result<Option<h_cosmos::Signer>> {
+        self.signer().await
+    }
+
+    async fn dango_signer(&self) -> Result<Option<h_dango::DangoSigner>> {
         self.signer().await
     }
 

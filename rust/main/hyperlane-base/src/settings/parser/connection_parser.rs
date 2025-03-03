@@ -5,6 +5,7 @@ use hyperlane_sealevel::{
 use url::Url;
 
 use h_eth::TransactionOverrides;
+use hyperlane_dango as h_dango;
 
 use hyperlane_core::config::{ConfigErrResultExt, OperationBatchConfig};
 use hyperlane_core::{config::ConfigParsingError, HyperlaneDomainProtocol, NativeToken};
@@ -159,6 +160,104 @@ pub fn build_cosmos_connection_conf(
         )))
     }
 }
+
+fn build_dango_connection_conf(
+    rpcs: &[Url],
+    chain: &ValueParser,
+    err: &mut ConfigParsingError,
+    operation_batch: OperationBatchConfig,
+) -> Option<ChainConnectionConf> {
+    let mut local_err = ConfigParsingError::default();
+
+    let chain_id = chain
+        .chain(&mut local_err)
+        .get_key("chain_id")
+        .parse_string()
+        .end()
+        .or_else(|| {
+            local_err.push(&chain.cwp + "chain_id", eyre!("Missing chain_id"));
+            None
+        });
+
+    let provder_config = chain
+        .chain(&mut local_err)
+        .get_key("provder_config")
+        .parse_value::<h_dango::ProviderConf>("fails to deserialize h_dango::ProviderConf")
+        .end();
+
+    let gas_price = chain
+        .chain(&mut local_err)
+        .get_key("gas_price")
+        .parse_value::<grug::Coin>("fails to deserialize grug::Coin")
+        .end();
+
+    let gas_scale = chain
+        .chain(&mut local_err)
+        .get_key("gas_scale")
+        .parse_f64()
+        .end()
+        .or_else(|| {
+            local_err.push(&chain.cwp + "gas_scale", eyre!("Missing gas_scale"));
+            None
+        });
+
+    let flat_gas_increase = chain
+        .chain(&mut local_err)
+        .get_key("flat_gas_increase")
+        .parse_u64()
+        .end()
+        .or_else(|| {
+            local_err.push(
+                &chain.cwp + "flat_gas_increase",
+                eyre!("Missing flat_gas_increase"),
+            );
+            None
+        });
+
+    let search_sleep_duration = chain
+        .chain(&mut local_err)
+        .get_key("search_sleep_duration")
+        .parse_u64()
+        .end()
+        .or_else(|| {
+            local_err.push(
+                &chain.cwp + "search_sleep_duration",
+                eyre!("Missing search_sleep_duration"),
+            );
+            None
+        });
+
+    let search_retry_attempts = chain
+        .chain(&mut local_err)
+        .get_key("search_retry_attempts")
+        .parse_u64()
+        .end()
+        .or_else(|| {
+            local_err.push(
+                &chain.cwp + "search_retry_attempts",
+                eyre!("Missing search_retry_attempts"),
+            );
+            None
+        });
+
+    if !local_err.is_ok() {
+        err.merge(local_err);
+        None
+    } else {
+        Some(ChainConnectionConf::Dango(h_dango::ConnectionConf {
+            provider_conf: provder_config.unwrap(),
+            gas_price: gas_price.unwrap(),
+            gas_scale: gas_scale.unwrap(),
+            flat_gas_increase: flat_gas_increase.unwrap(),
+            search_sleep_duration: search_sleep_duration.unwrap(),
+            search_retry_attempts: search_retry_attempts.unwrap(),
+            chain_id: chain_id.unwrap().to_string(),
+            rpcs: rpcs.to_owned(),
+            operation_batch
+        }))
+    }
+}
+
 
 fn build_sealevel_connection_conf(
     url: &Url,
@@ -378,6 +477,9 @@ pub fn build_connection_conf(
             .and_then(|url| build_sealevel_connection_conf(url, chain, err, operation_batch)),
         HyperlaneDomainProtocol::Cosmos => {
             build_cosmos_connection_conf(rpcs, chain, err, operation_batch)
+        }
+        HyperlaneDomainProtocol::Dango => {
+            build_dango_connection_conf(rpcs, chain, err, operation_batch)
         }
     }
 }

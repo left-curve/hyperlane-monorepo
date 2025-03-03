@@ -1,0 +1,36 @@
+
+[package]
+name = "hyperlane-dango"
+documentation = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license-file = { workspace = true }
+publish = { workspace = true }
+version = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+dango-client = { workspace = true }
+dango-types = { workspace = true }
+dango-hyperlane-types = { workspace = true }
+futures-util = { workspace = true }
+grug = { workspace = true }
+grug-app = { workspace = true }
+hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
+serde = { workspace = true }
+tendermint = { workspace = true }
+tendermint-rpc = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+bip32             = "0.5.3"
+dangod-types      = { git = "https://github.com/Rhaki/dangod"}
+ethers-prometheus = { path = "../../ethers-prometheus" }
+hyperlane-base    = { path = "../../hyperlane-base" }
+prometheus        = { workspace = true }
+process-terminal  = "0.1.2"
+relayer           = { path = "../../agents/relayer" }
+validator         = { path = "../../agents/validator" }
