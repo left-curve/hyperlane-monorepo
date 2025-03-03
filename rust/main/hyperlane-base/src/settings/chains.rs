@@ -230,6 +230,8 @@ impl ChainConf {
                 h_cosmos::application::CosmosApplicationOperationVerifier::new(),
             )
                 as Box<dyn ApplicationOperationVerifier>),
+            // TODO: DANGO
+            ChainConnectionConf::Dango(_) => todo!(),
         };
 
         result.context(ctx)
@@ -420,13 +422,7 @@ impl ChainConf {
                 );
                 Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
             }
-            ChainConnectionConf::Dango(conf) => {
-                let signer = self.dango_signer().await.context(ctx)?;
-                let indexer = Box::new(h_dango::DangoMailboxDispatchIndexer::new(
-                    conf, &locator, signer,
-                )?);
-                Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
-            }
+
             ChainConnectionConf::Dango(conf) => {
                 let signer = self.dango_signer().await.context(ctx)?;
                 let indexer = Box::new(h_dango::DangoMailboxDispatchIndexer::new(
