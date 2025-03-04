@@ -24,7 +24,7 @@ async fn run_validator() {
         child,
         mut accounts,
         client,
-    } = DangodBuilder::new().start().await.unwrap();
+    } = try_start_test!(DangodBuilder::new("dango").start().await);
 
     process_terminal::add_process(
         "Dango",
@@ -167,9 +167,4 @@ async fn run_validator() {
     std::thread::sleep(std::time::Duration::from_secs(200));
 
     process_terminal::end_terminal();
-}
-
-#[tokio::test]
-async fn relayer() {
-    
 }

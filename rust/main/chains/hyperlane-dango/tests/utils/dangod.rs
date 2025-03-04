@@ -1,16 +1,30 @@
 use {
-    super::constants::{CHAIN_ID, COIN_TYPE, LOCALHOST},
+    super::constants::{CHAIN_ID, COIN_TYPE},
+    anyhow::{bail, ensure},
     dango_client::SingleSigner,
     dango_types::auth::Nonce,
-    dangod_types::{home_dir, PathBuffExt, Writer},
-    grug::{Client, Defined, MaybeDefined, Message, SigningClient, Undefined},
+    grug::{Client, Defined, JsonDeExt, MaybeDefined, SigningClient, Undefined},
     process_terminal::tprintln,
+    serde::de::DeserializeOwned,
     std::{
         collections::BTreeMap,
         ops::{Deref, DerefMut, Index, IndexMut},
         process::{Child, Command, Stdio},
     },
 };
+
+#[macro_export]
+macro_rules! try_start_test {
+    ($fn: expr) => {
+        match $fn {
+            Ok(ok) => ok,
+            Err(err) => {
+                println!("Test skipped: {}", err);
+                return;
+            }
+        }
+    };
+}
 
 pub async fn await_until_chain_start(client: &Client) {
     tprintln!("waiting for chain to start...");
@@ -24,125 +38,52 @@ pub async fn await_until_chain_start(client: &Client) {
     }
 }
 
-fn is_installed(name: &str) -> anyhow::Result<()> {
-    let output = Command::new("which").arg(name).output()?;
-    if !output.status.success() {
-        anyhow::bail!("{} is not installed", name);
-    } else {
-        Ok(())
-    }
-}
-
-#[macro_export]
-macro_rules! try_start_test {
-    ($fn: expr) => {
-        match $fn {
-            Ok(_) => {}
-            Err(e) => {
-                println!("Test skipped: {}", e);
-                return;
-            }
-        }
-    };
-}
-
-type GenesisClosure = Box<dyn FnOnce(&mut dangod_types::Genesis) + Send>;
-type MessagesClosure = Box<dyn FnOnce(&dangod_types::Genesis) -> Vec<Message> + Send>;
-
-pub struct DangodBuilder<G = Undefined<GenesisClosure>, M = Undefined<MessagesClosure>>
+pub struct DangodBuilder<HD = Undefined<u32>, RPC = Undefined<u16>>
 where
-    G: MaybeDefined<GenesisClosure>,
-    M: MaybeDefined<MessagesClosure>,
+    HD: MaybeDefined<u32>,
+    RPC: MaybeDefined<u16>,
 {
-    genesis_closure: G,
-    genesis_msgs_closure: M,
+    container_name: String,
+    hyperlane_domain: HD,
+    port: RPC,
 }
 
 impl DangodBuilder {
-    pub fn new() -> Self {
+    pub fn new(container_name: &str) -> Self {
         Self {
-            genesis_closure: Undefined::default(),
-            genesis_msgs_closure: Undefined::default(),
+            container_name: container_name.to_string(),
+            hyperlane_domain: Undefined::default(),
+            port: Undefined::default(),
         }
     }
 }
 
-impl<M> DangodBuilder<Undefined<GenesisClosure>, M>
+impl<HD, RPC> DangodBuilder<HD, RPC>
 where
-    M: MaybeDefined<MessagesClosure>,
-{
-    pub fn with_genesis_closure<C: FnOnce(&mut dangod_types::Genesis) + Send + 'static>(
-        self,
-        closure: C,
-    ) -> DangodBuilder<Defined<GenesisClosure>, M> {
-        DangodBuilder {
-            genesis_closure: Defined::new(Box::new(closure)),
-            genesis_msgs_closure: self.genesis_msgs_closure,
-        }
-    }
-}
-
-impl<G> DangodBuilder<G, Undefined<MessagesClosure>>
-where
-    G: MaybeDefined<GenesisClosure>,
-{
-    pub fn with_extra_messages<
-        C: FnOnce(&dangod_types::Genesis) -> Vec<Message> + Send + 'static,
-    >(
-        self,
-        closure: C,
-    ) -> DangodBuilder<G, Defined<MessagesClosure>> {
-        DangodBuilder {
-            genesis_closure: self.genesis_closure,
-            genesis_msgs_closure: Defined::new(Box::new(closure)),
-        }
-    }
-}
-
-impl<G, M> DangodBuilder<G, M>
-where
-    G: MaybeDefined<GenesisClosure>,
-    M: MaybeDefined<MessagesClosure>,
+    HD: MaybeDefined<u32>,
+    RPC: MaybeDefined<u16>,
 {
     pub async fn start(self) -> anyhow::Result<DangodEnv> {
-        let client = SigningClient::connect(CHAIN_ID, LOCALHOST).unwrap();
+        let port = self.port.maybe_into_inner().unwrap_or(26657);
 
-        is_installed("dangod")?;
-        is_installed("cometbft")?;
-        is_installed("dango")?;
+        let client =
+            SigningClient::connect(CHAIN_ID, format!("http://localhost:{port}").as_str()).unwrap();
 
-        // Reset dango and cometbft
-        Command::new("dangod").arg("reset").status()?;
-        Command::new("dangod").arg("generate-static").status()?;
+        ensure!(
+            is_docker_running(),
+            "docker is not running, please start it"
+        );
 
-        let path_dangod_config = home_dir()?.join(".dangod/genesis.json");
-
-        if let Some(closure) = self.genesis_closure.maybe_into_inner() {
-            let mut genesis: dangod_types::Genesis = path_dangod_config.read()?;
-            closure(&mut genesis);
-            genesis.write_pretty_json(&path_dangod_config)?;
-        }
-
-        Command::new("dangod").arg("build").status()?;
-
-        if let Some(closure) = self.genesis_msgs_closure.maybe_into_inner() {
-            let mut genesis: dangod_types::Genesis = path_dangod_config.read()?;
-            let msgs = closure(&genesis);
-            genesis.extra_msgs = msgs;
-            genesis.write_pretty_json(&path_dangod_config)?;
-
-            Command::new("dangod").arg("build-msgs").status()?;
-        }
-
-        let genesis: dangod_types::Genesis = path_dangod_config.read()?;
-
-        let child = Command::new("dangod")
-            .arg("start")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?;
+        let child = start_dango_docker(
+            self.container_name.as_str(),
+            port,
+            self.hyperlane_domain.maybe_into_inner().unwrap_or(88888888),
+        );
 
         await_until_chain_start(&client).await;
+
+        let genesis: dangod_types::Genesis =
+            read_docker_file(&self.container_name, "/root/.dangod/genesis.json")?;
 
         let mut accounts = BTreeMap::new();
 
@@ -166,6 +107,32 @@ where
             child,
             accounts: Accounts(accounts),
         })
+    }
+}
+
+impl<RPC> DangodBuilder<Undefined<u32>, RPC>
+where
+    RPC: MaybeDefined<u16>,
+{
+    pub fn with_hyperlane_domain(self, hyperlane_domain: u32) -> DangodBuilder<Defined<u32>, RPC> {
+        DangodBuilder {
+            container_name: self.container_name,
+            hyperlane_domain: Defined::new(hyperlane_domain),
+            port: self.port,
+        }
+    }
+}
+
+impl<HD> DangodBuilder<HD, Undefined<u16>>
+where
+    HD: MaybeDefined<u32>,
+{
+    pub fn with_rpc_port(self, port: u16) -> DangodBuilder<HD, Defined<u16>> {
+        DangodBuilder {
+            container_name: self.container_name,
+            hyperlane_domain: self.hyperlane_domain,
+            port: Defined::new(port),
+        }
     }
 }
 
@@ -208,5 +175,47 @@ where
 {
     fn index_mut(&mut self, index: S) -> &mut Self::Output {
         self.get_mut(index.as_ref()).expect("account not found")
+    }
+}
+
+fn is_docker_running() -> bool {
+    Command::new("docker").arg("info").output().is_ok()
+}
+
+fn start_dango_docker(chain_name: &str, port: u16, hyperlane_domain: u32) -> Child {
+    Command::new("docker")
+        .args(&[
+            "run",
+            "--rm",
+            "--name",
+            chain_name,
+            "-p",
+            &format!("{port}:26657"),
+            "dango",
+            &format!("--hyperlane_domain {hyperlane_domain}"),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap()
+}
+
+fn read_docker_file<R>(container_name: &str, file_path: &str) -> anyhow::Result<R>
+where
+    R: DeserializeOwned,
+{
+    let output = Command::new("docker")
+        .args(["exec", container_name, "cat", file_path])
+        .output()?;
+
+    if output.status.success() {
+        let str = std::str::from_utf8(&output.stdout)?;
+
+        Ok(str.deserialize_json()?)
+    } else {
+        bail!(
+            "Failed to read file: {}",
+            std::str::from_utf8(&output.stderr)?
+        )
     }
 }

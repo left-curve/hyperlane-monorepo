@@ -1,29 +1,14 @@
 use {
     grug::btree_set,
     process_terminal::{KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
-    std::process::{Child, Command, Stdio},
-    utils::agent::{Agent, AgentBuilder},
+    std::process::Command,
+    utils::{
+        agent::{Agent, AgentBuilder},
+        dangod::DangodBuilder,
+    },
 };
 
 pub mod utils;
-
-fn startup_chain(chain_name: &str, port: u16, hyperlane_domain: u32) -> Child {
-    Command::new("docker")
-        .args(&[
-            "run",
-            "--rm",
-            "--name",
-            chain_name,
-            "-p",
-            &format!("{port}:26657"),
-            "dango2",
-            &format!("--hyperlane_domain {hyperlane_domain}"),
-        ])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap()
-}
 
 fn exit_process(names: &[&str]) {
     println!("Exiting processes");
@@ -37,8 +22,26 @@ fn exit_process(names: &[&str]) {
 
 #[tokio::test]
 async fn relayer() {
-    startup_chain("dango1", 26657, 88888887);
-    startup_chain("dango2", 36657, 88888886);
+    let (d1, d2) = try_start_test!(tokio::try_join!(
+        DangodBuilder::new("dango1").start(),
+        DangodBuilder::new("dango2")
+            .with_hyperlane_domain(88888887)
+            .with_rpc_port(36657)
+            .start()
+    ));
+
+    process_terminal::add_process(
+        "Dango1",
+        d1.child,
+        ProcessSettings::new(MessageSettings::Output),
+    )
+    .unwrap();
+    process_terminal::add_process(
+        "Dango2",
+        d2.child,
+        ProcessSettings::new(MessageSettings::Output),
+    )
+    .unwrap();
 
     process_terminal::with_exit_callback(|| exit_process(&["dango1", "dango2"]));
 
