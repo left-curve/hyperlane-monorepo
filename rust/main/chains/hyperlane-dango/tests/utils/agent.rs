@@ -1,4 +1,5 @@
 use {
+    super::user::IntoSignerConf,
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     std::{
         collections::{BTreeMap, BTreeSet},
@@ -12,6 +13,7 @@ pub struct AgentBuilder<'a> {
     agent: Agent,
     checkpoint_syncer: Option<CheckpointSyncerConf>,
     origin_chain_name: Option<OriginChainName>,
+    allow_local_checkpoint_syncer: Option<AllowLocalCheckpointSyncer>,
     chain_signers: BTreeMap<&'a str, SignerConf>,
     validator_signer: Option<ValidatorSigner>,
     relay_chains: Option<RelayChains<'a>>,
@@ -40,8 +42,20 @@ impl<'a> AgentBuilder<'a> {
         self
     }
 
-    pub fn with_chain_signer(mut self, chain: &'a str, signer: SignerConf) -> Self {
-        self.chain_signers.insert(chain, signer);
+    pub fn with_allow_local_checkpoint_syncer(
+        mut self,
+        allow_local_checkpoint_syncer: bool,
+    ) -> Self {
+        self.allow_local_checkpoint_syncer =
+            Some(AllowLocalCheckpointSyncer(allow_local_checkpoint_syncer));
+        self
+    }
+
+    pub fn with_chain_signer<S>(mut self, chain: &'a str, signer: S) -> Self
+    where
+        S: IntoSignerConf,
+    {
+        self.chain_signers.insert(chain, signer.as_signer_conf());
         self
     }
 
@@ -60,6 +74,7 @@ impl<'a> AgentBuilder<'a> {
             .args(self.chain_signers.args())
             .args(self.validator_signer.args())
             .args(self.relay_chains.args())
+            .args(self.allow_local_checkpoint_syncer.args())
             .current_dir(workspace())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -204,6 +219,17 @@ impl Args for RelayChains<'_> {
         vec![
             "--relayChains".to_string(),
             self.0.into_iter().collect::<Vec<_>>().join(","),
+        ]
+    }
+}
+
+pub struct AllowLocalCheckpointSyncer(bool);
+
+impl Args for AllowLocalCheckpointSyncer {
+    fn args(self) -> Vec<String> {
+        vec![
+            "--allowLocalCheckpointSyncer".to_string(),
+            self.0.to_string(),
         ]
     }
 }

@@ -231,7 +231,10 @@ impl ChainConf {
             )
                 as Box<dyn ApplicationOperationVerifier>),
             // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(_) => Ok(Box::new(
+                h_dango::application::DangoApplicationOperationVerifier::new(),
+            )
+                as Box<dyn ApplicationOperationVerifier>),
         };
 
         result.context(ctx)
@@ -750,8 +753,10 @@ impl ChainConf {
                 )?);
                 Ok(ism as Box<dyn InterchainSecurityModule>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let ism = Box::new(h_dango::DangoIsm::new(conf, &locator, None)?);
+                Ok(ism as Box<dyn InterchainSecurityModule>)
+            }
         }
         .context(ctx)
     }
@@ -791,7 +796,10 @@ impl ChainConf {
                 Ok(ism as Box<dyn MultisigIsm>)
             }
             // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(conf) => {
+                let ism = Box::new(h_dango::DangoIsm::new(conf, &locator, None)?);
+                Ok(ism as Box<dyn MultisigIsm>)
+            }
         }
         .context(ctx)
     }

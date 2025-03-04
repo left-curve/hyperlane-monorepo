@@ -1,64 +1,137 @@
 use {
-    grug::btree_set,
-    process_terminal::{KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
-    std::process::Command,
+    dango_types::{constants::DANGO_DENOM, warp::Route},
+    grug::{btree_set, Coin, Denom, NumberConst, Uint128},
+    hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
+    process_terminal::{tprintln, KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
+    std::str::FromStr,
     utils::{
         agent::{Agent, AgentBuilder},
-        dangod::DangodBuilder,
+        constants::{DANGO1_DOMAIN, DANGO2_DOMAIN, VALIDATOR_ADDRESS, VALIDATOR_KEY},
+        dango_builder::{kill_docker_processes, DangoBuilder},
     },
 };
 
 pub mod utils;
 
-fn exit_process(names: &[&str]) {
-    println!("Exiting processes");
-    for name in names {
-        Command::new("docker")
-            .args(&["kill", name])
-            .output()
-            .unwrap();
-    }
-}
-
 #[tokio::test]
 async fn relayer() {
-    let (d1, d2) = try_start_test!(tokio::try_join!(
-        DangodBuilder::new("dango1").start(),
-        DangodBuilder::new("dango2")
-            .with_hyperlane_domain(88888887)
+    let ((mut ch1, _), (mut ch2, _)) = try_start_test!(tokio::try_join!(
+        DangoBuilder::new("dango1")
+            .with_hyperlane_domain(DANGO1_DOMAIN)
+            .start(),
+        DangoBuilder::new("dango2")
+            .with_hyperlane_domain(DANGO2_DOMAIN)
             .with_rpc_port(36657)
             .start()
     ));
 
-    process_terminal::add_process(
-        "Dango1",
-        d1.child,
-        ProcessSettings::new(MessageSettings::Output),
-    )
-    .unwrap();
-    process_terminal::add_process(
-        "Dango2",
-        d2.child,
-        ProcessSettings::new(MessageSettings::Output),
-    )
-    .unwrap();
+    process_terminal::with_exit_callback(|| kill_docker_processes(&["dango1", "dango2"]));
 
-    process_terminal::with_exit_callback(|| exit_process(&["dango1", "dango2"]));
+    // run Relayer
+    {
+        let agent = AgentBuilder::new(Agent::Relayer)
+            .with_origin_chain_name("dango1")
+            .with_relay_chains(btree_set!("dango1", "dango2"))
+            .with_allow_local_checkpoint_syncer(true)
+            .launch();
 
-    let agent = AgentBuilder::new(Agent::Relayer)
-        .with_origin_chain_name("dango1")
-        .with_relay_chains(btree_set!("dango1", "dango2"))
-        .launch();
+        process_terminal::add_process(
+            "Relayer",
+            agent,
+            ProcessSettings::new_with_scroll(
+                MessageSettings::All,
+                ScrollSettings::enable(KeyCode::Up, KeyCode::Down),
+            ),
+        )
+        .unwrap();
+    }
 
-    process_terminal::add_process(
-        "Relayer",
-        agent,
-        ProcessSettings::new_with_scroll(
-            MessageSettings::All,
-            ScrollSettings::enable(KeyCode::Up, KeyCode::Down),
-        ),
-    )
-    .unwrap();
+    // run Validator for dango1
+    {
+        let validator = AgentBuilder::new(Agent::Validator)
+            .with_origin_chain_name("dango1")
+            .with_checkpoint_syncer(CheckpointSyncerConf::LocalStorage {
+                path: "dango_1".into(),
+            })
+            .with_validator_signer(SignerConf::HexKey {
+                key: VALIDATOR_KEY.clone(),
+            })
+            .with_chain_signer("dango1", &ch1.accounts["user_2"])
+            .launch();
+
+        process_terminal::add_process(
+            "Validator",
+            validator,
+            ProcessSettings::new_with_scroll(
+                MessageSettings::All,
+                ScrollSettings::enable(KeyCode::Up, KeyCode::Down),
+            ),
+        )
+        .unwrap();
+    }
+
+    // Set route on dango1
+    {
+        tprintln!("Setting route on dango1...");
+        ch1.set_route(
+            DANGO_DENOM.clone(),
+            DANGO2_DOMAIN,
+            Route {
+                address: ch2.cfg.addresses.warp.into(),
+                fee: Uint128::ZERO,
+            },
+        )
+        .await
+        .unwrap();
+        tprintln!("Route set on dango1");
+    }
+
+    let dango_2_denom = Denom::from_str("hyp/d1/dango").unwrap();
+
+    // Set route on dango2
+    {
+        tprintln!("Setting route on dango2...");
+        ch2.set_route(
+            dango_2_denom.clone(),
+            DANGO1_DOMAIN,
+            Route {
+                address: ch1.cfg.addresses.warp.into(),
+                fee: Uint128::ZERO,
+            },
+        )
+        .await
+        .unwrap();
+        tprintln!("Route set on dango2");
+    }
+
+    // Set validator set on dango2
+    {
+        tprintln!("Setting validator set on dango2...");
+        ch2.set_hyperlane_validators(DANGO1_DOMAIN, 1, btree_set!(VALIDATOR_ADDRESS.clone()))
+            .await
+            .unwrap();
+        tprintln!("Validator set set on dango2");
+    }
+
+    // Wait until validator start
+    {
+        let msg = process_terminal::block_search_message("Validator", "Waiting for").unwrap();
+        tprintln!("msg: {}", msg);
+    }
+
+    // Transfer from dango1 to dango2
+    {
+        tprintln!("Transferring from dango1 to dango2...");
+        ch1.send_remote(
+            "user_1",
+            Coin::new(DANGO_DENOM.clone(), 100).unwrap(),
+            DANGO2_DOMAIN,
+            ch2.accounts["user_1"].address,
+        )
+        .await
+        .unwrap();
+        tprintln!("Transferred from dango1 to dango2");
+    }
 
     loop {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;

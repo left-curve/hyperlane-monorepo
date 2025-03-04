@@ -1,18 +1,10 @@
 use {
-    dango_types::{
-        config::AppConfig,
-        constants::DANGO_DENOM,
-        warp::{self, Route},
-    },
-    grug::{Addr, Coins, Defined, GasOption, Message, NumberConst, Uint128},
+    dango_types::{constants::DANGO_DENOM, warp::Route},
+    grug::{Addr, Coin, NumberConst, Uint128},
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
-    hyperlane_core::utils::hex_or_base58_to_h256,
-    hyperlane_dango::DangoProviderInterface,
     process_terminal::{tprintln, KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
     utils::{
-        agent::{Agent, AgentBuilder},
-        constants::USER_2,
-        dangod::{DangodBuilder, DangodEnv},
+        agent::{Agent, AgentBuilder}, constants::VALIDATOR_KEY, dango_builder::{kill_docker_processes, DangoBuilder}
     },
 };
 
@@ -20,11 +12,12 @@ pub mod utils;
 
 #[tokio::test]
 async fn run_validator() {
-    let DangodEnv {
-        child,
-        mut accounts,
-        client,
-    } = try_start_test!(DangodBuilder::new("dango").start().await);
+    let (mut ch, child) = try_start_test!(
+        DangoBuilder::new("dango")
+            .with_hyperlane_domain(88888887)
+            .start()
+            .await
+    );
 
     process_terminal::add_process(
         "Dango",
@@ -33,20 +26,22 @@ async fn run_validator() {
     )
     .unwrap();
 
-    let child = AgentBuilder::new(Agent::Validator)
+    process_terminal::with_exit_callback(|| kill_docker_processes(&["dango"]));
+
+    let validator = AgentBuilder::new(Agent::Validator)
         .with_origin_chain_name("dango1")
         .with_checkpoint_syncer(CheckpointSyncerConf::LocalStorage {
             path: "dango_1".into(),
         })
         .with_validator_signer(SignerConf::HexKey {
-            key: hex_or_base58_to_h256("0x76e21577e7df18de93bbe82779bf3a16b2bacfd9").unwrap(),
+            key: VALIDATOR_KEY.clone(),
         })
-        .with_chain_signer("dango1", USER_2.clone().into())
+        .with_chain_signer("dango1", &ch.accounts["user_2"])
         .launch();
 
     process_terminal::add_process(
         "Validator",
-        child,
+        validator,
         ProcessSettings::new_with_scroll(
             MessageSettings::All,
             ScrollSettings::enable(KeyCode::Up, KeyCode::Down),
@@ -54,27 +49,14 @@ async fn run_validator() {
     )
     .unwrap();
 
-    let app_cfg: AppConfig = client.query_app_config().await.unwrap();
-
     // Set route
-    let tx = client
-        .send_message(
-            &mut accounts["owner"],
-            Message::execute(
-                app_cfg.addresses.warp,
-                &warp::ExecuteMsg::SetRoute {
-                    denom: DANGO_DENOM.clone(),
-                    destination_domain: 10,
-                    route: Route {
-                        address: Addr::mock(1).into(),
-                        fee: Uint128::ZERO,
-                    },
-                },
-                Coins::default(),
-            )
-            .unwrap(),
-            GasOption::Predefined {
-                gas_limit: 10_000_000,
+    let tx = ch
+        .set_route(
+            DANGO_DENOM.clone(),
+            10,
+            Route {
+                address: Addr::mock(1).into(),
+                fee: Uint128::ZERO,
             },
         )
         .await
@@ -87,35 +69,15 @@ async fn run_validator() {
     let msg = process_terminal::block_search_message("Validator", "Waiting for").unwrap();
     tprintln!("msg: {}", msg);
 
-    let tx = loop {
-        match client
-            .send_message(
-                &mut accounts["user_1"],
-                Message::execute(
-                    app_cfg.addresses.warp,
-                    &warp::ExecuteMsg::TransferRemote {
-                        destination_domain: 10,
-                        recipient: Addr::mock(2).into(),
-                        metadata: None,
-                    },
-                    Coins::one(DANGO_DENOM.clone(), 100).unwrap(),
-                )
-                .unwrap(),
-                GasOption::Predefined {
-                    gas_limit: 10_000_000,
-                },
-            )
-            .await
-        {
-            Ok(tx) => break tx,
-            Err(_err) => {
-                tprintln!("Transfer remote broadcast fail!");
-                std::thread::sleep(std::time::Duration::from_secs(2));
-                let sequence = accounts["user_1"].nonce.into_inner() - 1;
-                *&mut accounts["user_1"].nonce = Defined::new(sequence);
-            }
-        }
-    };
+    let tx = ch
+        .send_remote(
+            "user_1",
+            Coin::new(DANGO_DENOM.clone(), 100).unwrap(),
+            10,
+            Addr::mock(2),
+        )
+        .await
+        .unwrap();
 
     assert!(tx.code.is_ok(), "tx failed: {:?}", tx);
 
@@ -128,35 +90,15 @@ async fn run_validator() {
 
     std::thread::sleep(std::time::Duration::from_secs(10));
 
-    let tx = loop {
-        match client
-            .send_message(
-                &mut accounts["user_1"],
-                Message::execute(
-                    app_cfg.addresses.warp,
-                    &warp::ExecuteMsg::TransferRemote {
-                        destination_domain: 10,
-                        recipient: Addr::mock(3).into(),
-                        metadata: None,
-                    },
-                    Coins::one(DANGO_DENOM.clone(), 200).unwrap(),
-                )
-                .unwrap(),
-                GasOption::Predefined {
-                    gas_limit: 10_000_000,
-                },
-            )
-            .await
-        {
-            Ok(tx) => break tx,
-            Err(_err) => {
-                tprintln!("Transfer remote broadcast fail!");
-                std::thread::sleep(std::time::Duration::from_secs(2));
-                let sequence = accounts["user_1"].nonce.into_inner() - 1;
-                *&mut accounts["user_1"].nonce = Defined::new(sequence);
-            }
-        }
-    };
+    let tx = ch
+        .send_remote(
+            "user_1",
+            Coin::new(DANGO_DENOM.clone(), 200).unwrap(),
+            10,
+            Addr::mock(3),
+        )
+        .await
+        .unwrap();
 
     assert!(tx.code.is_ok(), "tx failed: {:?}", tx);
 

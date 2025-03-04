@@ -1,8 +1,8 @@
 use {
     bip32::{Language, Mnemonic},
-    dango_client::SigningKey,
+    dango_client::{SigningKey, SingleSigner},
     dango_types::account_factory::Username,
-    grug::{Addr, HexByteArray},
+    grug::{Addr, HexByteArray, MaybeDefined},
     hyperlane_base::settings::SignerConf,
     std::str::FromStr,
 };
@@ -41,6 +41,23 @@ impl From<UserInfo<'_>> for SignerConf {
             username: value.username,
             key: value.sk,
             address: value.address,
+        }
+    }
+}
+
+pub trait IntoSignerConf {
+    fn as_signer_conf(&self) -> SignerConf;
+}
+
+impl<K> IntoSignerConf for &SingleSigner<K>
+where
+    K: MaybeDefined<u32>,
+{
+    fn as_signer_conf(&self) -> SignerConf {
+        SignerConf::Dango {
+            username: self.username.clone(),
+            key: HexByteArray::from(self.sk.private_key()),
+            address: self.address,
         }
     }
 }
