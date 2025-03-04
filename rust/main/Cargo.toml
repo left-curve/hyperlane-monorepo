@@ -168,8 +168,8 @@ ya-gcp = { version = "0.11.3", features = ["storage"] }
 
 grug = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d" }
 grug-app = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d" }
-dango-types = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d", package = "types" }
-dango-client = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d", package = "client" }
+dango-types = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d", package = "dango-types" }
+dango-client = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d", package = "dango-client" }
 dango-hyperlane-types = { git = "https://github.com/left-curve/left-curve.git", tag = "115df1d", package = "hyperlane-types" }
 
 ## TODO: remove this
