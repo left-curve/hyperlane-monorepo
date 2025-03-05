@@ -17,6 +17,7 @@ pub struct AgentBuilder<'a> {
     chain_signers: BTreeMap<&'a str, SignerConf>,
     validator_signer: Option<ValidatorSigner>,
     relay_chains: Option<RelayChains<'a>>,
+    metrics_port: Option<MetricsPort>,
 }
 
 impl<'a> AgentBuilder<'a> {
@@ -64,6 +65,11 @@ impl<'a> AgentBuilder<'a> {
         self
     }
 
+    pub fn with_metrics_port(mut self, metrics_port: u16) -> Self {
+        self.metrics_port = Some(MetricsPort(metrics_port));
+        self
+    }
+
     pub fn launch(self) -> Child {
         Command::new("cargo")
             .args(&["run", "--bin"])
@@ -75,6 +81,7 @@ impl<'a> AgentBuilder<'a> {
             .args(self.validator_signer.args())
             .args(self.relay_chains.args())
             .args(self.allow_local_checkpoint_syncer.args())
+            .args(self.metrics_port.args())
             .current_dir(workspace())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -231,5 +238,13 @@ impl Args for AllowLocalCheckpointSyncer {
             "--allowLocalCheckpointSyncer".to_string(),
             self.0.to_string(),
         ]
+    }
+}
+
+pub struct MetricsPort(u16);
+
+impl Args for MetricsPort {
+    fn args(self) -> Vec<String> {
+        vec!["--metrics-port".to_string(), self.0.to_string()]
     }
 }

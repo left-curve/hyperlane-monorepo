@@ -57,6 +57,7 @@ async fn relayer() {
                 key: VALIDATOR_KEY.clone(),
             })
             .with_chain_signer("dango1", &ch1.accounts["user_2"])
+            .with_metrics_port(9089)
             .launch();
 
         process_terminal::add_process(
@@ -104,6 +105,15 @@ async fn relayer() {
         tprintln!("Route set on dango2");
     }
 
+    // Set validator set on dango1
+    {
+        tprintln!("Setting validator set on dango1...");
+        ch1.set_hyperlane_validators(DANGO2_DOMAIN, 1, btree_set!(VALIDATOR_ADDRESS.clone()))
+            .await
+            .unwrap();
+        tprintln!("Validator set set on dango1");
+    }
+
     // Set validator set on dango2
     {
         tprintln!("Setting validator set on dango2...");
@@ -134,6 +144,14 @@ async fn relayer() {
     }
 
     loop {
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        let balances = ch2
+            .client
+            .query_balances(ch2.accounts["user_1"].address, None, None, None)
+            .await
+            .unwrap();
+
+        tprintln!("balances: {:?}", balances);
+
+        std::thread::sleep(std::time::Duration::from_secs(1));
     }
 }
