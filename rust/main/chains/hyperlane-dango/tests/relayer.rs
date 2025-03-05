@@ -3,7 +3,8 @@ use {
     grug::{btree_set, Coin, Denom, NumberConst, Uint128},
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     process_terminal::{tprintln, KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
-    std::str::FromStr,
+    std::{str::FromStr, thread, time::Duration},
+    tendermint::abci::Code,
     utils::{
         agent::{Agent, AgentBuilder},
         constants::{DANGO1_DOMAIN, DANGO2_DOMAIN, VALIDATOR_ADDRESS, VALIDATOR_KEY},
@@ -105,6 +106,8 @@ async fn relayer() {
         tprintln!("Route set on dango2");
     }
 
+    thread::sleep(Duration::from_secs(2));
+
     // Set validator set on dango1
     {
         tprintln!("Setting validator set on dango1...");
@@ -117,10 +120,12 @@ async fn relayer() {
     // Set validator set on dango2
     {
         tprintln!("Setting validator set on dango2...");
-        ch2.set_hyperlane_validators(DANGO1_DOMAIN, 1, btree_set!(VALIDATOR_ADDRESS.clone()))
+        let res = ch2
+            .set_hyperlane_validators(DANGO1_DOMAIN, 1, btree_set!(VALIDATOR_ADDRESS.clone()))
             .await
             .unwrap();
         tprintln!("Validator set set on dango2");
+        assert_eq!(res.code, Code::Ok, "Tx failed! {:?}", res);
     }
 
     // Wait until validator start

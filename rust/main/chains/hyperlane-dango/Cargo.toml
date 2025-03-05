@@ -25,6 +25,7 @@ tendermint-rpc = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
 bip32             = "0.5.3"
@@ -32,7 +33,7 @@ dangod-types      = { git = "https://github.com/Rhaki/dangod"}
 ethers-prometheus = { path = "../../ethers-prometheus" }
 hyperlane-base    = { path = "../../hyperlane-base" }
 prometheus        = { workspace = true }
-process-terminal  = "0.1.2"
+process-terminal  = "0.1.4"
 relayer           = { path = "../../agents/relayer" }
 validator         = { path = "../../agents/validator" }
 ethers            = { workspace = true }
