@@ -1,6 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     ops::{Deref, DerefMut, Index, IndexMut},
+    time::Duration,
 };
 
 use dango_client::SingleSigner;
@@ -10,9 +11,11 @@ use dango_types::{
     config::AppConfig,
     warp::{self, Route},
 };
-use grug::{Addr, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message, SigningClient};
-use hyperlane_dango::DangoProviderInterface;
-use tendermint_rpc::endpoint::broadcast::tx_sync;
+use grug::{
+    Addr, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message, SigningClient, TxOutcome,
+};
+use hyperlane_dango::{DangoProviderInterface, TryDangoConvertor};
+use tokio::time::sleep;
 
 pub struct ChainHelper {
     pub cfg: AppConfig,
@@ -39,36 +42,23 @@ impl ChainHelper {
         denom: Denom,
         destination_domain: u32,
         route: Route,
-    ) -> anyhow::Result<tx_sync::Response> {
-        loop {
-            match self
-                .client
-                .send_message(
-                    &mut self.accounts["owner"],
-                    Message::execute(
-                        self.cfg.addresses.warp,
-                        &warp::ExecuteMsg::SetRoute {
-                            denom: denom.clone(),
-                            destination_domain,
-                            route: route.clone(),
-                        },
-                        Coins::default(),
-                    )?,
-                    GasOption::Predefined {
-                        gas_limit: 10_000_000,
-                    },
-                )
-                .await
-            {
-                Ok(res) => return Ok(res),
-                Err(_) => {
-                    std::thread::sleep(std::time::Duration::from_secs(1));
-                    let sequence = self.accounts["owner"].nonce.into_inner() - 1;
-                    *&mut self.accounts["owner"].nonce = Defined::new(sequence);
-                    continue;
-                }
-            }
-        }
+    ) -> anyhow::Result<TxOutcome> {
+        self.boradcast_and_find(
+            "owner",
+            Message::execute(
+                self.cfg.addresses.warp,
+                &warp::ExecuteMsg::SetRoute {
+                    denom: denom.clone(),
+                    destination_domain,
+                    route: route.clone(),
+                },
+                Coins::default(),
+            )?,
+            GasOption::Predefined {
+                gas_limit: 10_000_000,
+            },
+        )
+        .await
     }
 
     pub async fn send_remote(
@@ -77,37 +67,23 @@ impl ChainHelper {
         coin: Coin,
         destination_domain: u32,
         recipient: Addr,
-    ) -> anyhow::Result<tx_sync::Response> {
-        loop {
-            match self
-                .client
-                .send_message(
-                    &mut self.accounts[sender],
-                    Message::execute(
-                        self.cfg.addresses.warp,
-                        &warp::ExecuteMsg::TransferRemote {
-                            destination_domain,
-                            recipient: recipient.into(),
-                            metadata: None,
-                        },
-                        coin.clone(),
-                    )
-                    .unwrap(),
-                    GasOption::Predefined {
-                        gas_limit: 10_000_000,
-                    },
-                )
-                .await
-            {
-                Ok(res) => return Ok(res),
-                Err(_) => {
-                    std::thread::sleep(std::time::Duration::from_secs(1));
-                    let sequence = self.accounts[sender].nonce.into_inner() - 1;
-                    *&mut self.accounts[sender].nonce = Defined::new(sequence);
-                    continue;
-                }
-            }
-        }
+    ) -> anyhow::Result<TxOutcome> {
+        self.boradcast_and_find(
+            sender,
+            Message::execute(
+                self.cfg.addresses.warp,
+                &warp::ExecuteMsg::TransferRemote {
+                    destination_domain,
+                    recipient: recipient.into(),
+                    metadata: None,
+                },
+                coin.clone(),
+            )?,
+            GasOption::Predefined {
+                gas_limit: 10_000_000,
+            },
+        )
+        .await
     }
 
     pub async fn set_hyperlane_validators(
@@ -115,25 +91,47 @@ impl ChainHelper {
         remote_domain: u32,
         threshold: u32,
         validators: BTreeSet<HexByteArray<20>>,
-    ) -> anyhow::Result<tx_sync::Response> {
-        self.client
-            .send_message(
-                &mut self.accounts["owner"],
-                Message::execute(
-                    self.cfg.addresses.hyperlane.ism,
-                    &isms::multisig::ExecuteMsg::SetValidators {
-                        domain: remote_domain,
-                        threshold,
-                        validators,
-                    },
-                    Coins::default(),
-                )
-                .unwrap(),
-                GasOption::Predefined {
-                    gas_limit: 10_000_000,
+    ) -> anyhow::Result<TxOutcome> {
+        self.boradcast_and_find(
+            "owner",
+            Message::execute(
+                self.cfg.addresses.hyperlane.ism,
+                &isms::multisig::ExecuteMsg::SetValidators {
+                    domain: remote_domain,
+                    threshold,
+                    validators,
                 },
-            )
-            .await
+                Coins::default(),
+            )?,
+            GasOption::Predefined {
+                gas_limit: 10_000_000,
+            },
+        )
+        .await
+    }
+
+    async fn boradcast_and_find(
+        &mut self,
+        signer: &str,
+        msg: Message,
+        gas_opt: GasOption,
+    ) -> anyhow::Result<TxOutcome> {
+        let hash = self
+            .client
+            .send_message(&mut self.accounts[signer], msg, gas_opt)
+            .await?
+            .hash
+            .try_convert()?;
+
+        loop {
+            let outcome = self.client.search_tx(hash).await;
+
+            if let Ok(outcome) = outcome {
+                return Ok(outcome.outcome);
+            }
+
+            sleep(Duration::from_secs(1)).await;
+        }
     }
 }
 pub struct Accounts(BTreeMap<String, SingleSigner<Defined<Nonce>>>);

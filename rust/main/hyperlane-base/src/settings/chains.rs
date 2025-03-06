@@ -230,7 +230,6 @@ impl ChainConf {
                 h_cosmos::application::CosmosApplicationOperationVerifier::new(),
             )
                 as Box<dyn ApplicationOperationVerifier>),
-            // TODO: DANGO
             ChainConnectionConf::Dango(_) => Ok(Box::new(
                 h_dango::application::DangoApplicationOperationVerifier::new(),
             )
@@ -357,7 +356,7 @@ impl ChainConf {
             ChainConnectionConf::Dango(conf) => {
                 let signer = self.dango_signer().await.context(ctx)?;
                 Ok(
-                    Box::new(h_dango::DangoMerkleTreeHook::new(conf, &locator, signer)?)
+                    Box::new(h_dango::DangoMerkleTree::new(conf, &locator, signer)?)
                         as Box<dyn MerkleTreeHook>,
                 )
             }
@@ -428,9 +427,7 @@ impl ChainConf {
 
             ChainConnectionConf::Dango(conf) => {
                 let signer = self.dango_signer().await.context(ctx)?;
-                let indexer = Box::new(h_dango::DangoMailboxDispatchIndexer::new(
-                    conf, &locator, signer,
-                )?);
+                let indexer = Box::new(h_dango::DangoMailbox::new(conf, &locator, signer)?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
             }
         }
@@ -663,7 +660,7 @@ impl ChainConf {
                 Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
             }
             ChainConnectionConf::Dango(conf) => {
-                let indexer = Box::new(h_dango::DangoMerkleTreeIndexer::new(conf, &locator, None)?);
+                let indexer = Box::new(h_dango::DangoMerkleTree::new(conf, &locator, None)?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
             }
         }
@@ -795,7 +792,6 @@ impl ChainConf {
                 let ism = Box::new(h_cosmos::CosmosMultisigIsm::new(provider, locator.clone())?);
                 Ok(ism as Box<dyn MultisigIsm>)
             }
-            // TODO: DANGO
             ChainConnectionConf::Dango(conf) => {
                 let ism = Box::new(h_dango::DangoIsm::new(conf, &locator, None)?);
                 Ok(ism as Box<dyn MultisigIsm>)

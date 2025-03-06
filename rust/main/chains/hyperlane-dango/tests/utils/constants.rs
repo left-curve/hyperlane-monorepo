@@ -1,10 +1,7 @@
-use std::sync::LazyLock;
-
-use ethers::signers::{LocalWallet, Signer};
-use grug::HexByteArray;
-use hyperlane_core::{utils::hex_or_base58_to_h256, H256};
-
-use super::user::UserInfo;
+use {
+    super::user::UserInfo,
+    std::sync::LazyLock,
+};
 
 pub const EXISTING_CONTRACT: &str = "0x2f3d763027f30db0250de65d037058c8bcbd3352";
 pub const NOT_EXISTING_CONTRACT: &str = "0x929a99d0881f07e03d5f91b5ad2a1fc188f64ea1";
@@ -47,17 +44,3 @@ pub const CHAIN_ID: &str = "dango";
 
 pub const DANGO1_DOMAIN: u32 = 88888887;
 pub const DANGO2_DOMAIN: u32 = 88888886;
-
-pub const VALIDATOR_KEY: LazyLock<H256> =
-    LazyLock::new(|| hex_or_base58_to_h256("0x76e21577e7df18de93bbe82779bf3a16b2bacfd9").unwrap());
-
-pub const VALIDATOR_ADDRESS: LazyLock<HexByteArray<20>> =
-    LazyLock::new(|| derive_address(&VALIDATOR_KEY));
-
-fn derive_address(key: &H256) -> HexByteArray<20> {
-    let wallet = LocalWallet::from(ethers::core::k256::ecdsa::SigningKey::from(
-        ethers::core::k256::SecretKey::from_be_bytes(key.as_bytes()).unwrap(),
-    ));
-
-    HexByteArray::from_inner(wallet.address().to_fixed_bytes())
-}

@@ -132,7 +132,10 @@ async fn await_until_chain_start(client: &Client) {
 }
 
 fn is_docker_running() -> bool {
-    Command::new("docker").arg("info").output().is_ok()
+    Command::new("docker")
+        .arg("info")
+        .output()
+        .map_or(false, |output| output.status.success())
 }
 
 fn start_dango_docker(chain_name: &str, port: u16, hyperlane_domain: u32) -> Child {

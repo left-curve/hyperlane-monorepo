@@ -12,15 +12,15 @@ use {
 };
 
 #[derive(Debug)]
-pub struct DangoMerkleTreeHook {
-    address: H256,
-    provider: DangoProvider,
+pub struct DangoMerkleTree {
+    pub(crate) address: H256,
+    pub(crate) provider: DangoProvider,
 }
 
-hyperlane_contract!(DangoMerkleTreeHook);
+hyperlane_contract!(DangoMerkleTree);
 
 #[async_trait]
-impl MerkleTreeHook for DangoMerkleTreeHook {
+impl MerkleTreeHook for DangoMerkleTree {
     async fn tree(&self, reorg_period: &ReorgPeriod) -> ChainResult<IncrementalMerkle> {
         let dango_tree = self.dango_tree(reorg_period.clone().into()).await?;
 
@@ -59,7 +59,7 @@ impl MerkleTreeHook for DangoMerkleTreeHook {
     }
 }
 
-impl DangoMerkleTreeHook {
+impl DangoMerkleTree {
     pub fn new(
         config: &ConnectionConf,
         locator: &ContractLocator,

@@ -1,4 +1,4 @@
-mod indexer;
 mod core;
+mod indexer;
 
-pub use {indexer::*, core::*};
+pub use core::*;

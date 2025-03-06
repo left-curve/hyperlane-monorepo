@@ -1,4 +1,5 @@
 use {
+    super::constants::COIN_TYPE,
     bip32::{Language, Mnemonic},
     dango_client::{SigningKey, SingleSigner},
     dango_types::account_factory::Username,
@@ -6,8 +7,6 @@ use {
     hyperlane_base::settings::SignerConf,
     std::str::FromStr,
 };
-
-use super::constants::COIN_TYPE;
 
 #[derive(Clone)]
 pub struct UserInfo<'a> {

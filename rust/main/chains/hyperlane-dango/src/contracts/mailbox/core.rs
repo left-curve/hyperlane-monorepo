@@ -1,7 +1,7 @@
 use {
     crate::{
-        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner,
-        DangoConvertor, IntoDangoError, TryDangoConvertor,
+        hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoConvertor, DangoResult,
+        DangoSigner, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{mailbox, recipients::RecipientQuery},
@@ -14,8 +14,8 @@ use {
 
 #[derive(Debug)]
 pub struct DangoMailbox {
-    provider: DangoProvider,
-    address: H256,
+    pub(crate) provider: DangoProvider,
+    pub(crate) address: H256,
 }
 
 impl DangoMailbox {

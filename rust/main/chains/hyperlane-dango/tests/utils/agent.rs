@@ -1,6 +1,7 @@
 use {
     super::user::IntoSignerConf,
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
+    hyperlane_core::H256,
     std::{
         collections::{BTreeMap, BTreeSet},
         path::PathBuf,
@@ -18,6 +19,8 @@ pub struct AgentBuilder<'a> {
     validator_signer: Option<ValidatorSigner>,
     relay_chains: Option<RelayChains<'a>>,
     metrics_port: Option<MetricsPort>,
+    piped: bool,
+    db: Option<Db>,
 }
 
 impl<'a> AgentBuilder<'a> {
@@ -38,8 +41,8 @@ impl<'a> AgentBuilder<'a> {
         self
     }
 
-    pub fn with_validator_signer(mut self, signer: SignerConf) -> Self {
-        self.validator_signer = Some(ValidatorSigner(signer));
+    pub fn with_validator_signer(mut self, hex_key: H256) -> Self {
+        self.validator_signer = Some(ValidatorSigner(SignerConf::HexKey { key: hex_key }));
         self
     }
 
@@ -49,6 +52,11 @@ impl<'a> AgentBuilder<'a> {
     ) -> Self {
         self.allow_local_checkpoint_syncer =
             Some(AllowLocalCheckpointSyncer(allow_local_checkpoint_syncer));
+        self
+    }
+
+    pub fn piped(mut self, piped: bool) -> Self {
+        self.piped = piped;
         self
     }
 
@@ -70,11 +78,21 @@ impl<'a> AgentBuilder<'a> {
         self
     }
 
+    pub fn with_db(mut self, db: &str) -> Self {
+        self.db = Some(Db(db.to_string()));
+        self
+    }
+
     pub fn launch(self) -> Child {
-        Command::new("cargo")
-            .args(&["run", "--bin"])
-            .args(self.agent.args())
-            .arg("--")
+        let path = format!("./target/debug/{}", self.agent.args().first().unwrap());
+
+        let (stdout, stderr) = if self.piped {
+            (Stdio::piped(), Stdio::piped())
+        } else {
+            (Stdio::null(), Stdio::null())
+        };
+
+        Command::new(path)
             .args(self.origin_chain_name.args())
             .args(self.checkpoint_syncer.args())
             .args(self.chain_signers.args())
@@ -82,15 +100,16 @@ impl<'a> AgentBuilder<'a> {
             .args(self.relay_chains.args())
             .args(self.allow_local_checkpoint_syncer.args())
             .args(self.metrics_port.args())
+            .args(self.db.args())
             .current_dir(workspace())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stdout(stdout)
+            .stderr(stderr)
             .spawn()
             .unwrap()
     }
 }
 
-fn workspace() -> PathBuf {
+pub fn workspace() -> PathBuf {
     let target_subpath = "hyperlane-monorepo/rust/main";
 
     let current_dir = std::env::current_dir()
@@ -235,7 +254,7 @@ pub struct AllowLocalCheckpointSyncer(bool);
 impl Args for AllowLocalCheckpointSyncer {
     fn args(self) -> Vec<String> {
         vec![
-            "--allowLocalCheckpointSyncer".to_string(),
+            "--allowLocalCheckpointSyncers".to_string(),
             self.0.to_string(),
         ]
     }
@@ -247,4 +266,22 @@ impl Args for MetricsPort {
     fn args(self) -> Vec<String> {
         vec!["--metrics-port".to_string(), self.0.to_string()]
     }
+}
+
+pub struct Db(String);
+
+impl Args for Db {
+    fn args(self) -> Vec<String> {
+        let path = workspace().join(self.0);
+        vec!["--db".to_string(), path.to_string_lossy().to_string()]
+        // vec!["--db".to_string(), format!("/{}", self.0)]
+    }
+}
+
+#[test]
+fn workspace_work() {
+    println!("{:?}", workspace());
+
+    let path = workspace().join("./validator_db_dango1");
+    println!("{:?}", path);
 }

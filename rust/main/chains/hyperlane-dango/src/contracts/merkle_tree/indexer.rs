@@ -1,39 +1,17 @@
 use {
-    super::DangoMerkleTreeHook,
-    crate::{
-        provider::DangoProvider, ConnectionConf, DangoResult, DangoSigner, ExecutionBlock,
-        DangoConvertor, SearchLog, TryDangoConvertor,
-    },
+    super::DangoMerkleTree,
+    crate::{DangoConvertor, ExecutionBlock, SearchLog, TryDangoConvertor},
     async_trait::async_trait,
     dango_hyperlane_types::hooks::merkle,
     hyperlane_core::{
-        ChainResult, ContractLocator, HyperlaneContract, Indexed, Indexer, LogMeta,
-        MerkleTreeInsertion, SequenceAwareIndexer, H512,
+        ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeInsertion,
+        SequenceAwareIndexer, H512,
     },
     std::ops::RangeInclusive,
 };
 
-#[derive(Debug)]
-pub struct DangoMerkleTreeIndexer {
-    pub merkle_tree: DangoMerkleTreeHook,
-    pub provider: DangoProvider,
-}
-
-impl DangoMerkleTreeIndexer {
-    pub fn new(
-        config: &ConnectionConf,
-        locator: &ContractLocator,
-        signer: Option<DangoSigner>,
-    ) -> DangoResult<Self> {
-        Ok(Self {
-            merkle_tree: DangoMerkleTreeHook::new(config, locator, signer.clone())?,
-            provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
-        })
-    }
-}
-
 #[async_trait]
-impl Indexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
+impl Indexer<MerkleTreeInsertion> for DangoMerkleTree {
     /// Fetch list of logs between blocks `from` and `to`, inclusive.
     async fn fetch_logs_in_range(
         &self,
@@ -43,7 +21,7 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
             .provider
             .fetch_logs(range)
             .await?
-            .search_contract_log(self.merkle_tree.address().try_convert()?, search_fn)?)
+            .search_contract_log(self.address().try_convert()?, search_fn)?)
     }
 
     /// Get the chain's latest block number that has reached finality
@@ -62,7 +40,7 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
             .await?
             .with_block_hash(&self.provider)
             .await?
-            .search_contract_log(self.merkle_tree.address().try_convert()?, search_fn)?)
+            .search_contract_log(self.address().try_convert()?, search_fn)?)
     }
 }
 
@@ -71,12 +49,11 @@ fn search_fn(event: merkle::PostDispatch) -> Indexed<MerkleTreeInsertion> {
 }
 
 #[async_trait]
-impl SequenceAwareIndexer<MerkleTreeInsertion> for DangoMerkleTreeIndexer {
+impl SequenceAwareIndexer<MerkleTreeInsertion> for DangoMerkleTree {
     /// Return the latest finalized sequence (if any) and block number
     async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
         let last_height = self.provider.get_block(None).await?.height;
         let dango_tree = self
-            .merkle_tree
             .dango_tree(ExecutionBlock::Defined(last_height))
             .await?;
 
