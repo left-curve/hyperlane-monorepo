@@ -23,6 +23,7 @@ use {
     },
     utils::{
         agent::{Agent, AgentBuilder},
+        chain_helper::ClientExt,
         constants::{DANGO1_DOMAIN, DANGO2_DOMAIN},
         crypto::{derive_pk, ValidatorKey},
         dango_builder::{kill_docker_processes, DangoBuilder},
@@ -563,9 +564,9 @@ async fn onboarding() {
             address: dango2_ch.cfg.addresses.account_factory,
         };
 
-        let tx_hash = dango2_ch
+        dango2_ch
             .client
-            .broadcast_message(
+            .broadcast_and_find(
                 &mut signer,
                 Message::execute(
                     dango2_ch.cfg.addresses.account_factory,
@@ -583,19 +584,10 @@ async fn onboarding() {
                 },
             )
             .await
-            .unwrap();
+            .unwrap()
+            .should_succeed();
 
         tprintln!("Broadcasted register user!");
-
-        loop {
-            if let Ok(tx) = dango2_ch.client.search_tx(tx_hash).await {
-                tx.outcome.clone().should_succeed();
-                tprintln!("Transaction confirmed!: {:0?}", tx.outcome.events);
-                break;
-            } else {
-                sleep(Duration::from_secs(1));
-            }
-        }
 
         let balance = dango2_ch
             .client

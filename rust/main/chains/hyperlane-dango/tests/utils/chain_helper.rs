@@ -4,6 +4,7 @@ use std::{
     time::Duration,
 };
 
+use async_trait::async_trait;
 use dango_client::SingleSigner;
 use dango_hyperlane_types::isms;
 use dango_types::{
@@ -12,7 +13,8 @@ use dango_types::{
     warp::{self, Route},
 };
 use grug::{
-    Addr, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message, SigningClient, TxOutcome,
+    Addr, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message, Signer, SigningClient,
+    TxOutcome,
 };
 use hyperlane_dango::{DangoProviderInterface, TryDangoConvertor};
 use tokio::time::sleep;
@@ -43,22 +45,23 @@ impl ChainHelper {
         destination_domain: u32,
         route: Route,
     ) -> anyhow::Result<TxOutcome> {
-        self.boradcast_and_find(
-            "owner",
-            Message::execute(
-                self.cfg.addresses.warp,
-                &warp::ExecuteMsg::SetRoute {
-                    denom: denom.clone(),
-                    destination_domain,
-                    route: route.clone(),
+        self.client
+            .broadcast_and_find(
+                &mut self.accounts["owner"],
+                Message::execute(
+                    self.cfg.addresses.warp,
+                    &warp::ExecuteMsg::SetRoute {
+                        denom: denom.clone(),
+                        destination_domain,
+                        route: route.clone(),
+                    },
+                    Coins::default(),
+                )?,
+                GasOption::Predefined {
+                    gas_limit: 10_000_000,
                 },
-                Coins::default(),
-            )?,
-            GasOption::Predefined {
-                gas_limit: 10_000_000,
-            },
-        )
-        .await
+            )
+            .await
     }
 
     pub async fn send_remote(
@@ -68,22 +71,23 @@ impl ChainHelper {
         destination_domain: u32,
         recipient: Addr,
     ) -> anyhow::Result<TxOutcome> {
-        self.boradcast_and_find(
-            sender,
-            Message::execute(
-                self.cfg.addresses.warp,
-                &warp::ExecuteMsg::TransferRemote {
-                    destination_domain,
-                    recipient: recipient.into(),
-                    metadata: None,
+        self.client
+            .broadcast_and_find(
+                &mut self.accounts[sender],
+                Message::execute(
+                    self.cfg.addresses.warp,
+                    &warp::ExecuteMsg::TransferRemote {
+                        destination_domain,
+                        recipient: recipient.into(),
+                        metadata: None,
+                    },
+                    coin.clone(),
+                )?,
+                GasOption::Predefined {
+                    gas_limit: 10_000_000,
                 },
-                coin.clone(),
-            )?,
-            GasOption::Predefined {
-                gas_limit: 10_000_000,
-            },
-        )
-        .await
+            )
+            .await
     }
 
     pub async fn set_hyperlane_validators(
@@ -92,47 +96,48 @@ impl ChainHelper {
         threshold: u32,
         validators: BTreeSet<HexByteArray<20>>,
     ) -> anyhow::Result<TxOutcome> {
-        self.boradcast_and_find(
-            "owner",
-            Message::execute(
-                self.cfg.addresses.hyperlane.ism,
-                &isms::multisig::ExecuteMsg::SetValidators {
-                    domain: remote_domain,
-                    threshold,
-                    validators,
+        self.client
+            .broadcast_and_find(
+                &mut self.accounts["owner"],
+                Message::execute(
+                    self.cfg.addresses.hyperlane.ism,
+                    &isms::multisig::ExecuteMsg::SetValidators {
+                        domain: remote_domain,
+                        threshold,
+                        validators,
+                    },
+                    Coins::default(),
+                )?,
+                GasOption::Predefined {
+                    gas_limit: 10_000_000,
                 },
-                Coins::default(),
-            )?,
-            GasOption::Predefined {
-                gas_limit: 10_000_000,
-            },
-        )
-        .await
+            )
+            .await
     }
 
-    async fn boradcast_and_find(
-        &mut self,
-        signer: &str,
-        msg: Message,
-        gas_opt: GasOption,
-    ) -> anyhow::Result<TxOutcome> {
-        let hash = self
-            .client
-            .send_message(&mut self.accounts[signer], msg, gas_opt)
-            .await?
-            .hash
-            .try_convert()?;
+    // async fn boradcast_and_find(
+    //     &mut self,
+    //     signer: &str,
+    //     msg: Message,
+    //     gas_opt: GasOption,
+    // ) -> anyhow::Result<TxOutcome> {
+    //     let hash = self
+    //         .client
+    //         .send_message(&mut self.accounts[signer], msg, gas_opt)
+    //         .await?
+    //         .hash
+    //         .try_convert()?;
 
-        loop {
-            let outcome = self.client.search_tx(hash).await;
+    //     loop {
+    //         let outcome = self.client.search_tx(hash).await;
 
-            if let Ok(outcome) = outcome {
-                return Ok(outcome.outcome);
-            }
+    //         if let Ok(outcome) = outcome {
+    //             return Ok(outcome.outcome);
+    //         }
 
-            sleep(Duration::from_secs(1)).await;
-        }
-    }
+    //         sleep(Duration::from_secs(1)).await;
+    //     }
+    // }
 }
 pub struct Accounts(BTreeMap<String, SingleSigner<Defined<Nonce>>>);
 
@@ -167,5 +172,51 @@ where
 {
     fn index_mut(&mut self, index: S) -> &mut Self::Output {
         self.get_mut(index.as_ref()).expect("account not found")
+    }
+}
+
+#[async_trait]
+pub trait ClientExt {
+    async fn broadcast_and_find<S>(
+        &self,
+        signer: &mut S,
+        message: Message,
+        gas_opt: GasOption,
+    ) -> anyhow::Result<TxOutcome>
+    where
+        S: Signer + Send + Sync + 'static;
+}
+
+#[async_trait]
+impl ClientExt for SigningClient {
+    async fn broadcast_and_find<S>(
+        &self,
+        signer: &mut S,
+        message: Message,
+        gas_opt: GasOption,
+    ) -> anyhow::Result<TxOutcome>
+    where
+        S: Signer + Send + Sync + 'static,
+    {
+        let hash = self
+            .send_message(signer, message, gas_opt)
+            .await?
+            .hash
+            .try_convert()?;
+
+        let mut counter = 0;
+
+        while counter < 10 {
+            let outcome = self.search_tx(hash).await;
+
+            if let Ok(outcome) = outcome {
+                return Ok(outcome.outcome);
+            }
+
+            counter += 1;
+            sleep(Duration::from_secs(1)).await;
+        }
+
+        Err(anyhow::anyhow!("error while broadcasting tx: {}", hash))
     }
 }
