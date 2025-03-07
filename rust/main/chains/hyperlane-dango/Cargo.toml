@@ -30,10 +30,10 @@ tracing = { workspace = true }
 [dev-dependencies]
 bip32             = "0.5.3"
 dangod-types      = { git = "https://github.com/Rhaki/dangod"}
+ethers            = { workspace = true }
 ethers-prometheus = { path = "../../ethers-prometheus" }
 hyperlane-base    = { path = "../../hyperlane-base" }
+process-terminal  = "0.1.6"
 prometheus        = { workspace = true }
-process-terminal  = "0.1.5"
 relayer           = { path = "../../agents/relayer" }
 validator         = { path = "../../agents/validator" }
-ethers            = { workspace = true }
