@@ -592,7 +592,7 @@ impl ChainConf {
             }
             // TODO: DANGO
             ChainConnectionConf::Dango(conf) => {
-                let igp = h_dango::IGP::new(conf, locator.domain.clone())?;
+                let igp = h_dango::DangoIGP::new(conf, locator.domain.clone())?;
                 Ok(Box::new(igp) as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
             }
         }
@@ -828,8 +828,10 @@ impl ChainConf {
                 let ism = Box::new(h_cosmos::CosmosRoutingIsm::new(provider, locator.clone())?);
                 Ok(ism as Box<dyn RoutingIsm>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+
+            ChainConnectionConf::Dango(_) => {
+                Err(eyre!("Dango does not support routing ISM yet")).context(ctx)
+            }
         }
         .context(ctx)
     }
@@ -865,8 +867,9 @@ impl ChainConf {
 
                 Ok(ism as Box<dyn AggregationIsm>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(_) => {
+                Err(eyre!("Dango does not support aggregation ISM yet")).context(ctx)
+            }
         }
         .context(ctx)
     }
@@ -895,8 +898,9 @@ impl ChainConf {
             ChainConnectionConf::Cosmos(_) => {
                 Err(eyre!("Cosmos does not support CCIP read ISM yet")).context(ctx)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            ChainConnectionConf::Dango(_) => {
+                Err(eyre!("Dango does not support CCIP read ISM yet")).context(ctx)
+            }
         }
         .context(ctx)
     }

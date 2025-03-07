@@ -1,7 +1,4 @@
-use {
-    super::user::UserInfo,
-    std::sync::LazyLock,
-};
+use {super::user::UserInfo, std::sync::LazyLock};
 
 pub const EXISTING_CONTRACT: &str = "0x2f3d763027f30db0250de65d037058c8bcbd3352";
 pub const NOT_EXISTING_CONTRACT: &str = "0x929a99d0881f07e03d5f91b5ad2a1fc188f64ea1";

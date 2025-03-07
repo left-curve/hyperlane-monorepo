@@ -1,12 +1,12 @@
 use {
-    super::IGP,
+    super::DangoIGP,
     async_trait::async_trait,
     hyperlane_core::{ChainResult, Indexed, Indexer, InterchainGasPayment, LogMeta, H512},
     std::ops::RangeInclusive,
 };
 
 #[async_trait]
-impl Indexer<InterchainGasPayment> for IGP {
+impl Indexer<InterchainGasPayment> for DangoIGP {
     async fn fetch_logs_in_range(
         &self,
         _range: RangeInclusive<u32>,

@@ -279,7 +279,7 @@ fn build_dango_connection_conf(
             search_retry_attempts: search_retry_attempts.unwrap(),
             chain_id: chain_id.unwrap().to_string(),
             rpcs: rpcs.to_owned(),
-            operation_batch
+            operation_batch,
         }))
     }
 }
@@ -477,7 +477,6 @@ pub fn build_connection_conf(
         HyperlaneDomainProtocol::Cosmos => {
             build_cosmos_connection_conf(rpcs, chain, err, operation_batch)
         }
-        // TODO: DANGO
         HyperlaneDomainProtocol::Dango => {
             build_dango_connection_conf(rpcs, chain, err, operation_batch)
         }

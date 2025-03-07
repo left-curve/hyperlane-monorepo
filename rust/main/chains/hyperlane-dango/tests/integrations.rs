@@ -75,6 +75,11 @@ mod startup {
         }
     }
 
+    pub struct StartupResponse {
+        pub dango1_ch: ChainHelper,
+        pub dango2_ch: ChainHelper,
+    }
+
     fn launch_validators(
         validators: Vec<AgentOutput>,
         chain_name: &str,
@@ -122,45 +127,6 @@ mod startup {
                 (vk, child)
             })
             .collect::<Vec<_>>()
-    }
-
-    async fn set_validator_set(
-        ch: &mut ChainHelper,
-        domain: u32,
-        threshold: u32,
-        validator_addresses: BTreeSet<HexByteArray<20>>,
-    ) {
-        ch.set_hyperlane_validators(domain, threshold, validator_addresses)
-            .await
-            .unwrap()
-            .should_succeed();
-    }
-
-    async fn set_routes(
-        local_ch: &mut ChainHelper,
-        destination_warp_addr: Addr,
-        destination_domain: u32,
-        routes: Vec<Denom>,
-    ) {
-        for route in routes {
-            local_ch
-                .set_route(
-                    route,
-                    destination_domain,
-                    Route {
-                        address: destination_warp_addr.into(),
-                        fee: Uint128::ZERO,
-                    },
-                )
-                .await
-                .unwrap()
-                .should_succeed();
-        }
-    }
-
-    pub struct StartupResponse {
-        pub dango1_ch: ChainHelper,
-        pub dango2_ch: ChainHelper,
     }
 
     pub async fn startup(
@@ -255,6 +221,40 @@ mod startup {
             dango1_ch: ch1,
             dango2_ch: ch2,
         })
+    }
+
+    async fn set_validator_set(
+        ch: &mut ChainHelper,
+        domain: u32,
+        threshold: u32,
+        validator_addresses: BTreeSet<HexByteArray<20>>,
+    ) {
+        ch.set_hyperlane_validators(domain, threshold, validator_addresses)
+            .await
+            .unwrap()
+            .should_succeed();
+    }
+
+    async fn set_routes(
+        local_ch: &mut ChainHelper,
+        destination_warp_addr: Addr,
+        destination_domain: u32,
+        routes: Vec<Denom>,
+    ) {
+        for route in routes {
+            local_ch
+                .set_route(
+                    route,
+                    destination_domain,
+                    Route {
+                        address: destination_warp_addr.into(),
+                        fee: Uint128::ZERO,
+                    },
+                )
+                .await
+                .unwrap()
+                .should_succeed();
+        }
     }
 }
 

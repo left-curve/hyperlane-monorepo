@@ -290,8 +290,7 @@ impl HyperlaneDomainProtocol {
             Ethereum => format!("{:?}", H160::from(addr)),
             Fuel => format!("{:?}", addr),
             Sealevel => format!("{:?}", addr),
-            Cosmos => format!("{:?}", addr),
-            // TODO: DANGO
+            Cosmos => format!("{:?}", H160::from(addr)),
             Dango => format!("{:?}", addr),
         }
     }

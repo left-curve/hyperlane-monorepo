@@ -5,11 +5,11 @@ use {
 };
 
 #[derive(Debug)]
-pub struct IGP {
+pub struct DangoIGP {
     pub provider: DangoProvider,
 }
 
-impl IGP {
+impl DangoIGP {
     pub fn new(config: &ConnectionConf, domain: HyperlaneDomain) -> DangoResult<Self> {
         Ok(Self {
             provider: DangoProvider::from_config(config, domain, None)?,
@@ -18,7 +18,7 @@ impl IGP {
 }
 
 #[async_trait]
-impl SequenceAwareIndexer<InterchainGasPayment> for IGP {
+impl SequenceAwareIndexer<InterchainGasPayment> for DangoIGP {
     async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
         let height = self.provider.get_block(None).await?.height;
         Ok((None, height as u32))
