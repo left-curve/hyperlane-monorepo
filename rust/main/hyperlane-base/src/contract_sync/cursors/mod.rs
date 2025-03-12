@@ -91,7 +91,7 @@ impl Indexable for Delivery {
             HyperlaneDomainProtocol::Fuel => todo!(),
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::RateLimited,
-            // TODO: DANGO
+            // TODO: DANGO - requested only by the scraper
             HyperlaneDomainProtocol::Dango => todo!(),
         }
     }

@@ -485,7 +485,7 @@ impl ChainConf {
                 );
                 Ok(indexer as Box<dyn SequenceAwareIndexer<H256>>)
             }
-            // TODO: DANGO
+            // TODO: DANGO - requested only by the scraper
             ChainConnectionConf::Dango(_) => todo!(),
         }
         .context(ctx)
@@ -529,8 +529,8 @@ impl ChainConf {
                 )?);
                 Ok(paymaster as Box<dyn InterchainGasPaymaster>)
             }
-            // TODO: DANGO
-            ChainConnectionConf::Dango(_) => todo!(),
+            // TODO: DANGO - could not be implemented because dango does not support IGP
+            ChainConnectionConf::Dango(_) => unimplemented!(),
         }
         .context(ctx)
     }
@@ -590,7 +590,6 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
             }
-            // TODO: DANGO
             ChainConnectionConf::Dango(conf) => {
                 let igp = h_dango::DangoIGP::new(conf, locator.domain.clone())?;
                 Ok(Box::new(igp) as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
