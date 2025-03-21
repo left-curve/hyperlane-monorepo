@@ -4,7 +4,9 @@ use {
         DangoSigner, ExecutionBlock, TryDangoConvertor,
     },
     async_trait::async_trait,
-    dango_hyperlane_types::{hooks::merkle, IncrementalMerkleTree as DangoIncrementalMerkleTree},
+    dango_hyperlane_types::{
+        mailbox::QueryTreeRequest, IncrementalMerkleTree as DangoIncrementalMerkleTree,
+    },
     hyperlane_core::{
         accumulator::incremental::IncrementalMerkle, ChainCommunicationError, ChainResult,
         Checkpoint, ContractLocator, HyperlaneContract, MerkleTreeHook, ReorgPeriod, H256,
@@ -85,7 +87,7 @@ impl DangoMerkleTree {
         self.provider
             .query_wasm_smart(
                 self.address.try_convert()?,
-                merkle::QueryTreeRequest {},
+                QueryTreeRequest {},
                 block_height,
             )
             .await

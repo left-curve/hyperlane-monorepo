@@ -170,9 +170,9 @@ where
         } else {
             CoreContractAddresses {
                 mailbox: app_addresses.hyperlane.mailbox.convert(),
-                interchain_gas_paymaster: app_addresses.hyperlane.fee.convert(),
+                interchain_gas_paymaster: H256([0; 32]), // We don't have IGP.
                 validator_announce: app_addresses.hyperlane.va.convert(),
-                merkle_tree_hook: app_addresses.hyperlane.merkle.convert(),
+                merkle_tree_hook: app_addresses.hyperlane.mailbox.convert(),
             }
         };
 

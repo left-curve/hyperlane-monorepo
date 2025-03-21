@@ -1,8 +1,14 @@
 use {
-    dango_hyperlane_types::va::QueryAnnouncedValidatorsRequest, dango_types::config::AppConfig, grug::{Addr, Denom, ResultExt, SigningClient}, hyperlane_core::H256, hyperlane_dango::{DangoConvertor, DangoProviderInterface}, std::str::FromStr, utils::constants::{
+    dango_hyperlane_types::va::QueryAnnouncedValidatorsRequest,
+    dango_types::config::AppConfig,
+    grug::{Addr, Denom, ResultExt, SigningClient},
+    hyperlane_core::H256,
+    hyperlane_dango::{DangoConvertor, DangoProviderInterface},
+    std::str::FromStr,
+    utils::constants::{
         EXISTING_COIN, EXISTING_CONTRACT, EXISTING_USER, NOT_EXISTING_COIN, NOT_EXISTING_CONTRACT,
         NOT_EXISTING_USER,
-    }
+    },
 };
 
 pub mod utils;
@@ -90,19 +96,27 @@ async fn contracts() {
     let va: H256 = cfg.addresses.hyperlane.va.convert();
     println!("VA: {:?}", va);
 
-    let merkle: H256 = cfg.addresses.hyperlane.merkle.convert();
+    // Merkle tree in included in the mailbox contract.
+    let merkle: H256 = cfg.addresses.hyperlane.mailbox.convert();
     println!("merkle: {:?}", merkle);
-
 }
 
 #[tokio::test]
 async fn locations() {
-
     let client = SigningClient::connect("dango", "http://localhost:26657").unwrap();
     let cfg: AppConfig = client.query_app_config().await.unwrap();
 
-    let res = client.query_wasm_smart(cfg.addresses.hyperlane.va, QueryAnnouncedValidatorsRequest{ start_after: None, limit: None }, None).await.unwrap();
+    let res = client
+        .query_wasm_smart(
+            cfg.addresses.hyperlane.va,
+            QueryAnnouncedValidatorsRequest {
+                start_after: None,
+                limit: None,
+            },
+            None,
+        )
+        .await
+        .unwrap();
 
     println!("{:?}", res);
-
 }

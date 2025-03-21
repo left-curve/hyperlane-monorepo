@@ -1,13 +1,8 @@
 use {
-    super::DangoMerkleTree,
-    crate::{DangoConvertor, ExecutionBlock, SearchLog, TryDangoConvertor},
-    async_trait::async_trait,
-    dango_hyperlane_types::hooks::merkle,
-    hyperlane_core::{
+    super::DangoMerkleTree, crate::{DangoConvertor, ExecutionBlock, SearchLog, TryDangoConvertor}, async_trait::async_trait, dango_hyperlane_types::mailbox::PostDispatch, hyperlane_core::{
         ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeInsertion,
         SequenceAwareIndexer, H512,
-    },
-    std::ops::RangeInclusive,
+    }, std::ops::RangeInclusive
 };
 
 #[async_trait]
@@ -44,7 +39,7 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTree {
     }
 }
 
-fn search_fn(event: merkle::PostDispatch) -> Indexed<MerkleTreeInsertion> {
+fn search_fn(event: PostDispatch) -> Indexed<MerkleTreeInsertion> {
     MerkleTreeInsertion::new(event.index as u32, event.message_id.convert()).into()
 }
 
