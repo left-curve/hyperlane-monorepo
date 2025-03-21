@@ -4,8 +4,10 @@ use {
         DangoSigner, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
-    dango_hyperlane_types::va::{ExecuteMsg, QueryAnnouncedStorageLocationsRequest},
-    grug::{Coins, Inner, Message},
+    dango_hyperlane_types::va::{
+        ExecuteMsg, QueryAnnounceFeePerByteRequest, QueryAnnouncedStorageLocationsRequest,
+    },
+    grug::{Coin, Coins, Inner, Message, Uint128},
     hyperlane_core::{
         Announcement, ChainResult, ContractLocator, SignedType, TxOutcome, ValidatorAnnounce, H256,
         U256,
@@ -29,6 +31,23 @@ impl DangoValidatorAnnounce {
             provider: DangoProvider::from_config(config, locator.domain.clone(), signer)?,
             address: locator.address,
         })
+    }
+
+    /// Calculate the fee for announcing a storage location.
+    async fn announce_fee(&self, storage_location: &str) -> ChainResult<Coin> {
+        let fee_per_byte = self
+            .provider
+            .query_wasm_smart(
+                self.address.try_convert()?,
+                QueryAnnounceFeePerByteRequest {},
+                None,
+            )
+            .await?;
+
+        let fee_amount = Uint128::new(fee_per_byte.amount.inner() * storage_location.len() as u128);
+
+        // Unwrap since the denom is valid.
+        Ok(Coin::new(fee_per_byte.denom, fee_amount).unwrap())
     }
 }
 
@@ -64,6 +83,12 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
 
     /// Announce a storage location for a validator
     async fn announce(&self, announcement: SignedType<Announcement>) -> ChainResult<TxOutcome> {
+        // To announce, the validator is required to pay some fee that depend from
+        // the storage_location.
+        let announce_fee = self
+            .announce_fee(&announcement.value.storage_location)
+            .await?;
+
         let msg = ExecuteMsg::Announce {
             validator: announcement.value.validator.convert(),
             storage_location: announcement.value.storage_location,
@@ -74,7 +99,7 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 .into_dango_error()?,
         };
 
-        let msg = Message::execute(self.address.try_convert()?, &msg, Coins::new()).unwrap();
+        let msg = Message::execute(self.address.try_convert()?, &msg, announce_fee).unwrap();
 
         Ok(self.provider.send_message_and_find(msg, None).await?)
     }
