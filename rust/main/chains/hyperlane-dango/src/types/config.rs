@@ -39,7 +39,9 @@ pub struct RpcConfig {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
-pub struct GraphQlConfig {}
+pub struct GraphQlConfig {
+    pub url: String,
+}
 
 impl ConnectionConf {
     /// Build a provider.

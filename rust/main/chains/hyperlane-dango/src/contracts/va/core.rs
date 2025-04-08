@@ -7,7 +7,7 @@ use {
     dango_hyperlane_types::va::{
         ExecuteMsg, QueryAnnounceFeePerByteRequest, QueryAnnouncedStorageLocationsRequest,
     },
-    grug::{Coin, Coins, Inner, Message, Uint128},
+    grug::{Coin, Inner, Message, QueryClientExt, Uint128},
     hyperlane_core::{
         Announcement, ChainResult, ContractLocator, SignedType, TxOutcome, ValidatorAnnounce, H256,
         U256,
@@ -42,7 +42,8 @@ impl DangoValidatorAnnounce {
                 QueryAnnounceFeePerByteRequest {},
                 None,
             )
-            .await?;
+            .await
+            .into_dango_error()?;
 
         let fee_amount = Uint128::new(fee_per_byte.amount.inner() * storage_location.len() as u128);
 
@@ -72,7 +73,8 @@ impl ValidatorAnnounce for DangoValidatorAnnounce {
                 QueryAnnouncedStorageLocationsRequest { validators },
                 None,
             )
-            .await?;
+            .await
+            .into_dango_error()?;
 
         Ok(response
             .into_values()

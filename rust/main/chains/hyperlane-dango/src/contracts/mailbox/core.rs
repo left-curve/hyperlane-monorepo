@@ -5,7 +5,7 @@ use {
     },
     async_trait::async_trait,
     dango_hyperlane_types::{mailbox, recipients::RecipientQuery},
-    grug::{Coins, HexBinary, Message},
+    grug::{Coins, HexBinary, Message, QueryClientExt},
     hyperlane_core::{
         ChainResult, ContractLocator, HyperlaneMessage, Mailbox, RawHyperlaneMessage, ReorgPeriod,
         TxCostEstimate, TxOutcome, H256, U256,
@@ -44,7 +44,8 @@ impl Mailbox for DangoMailbox {
                 mailbox::QueryNonceRequest {},
                 None,
             )
-            .await?)
+            .await
+            .into_dango_error()?)
     }
 
     /// Fetch the status of a message
@@ -58,7 +59,8 @@ impl Mailbox for DangoMailbox {
                 },
                 None,
             )
-            .await?)
+            .await
+            .into_dango_error()?)
     }
 
     /// Fetch the current default interchain security module value
@@ -70,7 +72,8 @@ impl Mailbox for DangoMailbox {
                 mailbox::QueryConfigRequest {},
                 None,
             )
-            .await?
+            .await
+            .into_dango_error()?
             .default_ism
             .convert())
     }
@@ -86,7 +89,7 @@ impl Mailbox for DangoMailbox {
                 ),
                 None,
             )
-            .await?
+            .await.into_dango_error()?
             .as_interchain_security_module()
         {
             Ok(ism.convert())

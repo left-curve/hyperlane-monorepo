@@ -1,6 +1,4 @@
 pub mod provider;
-pub mod rpc;
-pub mod traits;
-pub mod graphql;
+pub mod wrapper;
 
-pub use {traits::*, provider::*};
+pub use {provider::*, wrapper::*};

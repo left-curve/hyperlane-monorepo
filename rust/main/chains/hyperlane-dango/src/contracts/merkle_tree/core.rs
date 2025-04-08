@@ -1,12 +1,13 @@
 use {
     crate::{
         hyperlane_contract, provider::DangoProvider, ConnectionConf, DangoConvertor, DangoResult,
-        DangoSigner, ExecutionBlock, TryDangoConvertor,
+        DangoSigner, ExecutionBlock, IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::{
         mailbox::QueryTreeRequest, IncrementalMerkleTree as DangoIncrementalMerkleTree,
     },
+    grug::QueryClientExt,
     hyperlane_core::{
         accumulator::incremental::IncrementalMerkle, ChainCommunicationError, ChainResult,
         Checkpoint, ContractLocator, HyperlaneContract, MerkleTreeHook, ReorgPeriod, H256,
@@ -91,5 +92,6 @@ impl DangoMerkleTree {
                 block_height,
             )
             .await
+            .into_dango_error()
     }
 }

@@ -1,8 +1,9 @@
 use {
     super::DangoIsm,
-    crate::{DangoConvertor, TryDangoConvertor},
+    crate::{DangoConvertor, IntoDangoError, TryDangoConvertor},
     async_trait::async_trait,
     dango_hyperlane_types::isms,
+    grug::QueryClientExt,
     hyperlane_core::{ChainResult, HyperlaneMessage, MultisigIsm, H256},
 };
 
@@ -21,7 +22,8 @@ impl MultisigIsm for DangoIsm {
                 },
                 None,
             )
-            .await?;
+            .await
+            .into_dango_error()?;
 
         let validators: Vec<H256> = res
             .validators

@@ -2,10 +2,9 @@ mod config;
 mod convertor;
 mod error;
 mod log;
-mod outcome;
 mod signer;
 
-pub use {config::*, convertor::*, error::*, log::*, outcome::*, signer::*};
+pub use {config::*, convertor::*, error::*, log::*, signer::*};
 
 pub enum ExecutionBlock {
     /// Default reorg period of Hyperlane

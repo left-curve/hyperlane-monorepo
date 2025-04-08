@@ -1,8 +1,16 @@
 use {
-    super::DangoMerkleTree, crate::{DangoConvertor, ExecutionBlock, SearchLog, TryDangoConvertor}, async_trait::async_trait, dango_hyperlane_types::mailbox::PostDispatch, hyperlane_core::{
+    super::DangoMerkleTree,
+    crate::{
+        DangoConvertor, ExecutionBlock, IntoDangoError, SearchLog, SearchTxOutcomeExt,
+        TryDangoConvertor,
+    },
+    async_trait::async_trait,
+    dango_hyperlane_types::mailbox::PostDispatch,
+    hyperlane_core::{
         ChainResult, HyperlaneContract, Indexed, Indexer, LogMeta, MerkleTreeInsertion,
         SequenceAwareIndexer, H512,
-    }, std::ops::RangeInclusive
+    },
+    std::ops::RangeInclusive,
 };
 
 #[async_trait]
@@ -21,7 +29,13 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTree {
 
     /// Get the chain's latest block number that has reached finality
     async fn get_finalized_block_number(&self) -> ChainResult<u32> {
-        Ok(self.provider.get_block(None).await?.height as u32)
+        Ok(self
+            .provider
+            .query_block(None)
+            .await
+            .into_dango_error()?
+            .info
+            .height as u32)
     }
 
     /// Fetch list of logs emitted in a transaction with the given hash.
@@ -32,7 +46,8 @@ impl Indexer<MerkleTreeInsertion> for DangoMerkleTree {
         Ok(self
             .provider
             .search_tx(tx_hash.try_convert()?)
-            .await?
+            .await
+            .into_dango_error()?
             .with_block_hash(&self.provider)
             .await?
             .search_contract_log(self.address().try_convert()?, search_fn)?)
@@ -47,7 +62,13 @@ fn search_fn(event: PostDispatch) -> Indexed<MerkleTreeInsertion> {
 impl SequenceAwareIndexer<MerkleTreeInsertion> for DangoMerkleTree {
     /// Return the latest finalized sequence (if any) and block number
     async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
-        let last_height = self.provider.get_block(None).await?.height;
+        let last_height = self
+            .provider
+            .query_block(None)
+            .await
+            .into_dango_error()?
+            .info
+            .height;
         let dango_tree = self
             .dango_tree(ExecutionBlock::Defined(last_height))
             .await?;

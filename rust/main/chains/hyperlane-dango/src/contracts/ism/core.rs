@@ -1,10 +1,11 @@
 use {
     crate::{
         hyperlane_contract, ConnectionConf, DangoProvider, DangoResult, DangoSigner,
-        TryDangoConvertor,
+        IntoDangoError, TryDangoConvertor,
     },
     async_trait::async_trait,
     dango_hyperlane_types::isms,
+    grug::QueryClientExt,
     hyperlane_core::{
         ChainResult, ContractLocator, HyperlaneMessage, InterchainSecurityModule, ModuleType,
         RawHyperlaneMessage, H256, U256,
@@ -52,7 +53,8 @@ impl InterchainSecurityModule for DangoIsm {
                 }),
                 None,
             )
-            .await?;
+            .await
+            .into_dango_error()?;
 
         // We don't have a way to estimate gas for this call, so we return a default value
         Ok(Some(U256::one()))

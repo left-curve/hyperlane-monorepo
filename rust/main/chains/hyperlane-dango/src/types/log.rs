@@ -1,18 +1,18 @@
 use {
-    super::SearchTxOutcome,
-    crate::{DangoConvertor, DangoResult},
+    crate::{DangoConvertor, DangoProvider, DangoResult},
+    async_trait::async_trait,
     grug::{
-        Addr, Addressable, CheckedContractEvent, CronOutcome, Defined, EventFilter, EventId,
-        Hash256, HashExt, JsonDeExt, SearchEvent, Tx, Undefined,
+        Addr, Addressable, CheckedContractEvent, CronOutcome, EventFilter, EventId, Hash256,
+        HashExt, JsonDeExt, SearchEvent, SearchTxOutcome, Tx,
     },
     hyperlane_core::LogMeta,
     serde::de::DeserializeOwned,
 };
 
-pub struct BlockLogs<H = Undefined<Hash256>> {
+pub struct BlockLogs {
     pub(crate) block_height: u64,
     pub(crate) block_hash: Hash256,
-    pub(crate) txs: Vec<SearchTxOutcome<H>>,
+    pub(crate) txs: Vec<SearchTxOutcome>,
     pub(crate) crons: Vec<CronOutcome>,
 }
 
@@ -91,6 +91,34 @@ fn cron_hash(block: u64, cron_id: u32) -> Hash256 {
     bytes.hash256()
 }
 
+pub struct SearchTxOutcomeWithBlockHash {
+    pub(crate) block_hash: Hash256,
+    pub(crate) tx: SearchTxOutcome,
+}
+
+#[async_trait]
+pub trait SearchTxOutcomeExt {
+    async fn with_block_hash(
+        self,
+        client: &DangoProvider,
+    ) -> DangoResult<SearchTxOutcomeWithBlockHash>;
+}
+
+#[async_trait]
+
+impl SearchTxOutcomeExt for SearchTxOutcome {
+    async fn with_block_hash(
+        self,
+        client: &DangoProvider,
+    ) -> DangoResult<SearchTxOutcomeWithBlockHash> {
+        let block_hash = client.query_block(Some(self.height)).await?.info.hash;
+        Ok(SearchTxOutcomeWithBlockHash {
+            block_hash,
+            tx: self,
+        })
+    }
+}
+
 pub trait SearchLog {
     fn search_contract_log<E, R>(
         self,
@@ -101,7 +129,7 @@ pub trait SearchLog {
         E: DeserializeOwned;
 }
 
-impl<H> SearchLog for BlockLogs<H> {
+impl SearchLog for BlockLogs {
     fn search_contract_log<E, R>(
         self,
         contract: Addr,
@@ -128,10 +156,15 @@ impl<H> SearchLog for BlockLogs<H> {
         };
 
         let mut outcome_tx = vec![];
-        for (idx, tx) in self.txs.into_iter().enumerate() {
-            let res = filter_closure(tx.outcome.events.search_event::<CheckedContractEvent>());
+        for (idx, outcome) in self.txs.into_iter().enumerate() {
+            let res = filter_closure(
+                outcome
+                    .outcome
+                    .events
+                    .search_event::<CheckedContractEvent>(),
+            );
             if !res.is_empty() {
-                outcome_tx.push((idx as u32, tx.tx, res));
+                outcome_tx.push((idx as u32, outcome.tx, res));
             }
         }
 
@@ -155,7 +188,7 @@ impl<H> SearchLog for BlockLogs<H> {
     }
 }
 
-impl<H> SearchLog for Vec<BlockLogs<H>> {
+impl SearchLog for Vec<BlockLogs> {
     fn search_contract_log<E, R>(
         self,
         contract: Addr,
@@ -173,7 +206,7 @@ impl<H> SearchLog for Vec<BlockLogs<H>> {
     }
 }
 
-impl SearchLog for SearchTxOutcome<Defined<Hash256>> {
+impl SearchLog for SearchTxOutcomeWithBlockHash {
     fn search_contract_log<E, R>(
         self,
         contract: Addr,
@@ -183,9 +216,9 @@ impl SearchLog for SearchTxOutcome<Defined<Hash256>> {
         E: DeserializeOwned,
     {
         BlockLogs {
-            block_height: self.block_height,
-            block_hash: self.block_hash.into_inner(),
-            txs: vec![self],
+            block_height: self.tx.height,
+            block_hash: self.block_hash,
+            txs: vec![self.tx],
             crons: vec![],
         }
         .search_contract_log(contract, closure)
