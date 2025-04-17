@@ -30,12 +30,12 @@ url = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-bip32             = "0.5.3"
-dangod-types      = { git = "https://github.com/Rhaki/dangod"}
-ethers            = { workspace = true }
+bip32 = "0.5.3"
+dangod-types = { git = "https://github.com/Rhaki/dangod" }
+ethers = { workspace = true }
 ethers-prometheus = { path = "../../ethers-prometheus" }
-hyperlane-base    = { path = "../../hyperlane-base" }
-process-terminal  = "0.1.6"
-prometheus        = { workspace = true }
-relayer           = { path = "../../agents/relayer" }
-validator         = { path = "../../agents/validator" }
+hyperlane-base = { path = "../../hyperlane-base" }
+process-terminal = "0.1.6"
+prometheus = { workspace = true }
+relayer = { path = "../../agents/relayer" }
+validator = { path = "../../agents/validator" }

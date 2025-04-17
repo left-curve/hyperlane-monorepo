@@ -1,4 +1,4 @@
-use {super::user::UserInfo, std::sync::LazyLock};
+use {super::user::UserInfo, hyperlane_base::CoreMetrics, std::sync::LazyLock};
 
 pub const EXISTING_CONTRACT: &str = "0x2f3d763027f30db0250de65d037058c8bcbd3352";
 pub const NOT_EXISTING_CONTRACT: &str = "0x929a99d0881f07e03d5f91b5ad2a1fc188f64ea1";
@@ -41,3 +41,6 @@ pub const CHAIN_ID: &str = "dango";
 
 pub const DANGO1_DOMAIN: u32 = 88888887;
 pub const DANGO2_DOMAIN: u32 = 88888886;
+
+pub const EMPTY_METRICS: LazyLock<CoreMetrics> =
+    LazyLock::new(|| CoreMetrics::new("dango", 9090, prometheus::Registry::new()).unwrap());

@@ -13,29 +13,32 @@ use dango_types::{
     warp::{self, Route},
 };
 use grug::{
-    Addr, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message, Signer, SigningClient,
-    TxOutcome,
+    Addr, BroadcastClientExt, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message,
+    QueryClientExt, SearchTxClient, Signer, TendermintRpcClient, TxOutcome,
 };
-use hyperlane_dango::{DangoProviderInterface, TryDangoConvertor};
+
 use tokio::time::sleep;
 
 pub struct ChainHelper {
     pub cfg: AppConfig,
-    pub client: SigningClient,
+    pub client: TendermintRpcClient,
     pub accounts: Accounts,
+    pub chain_id: String,
 }
 
 impl ChainHelper {
     pub async fn new(
-        client: SigningClient,
+        client: TendermintRpcClient,
         accounts: BTreeMap<String, SingleSigner<Defined<Nonce>>>,
+        chain_id: String,
     ) -> anyhow::Result<Self> {
-        let cfg = client.query_app_config().await?;
+        let cfg = client.query_app_config(None).await?;
 
         Ok(Self {
             cfg,
             client,
             accounts: Accounts(accounts),
+            chain_id,
         })
     }
 
@@ -60,6 +63,7 @@ impl ChainHelper {
                 GasOption::Predefined {
                     gas_limit: 10_000_000,
                 },
+                &self.chain_id,
             )
             .await
     }
@@ -86,6 +90,7 @@ impl ChainHelper {
                 GasOption::Predefined {
                     gas_limit: 10_000_000,
                 },
+                &self.chain_id,
             )
             .await
     }
@@ -111,33 +116,10 @@ impl ChainHelper {
                 GasOption::Predefined {
                     gas_limit: 10_000_000,
                 },
+                &self.chain_id,
             )
             .await
     }
-
-    // async fn boradcast_and_find(
-    //     &mut self,
-    //     signer: &str,
-    //     msg: Message,
-    //     gas_opt: GasOption,
-    // ) -> anyhow::Result<TxOutcome> {
-    //     let hash = self
-    //         .client
-    //         .send_message(&mut self.accounts[signer], msg, gas_opt)
-    //         .await?
-    //         .hash
-    //         .try_convert()?;
-
-    //     loop {
-    //         let outcome = self.client.search_tx(hash).await;
-
-    //         if let Ok(outcome) = outcome {
-    //             return Ok(outcome.outcome);
-    //         }
-
-    //         sleep(Duration::from_secs(1)).await;
-    //     }
-    // }
 }
 pub struct Accounts(BTreeMap<String, SingleSigner<Defined<Nonce>>>);
 
@@ -182,27 +164,31 @@ pub trait ClientExt {
         signer: &mut S,
         message: Message,
         gas_opt: GasOption,
+        chain_id: &str,
     ) -> anyhow::Result<TxOutcome>
     where
         S: Signer + Send + Sync + 'static;
 }
 
 #[async_trait]
-impl ClientExt for SigningClient {
+impl ClientExt for TendermintRpcClient {
     async fn broadcast_and_find<S>(
         &self,
         signer: &mut S,
         message: Message,
         gas_opt: GasOption,
+        chain_id: &str,
     ) -> anyhow::Result<TxOutcome>
     where
         S: Signer + Send + Sync + 'static,
     {
-        let hash = self
-            .send_message(signer, message, gas_opt)
+        let broadcast_outcome = self
+            .send_message(signer, message, gas_opt, chain_id)
             .await?
-            .hash
-            .try_convert()?;
+            .into_result()
+            .map_err(|e| anyhow::anyhow!(e.check_tx.error))?;
+
+        let hash = broadcast_outcome.tx_hash;
 
         let mut counter = 0;
 

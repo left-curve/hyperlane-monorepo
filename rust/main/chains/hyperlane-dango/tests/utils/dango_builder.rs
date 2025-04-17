@@ -1,14 +1,18 @@
 use {
-    super::constants::{CHAIN_ID, COIN_TYPE},
+    super::constants::COIN_TYPE,
     crate::utils::chain_helper::ChainHelper,
-    anyhow::{bail, ensure},
+    anyhow::{bail, ensure, Ok},
     dango_client::SingleSigner,
-    grug::{Client, Defined, JsonDeExt, MaybeDefined, SigningClient, Undefined},
+    grug::{
+        Binary, BlockClient, BorshDeExt, Defined, JsonDeExt, MaybeDefined, QueryClient,
+        TendermintRpcClient, Undefined,
+    },
     process_terminal::tprintln,
     serde::de::DeserializeOwned,
     std::{
         collections::BTreeMap,
         process::{Child, Command, Stdio},
+        str::FromStr,
     },
 };
 
@@ -79,21 +83,27 @@ where
     pub async fn start(self) -> anyhow::Result<(ChainHelper, Child)> {
         let port = self.port.maybe_into_inner().unwrap_or(26657);
 
-        let client =
-            SigningClient::connect(CHAIN_ID, format!("http://localhost:{port}").as_str()).unwrap();
-
-        ensure!(
-            is_docker_running(),
-            "docker is not running, please start it"
-        );
+        let client = TendermintRpcClient::new(format!("http://localhost:{port}").as_str()).unwrap();
 
         let child = start_dango_docker(
             self.container_name.as_str(),
             port,
             self.hyperlane_domain.maybe_into_inner().unwrap_or(88888888),
-        );
+            &client,
+        )
+        .await?;
 
-        await_until_chain_start(&client).await;
+        let chain_id: String = client
+            .query_store(Binary::from_str("Y2hhaW5faWQ=").unwrap(), None, false)
+            .await
+            .map_err(|e| anyhow::Error::from(e))?
+            .0
+            .unwrap()
+            .to_vec()
+            .deserialize_borsh()
+            .unwrap();
+
+        println!("Chain ID: {}", chain_id);
 
         let genesis: dangod_types::Genesis =
             read_docker_file(&self.container_name, "/root/.dangod/genesis.json")?;
@@ -115,11 +125,11 @@ where
             accounts.insert(username, signer);
         }
 
-        Ok((ChainHelper::new(client, accounts).await?, child))
+        Ok((ChainHelper::new(client, accounts, chain_id).await?, child))
     }
 }
 
-async fn await_until_chain_start(client: &Client) {
+async fn await_until_chain_start(client: &TendermintRpcClient) {
     tprintln!("waiting for chain to start...");
 
     loop {
@@ -138,8 +148,18 @@ fn is_docker_running() -> bool {
         .map_or(false, |output| output.status.success())
 }
 
-fn start_dango_docker(chain_name: &str, port: u16, hyperlane_domain: u32) -> Child {
-    Command::new("docker")
+async fn start_dango_docker(
+    chain_name: &str,
+    port: u16,
+    hyperlane_domain: u32,
+    client: &TendermintRpcClient,
+) -> Result<Child, anyhow::Error> {
+    ensure!(
+        is_docker_running(),
+        "docker is not running, please start it"
+    );
+
+    let child = Command::new("docker")
         .args(&[
             "run",
             "--rm",
@@ -154,7 +174,11 @@ fn start_dango_docker(chain_name: &str, port: u16, hyperlane_domain: u32) -> Chi
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap()
+        .map_err(|e| anyhow::Error::from(e))?;
+
+    await_until_chain_start(client).await;
+
+    Ok(child)
 }
 
 fn read_docker_file<R>(container_name: &str, file_path: &str) -> anyhow::Result<R>

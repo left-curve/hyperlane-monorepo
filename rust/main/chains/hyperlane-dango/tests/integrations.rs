@@ -1,6 +1,6 @@
 use {
     dango_types::{
-        account_factory::{self, AccountType, Username},
+        account_factory::{self, AccountType, RegisterUserData, Username},
         auth::Key,
         bank,
         constants::DANGO_DENOM,
@@ -8,12 +8,11 @@ use {
     },
     grug::{
         btree_map, btree_set, Addr, Addressable, Coin, Coins, Denom, EncodedBytes, GasOption,
-        HashExt, Json, Message, NonEmpty, NumberConst, ResultExt, Signer, StdResult, Tx, Uint128,
-        UnsignedTx,
+        HashExt, Json, Message, NonEmpty, NumberConst, QueryClientExt, ResultExt, Signer,
+        StdResult, Tx, Uint128, UnsignedTx,
     },
     hyperlane_base::settings::CheckpointSyncerConf,
     hyperlane_core::H256,
-    hyperlane_dango::DangoProviderInterface,
     process_terminal::{tprintln, KeyCode, MessageSettings, ProcessSettings, ScrollSettings},
     startup::{startup, AgentOutput, SetupChain, StartupResponse},
     std::{
@@ -24,7 +23,7 @@ use {
     utils::{
         agent::{Agent, AgentBuilder},
         chain_helper::ClientExt,
-        constants::{DANGO1_DOMAIN, DANGO2_DOMAIN},
+        constants::{CHAIN_ID, DANGO1_DOMAIN, DANGO2_DOMAIN},
         crypto::{derive_pk, ValidatorKey},
         dango_builder::{kill_docker_processes, DangoBuilder},
     },
@@ -496,11 +495,11 @@ async fn onboarding() {
     let key = Key::Secp256k1(EncodedBytes::from_inner(pk));
 
     let salt = dango_types::account_factory::NewUserSalt {
-        secret: 10,
+        seed: 10,
         key: key.clone(),
         key_hash,
     }
-    .into_bytes();
+    .to_bytes();
 
     // get code_hash for spot account
     let code_hash = dango1_ch
@@ -564,6 +563,12 @@ async fn onboarding() {
             address: dango2_ch.cfg.addresses.account_factory,
         };
 
+        let username = Username::from_str("user_3").unwrap();
+        let _user_data = RegisterUserData {
+            username: username.clone(),
+            chain_id: CHAIN_ID.to_string(),
+        };
+
         dango2_ch
             .client
             .broadcast_and_find(
@@ -571,10 +576,11 @@ async fn onboarding() {
                 Message::execute(
                     dango2_ch.cfg.addresses.account_factory,
                     &account_factory::ExecuteMsg::RegisterUser {
-                        username: Username::from_str("user_3").unwrap(),
-                        secret: 10,
+                        username: username,
+                        seed: 10,
                         key,
                         key_hash,
+                        signature: todo!(),
                     },
                     Coins::default(),
                 )
@@ -582,6 +588,7 @@ async fn onboarding() {
                 GasOption::Predefined {
                     gas_limit: 10_000_000,
                 },
+                &dango2_ch.chain_id,
             )
             .await
             .unwrap()

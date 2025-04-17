@@ -1,24 +1,46 @@
 pub mod utils;
 
 use {
-    dango_types::warp::{ExecuteMsg, Route},
-    grug::{Coin, Coins, Denom, Message},
+    dango_types::{
+        constants::DANGO_DENOM,
+        warp::{ExecuteMsg, Route},
+    },
+    grug::{Coin, Message, ResultExt},
     hyperlane_core::ReorgPeriod,
-    std::{str::FromStr, sync::LazyLock},
     utils::{
-        config::{ChainConfBuilder, DANGO_DOMAIN, EMPTY_METRICS},
-        constants::OWNER,
+        config::{ChainConfBuilder, DANGO_DOMAIN, DEFAULT_RPC_PORT},
+        constants::{EMPTY_METRICS, OWNER},
+        dango_builder::DangoBuilder,
+        user::IntoSignerConf,
     },
 };
 
-pub const DANGO_DENOM: LazyLock<Denom> = LazyLock::new(|| Denom::from_str("udng").unwrap());
 pub const DESTINATION_DOMAIN: u32 = 1;
 
 #[tokio::test]
 async fn merkle_tree() {
-    let test_suite = ChainConfBuilder::new()
+    let docker_name = "dango";
+    let (mut chain_helper, _) = DangoBuilder::new(docker_name)
+        .with_rpc_port(DEFAULT_RPC_PORT)
+        .start()
+        .await
+        .unwrap();
+
+    let user1 = chain_helper
+        .accounts
+        .get("user_1")
+        .unwrap()
+        .as_signer_conf();
+
+    // let user_key = if let SignerConf::Dango { key, .. } = user1 {
+    //     key
+    // } else {
+    //     panic!("Failed to convert signer");
+    // };
+
+    let test_suite = ChainConfBuilder::new(chain_helper.chain_id.clone())
         .with_default_rpc_provider()
-        .with_signer(OWNER.to_owned().into())
+        .with_signer(user1)
         .build()
         .await;
 
@@ -37,28 +59,19 @@ async fn merkle_tree() {
         .unwrap();
 
     // Add the route for the destination domain.
-    let msg = Message::execute(
-        test_suite.warp_address,
-        &ExecuteMsg::SetRoute {
-            denom: DANGO_DENOM.clone(),
-            destination_domain: DESTINATION_DOMAIN,
-            route: Route {
+    chain_helper
+        .set_route(
+            DANGO_DENOM.clone(),
+            DESTINATION_DOMAIN,
+            Route {
                 // The address is not important for the test.
                 address: OWNER.address.into(),
                 fee: 0.into(),
             },
-        },
-        Coins::new(),
-    )
-    .unwrap();
-
-    let res = test_suite
-        .dango_provider
-        .send_message_and_find(msg, None)
+        )
         .await
-        .unwrap();
-
-    assert!(res.executed, "Failed to set the route.");
+        .unwrap()
+        .should_succeed();
 
     // Retrieve the data updated to the last block.
     let reorg_period = ReorgPeriod::None;

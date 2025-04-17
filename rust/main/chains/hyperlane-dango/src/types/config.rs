@@ -23,7 +23,7 @@ pub struct ConnectionConf {
     pub search_retry_attempts: u64,
     pub chain_id: String,
     pub rpcs: Vec<Url>,
-    pub operation_batch: OperationBatchConfig
+    pub operation_batch: OperationBatchConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +35,9 @@ pub enum ProviderConf {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
-pub struct RpcConfig {}
+pub struct RpcConfig {
+    pub url: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 

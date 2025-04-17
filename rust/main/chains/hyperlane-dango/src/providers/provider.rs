@@ -134,15 +134,8 @@ impl DangoProvider {
         signer: Option<DangoSigner>,
     ) -> DangoResult<Self> {
         let client = match &config.provider_conf {
-            ProviderConf::Rpc(_) => {
-                let rpc = TendermintRpcClient::new(
-                    config
-                        .rpcs
-                        .first()
-                        .ok_or(anyhow!("rpcs is empty"))?
-                        .as_str(),
-                )?;
-
+            ProviderConf::Rpc(config) => {
+                let rpc = TendermintRpcClient::new(&config.url.as_str())?;
                 Arc::new(rpc) as Arc<dyn ClientRef<anyhow::Error>>
             }
             ProviderConf::GraphQl(config) => {

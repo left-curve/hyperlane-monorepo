@@ -1,8 +1,8 @@
 use {
     async_trait::async_trait,
     grug::{
-        Binary, BlockClient, BroadcastClient, BroadcastTxOutcome, Query, QueryClient, QueryResponse,
-        SearchTxClient, Tx, TxOutcome, UnsignedTx,
+        Binary, BlockClient, BroadcastClient, BroadcastTxOutcome, Query, QueryClient,
+        QueryResponse, SearchTxClient, Tx, TxOutcome, UnsignedTx,
     },
     std::{fmt::Debug, ops::Deref, sync::Arc},
 };

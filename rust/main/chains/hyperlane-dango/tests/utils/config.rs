@@ -1,33 +1,28 @@
 use {
-    dango_types::{account_factory::Username, config::AppConfig},
+    dango_types::config::AppConfig,
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
-    grug::{Addr, Coin, Defined, HexByteArray, MaybeDefined, Undefined},
-    hyperlane_base::{
-        settings::{
-            ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
-        },
-        CoreMetrics,
+    grug::{Addr, Coin, Defined, MaybeDefined, QueryClientExt, Undefined},
+    hyperlane_base::settings::{
+        ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
     },
     hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
     hyperlane_dango::{
         ConnectionConf, DangoConvertor, DangoProvider, DangoSigner, GraphQlConfig, ProviderConf,
         RpcConfig,
     },
-    std::{collections::HashMap, num::NonZero, str::FromStr, sync::LazyLock},
+    std::{collections::HashMap, sync::LazyLock},
     url::Url,
 };
 
 pub const DANGO_DOMAIN: HyperlaneDomain = HyperlaneDomain::Known(KnownHyperlaneDomain::Dango);
 
-pub const EMPTY_METRICS: LazyLock<CoreMetrics> =
-    LazyLock::new(|| CoreMetrics::new("dango", 9090, prometheus::Registry::new()).unwrap());
+pub const DEFAULT_RPC_PORT: u16 = 26657;
+pub const DEFAULT_RPC_URL: LazyLock<String> =
+    LazyLock::new(|| format!("http://localhost:{DEFAULT_RPC_PORT}"));
 
-const CHAIN_ID: &str = "dango";
-const URL: &str = "http://localhost:26657";
+const GRAPHQL_PROVIDER: LazyLock<GraphQlConfig> = LazyLock::new(|| GraphQlConfig { url: todo!() });
 
-const GRAPHQL_PROVIDER: LazyLock<GraphQlConfig> = LazyLock::new(|| GraphQlConfig {});
-
-pub fn build_connection_conf(provider_conf: ProviderConf) -> ConnectionConf {
+pub fn build_connection_conf(provider_conf: ProviderConf, chain_id: String) -> ConnectionConf {
     ConnectionConf {
         provider_conf,
         gas_price: Coin::new("uusdc", 0).unwrap(),
@@ -35,37 +30,9 @@ pub fn build_connection_conf(provider_conf: ProviderConf) -> ConnectionConf {
         flat_gas_increase: 100_000,
         search_sleep_duration: 2,
         search_retry_attempts: 5,
-        chain_id: CHAIN_ID.to_owned(),
-        rpcs: vec![Url::parse(URL).unwrap()],
+        chain_id,
+        rpcs: vec![Url::parse(DEFAULT_RPC_URL.as_str()).unwrap()],
         operation_batch: Default::default(),
-    }
-}
-
-pub fn build_chain_conf(connection: ConnectionConf) -> ChainConf {
-    ChainConf {
-        domain: HyperlaneDomain::Known(KnownHyperlaneDomain::Dango),
-        signer: Some(hyperlane_base::settings::SignerConf::Dango {
-            username: Username::from_str("username").unwrap(),
-            key: HexByteArray::from_inner([0; 32]),
-            address: Addr::from_str("0xcf8c496fb3ff6abd98f2c2b735a0a148fed04b54").unwrap(),
-        }),
-        reorg_period: hyperlane_core::ReorgPeriod::Blocks(NonZero::new(3).unwrap()),
-        addresses: CoreContractAddresses {
-            mailbox: H256::from_str("mailbox").unwrap(),
-            interchain_gas_paymaster: H256::from_str("igs").unwrap(),
-            validator_announce: H256::from_str("validator_announce").unwrap(),
-            merkle_tree_hook: H256::from_str("merkle_tree_hook").unwrap(),
-        },
-        connection: ChainConnectionConf::Dango(connection),
-        metrics_conf: PrometheusMiddlewareConf {
-            contracts: HashMap::new(),
-            chain: None,
-        },
-        index: IndexSettings {
-            from: 0,
-            chunk_size: 10,
-            mode: hyperlane_core::IndexMode::Block,
-        },
     }
 }
 
@@ -75,6 +42,7 @@ where
     P: MaybeDefined<ProviderConf>,
     S: MaybeDefined<SignerConf>,
 {
+    chain_id: String,
     addresses: T,
     provider_conf: P,
     signer: S,
@@ -87,8 +55,9 @@ impl
         Undefined<SignerConf>,
     >
 {
-    pub fn new() -> Self {
+    pub fn new(chain_id: String) -> Self {
         Self {
+            chain_id,
             addresses: Undefined::new(),
             provider_conf: Undefined::new(),
             signer: Undefined::new(),
@@ -96,6 +65,7 @@ impl
     }
 }
 
+// ProviderConf
 impl<T, S> ChainConfBuilder<T, Undefined<ProviderConf>, S>
 where
     T: MaybeDefined<CoreContractAddresses>,
@@ -106,6 +76,7 @@ where
         provider_conf: ProviderConf,
     ) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
+            chain_id: self.chain_id,
             addresses: self.addresses,
             provider_conf: Defined::new(provider_conf),
             signer: self.signer,
@@ -114,14 +85,18 @@ where
 
     pub fn with_default_rpc_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
+            chain_id: self.chain_id,
             addresses: self.addresses,
-            provider_conf: Defined::new(ProviderConf::Rpc(RpcConfig {})),
+            provider_conf: Defined::new(ProviderConf::Rpc(RpcConfig {
+                url: DEFAULT_RPC_URL.to_string(),
+            })),
             signer: self.signer,
         }
     }
 
     pub fn with_default_graphql_provider(self) -> ChainConfBuilder<T, Defined<ProviderConf>, S> {
         ChainConfBuilder {
+            chain_id: self.chain_id,
             addresses: self.addresses,
             provider_conf: Defined::new(ProviderConf::GraphQl(GRAPHQL_PROVIDER.clone().to_owned())),
             signer: self.signer,
@@ -129,6 +104,7 @@ where
     }
 }
 
+// SignerConf
 impl<T, P> ChainConfBuilder<T, P, Undefined<SignerConf>>
 where
     T: MaybeDefined<CoreContractAddresses>,
@@ -136,6 +112,7 @@ where
 {
     pub fn with_signer(self, signer: SignerConf) -> ChainConfBuilder<T, P, Defined<SignerConf>> {
         ChainConfBuilder {
+            chain_id: self.chain_id,
             addresses: self.addresses,
             provider_conf: self.provider_conf,
             signer: Defined::new(signer),
@@ -149,7 +126,8 @@ where
     S: MaybeDefined<SignerConf>,
 {
     pub async fn build(self) -> TestSuite {
-        let connection = build_connection_conf(self.provider_conf.into_inner());
+        let connection =
+            build_connection_conf(self.provider_conf.into_inner(), self.chain_id.clone());
         let signer = if let Some(signer_conf) = self.signer.maybe_inner() {
             Some(signer_conf.build::<DangoSigner>().await.unwrap())
         } else {
@@ -157,9 +135,9 @@ where
         };
         let provider = DangoProvider::from_config(&connection, DANGO_DOMAIN, signer).unwrap();
 
-        // Query chain to retrieve the dango addresses (warp and hyperlane).
+        // Query chain to retrieve the dango addresses.
         let app_addresses = provider
-            .query_app_config::<AppConfig>()
+            .query_app_config::<AppConfig>(None)
             .await
             .unwrap()
             .addresses;
@@ -211,6 +189,7 @@ where
         addresses: CoreContractAddresses,
     ) -> ChainConfBuilder<Defined<CoreContractAddresses>, P, S> {
         ChainConfBuilder {
+            chain_id: self.chain_id,
             addresses: Defined::new(addresses),
             provider_conf: self.provider_conf,
             signer: self.signer,
