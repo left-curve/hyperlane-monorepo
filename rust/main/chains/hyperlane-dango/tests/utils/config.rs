@@ -20,7 +20,10 @@ pub const DEFAULT_RPC_PORT: u16 = 26657;
 pub const DEFAULT_RPC_URL: LazyLock<String> =
     LazyLock::new(|| format!("http://localhost:{DEFAULT_RPC_PORT}"));
 
-const GRAPHQL_PROVIDER: LazyLock<GraphQlConfig> = LazyLock::new(|| GraphQlConfig { url: todo!() });
+pub const DEFAULT_GRAPHQL_PORT: u16 = 26657;
+const GRAPHQL_PROVIDER: LazyLock<GraphQlConfig> = LazyLock::new(|| GraphQlConfig {
+    url: format!("http://localhost:{DEFAULT_GRAPHQL_PORT}"),
+});
 
 pub fn build_connection_conf(provider_conf: ProviderConf, chain_id: String) -> ConnectionConf {
     ConnectionConf {

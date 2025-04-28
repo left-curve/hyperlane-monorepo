@@ -35,14 +35,15 @@ hyperlane_contract!(DangoMailbox);
 
 #[async_trait]
 impl Mailbox for DangoMailbox {
-    /// since Dango has no reorg period, we always query the latest block
-    async fn count(&self, _reorg_period: &ReorgPeriod) -> ChainResult<u32> {
+    async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32> {
         Ok(self
             .provider
             .query_wasm_smart(
                 self.address.try_convert()?,
                 mailbox::QueryNonceRequest {},
-                None,
+                self.provider
+                    .get_block_height_by_reorg_period(&reorg_period)
+                    .await?,
             )
             .await
             .into_dango_error()?)
@@ -89,7 +90,8 @@ impl Mailbox for DangoMailbox {
                 ),
                 None,
             )
-            .await.into_dango_error()?
+            .await
+            .into_dango_error()?
             .as_interchain_security_module()
         {
             Ok(ism.convert())

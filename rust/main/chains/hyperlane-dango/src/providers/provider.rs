@@ -280,12 +280,12 @@ impl DangoProvider {
         });
     }
 
-    // // Utility
+    // Utility
 
     /// Get the block height for a given reorg period.
     pub async fn get_block_height_by_reorg_period(
         &self,
-        reorg_period: ReorgPeriod,
+        reorg_period: &ReorgPeriod,
     ) -> DangoResult<Option<u64>> {
         let block_height = match reorg_period {
             ReorgPeriod::Blocks(blocks) => {
@@ -312,7 +312,7 @@ impl DangoProvider {
     ) -> DangoResult<Option<u64>> {
         match execution_block {
             ExecutionBlock::ReorgPeriod(reorg_period) => {
-                self.get_block_height_by_reorg_period(reorg_period).await
+                self.get_block_height_by_reorg_period(&reorg_period).await
             }
             ExecutionBlock::Defined(height) => Ok(Some(height)),
         }

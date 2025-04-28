@@ -2459,7 +2459,7 @@ dependencies = [
 [[package]]
 name = "grug"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "borsh 1.5.5",
  "grug-client",
@@ -2477,7 +2477,7 @@ dependencies = [
 [[package]]
 name = "grug-app"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "borsh 1.5.5",
  "chrono",
@@ -2496,7 +2496,7 @@ dependencies = [
 [[package]]
 name = "grug-client"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2511,7 +2511,7 @@ dependencies = [
 [[package]]
 name = "grug-crypto"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "blake2",
  "blake3",
@@ -2528,7 +2528,7 @@ dependencies = [
 [[package]]
 name = "grug-db-memory"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "grug-app",
  "grug-jmt",
@@ -2539,7 +2539,7 @@ dependencies = [
 [[package]]
 name = "grug-ffi"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "borsh 1.5.5",
  "grug-types",
@@ -2549,7 +2549,7 @@ dependencies = [
 [[package]]
 name = "grug-jmt"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "borsh 1.5.5",
  "grug-math",
@@ -2562,7 +2562,7 @@ dependencies = [
 [[package]]
 name = "grug-macros"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "proc-macro2 1.0.93",
  "quote 1.0.37",
@@ -2572,7 +2572,7 @@ dependencies = [
 [[package]]
 name = "grug-math"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "bnum",
  "borsh 1.5.5",
@@ -2584,7 +2584,7 @@ dependencies = [
 [[package]]
 name = "grug-mock-account"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "anyhow",
  "grug-ffi",
@@ -2597,7 +2597,7 @@ dependencies = [
 [[package]]
 name = "grug-mock-bank"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "anyhow",
  "grug-ffi",
@@ -2610,7 +2610,7 @@ dependencies = [
 [[package]]
 name = "grug-mock-taxman"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "anyhow",
  "borsh 1.5.5",
@@ -2625,7 +2625,7 @@ dependencies = [
 [[package]]
 name = "grug-storage"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "bnum",
  "borsh 1.5.5",
@@ -2638,12 +2638,14 @@ dependencies = [
 [[package]]
 name = "grug-testing"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "anyhow",
+ "async-trait",
  "grug-app",
  "grug-crypto",
  "grug-db-memory",
+ "grug-jmt",
  "grug-math",
  "grug-mock-account",
  "grug-mock-bank",
@@ -2654,6 +2656,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]
@@ -2661,7 +2664,7 @@ dependencies = [
 [[package]]
 name = "grug-types"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "async-trait",
  "bnum",
@@ -2690,7 +2693,7 @@ dependencies = [
 [[package]]
 name = "grug-vm-rust"
 version = "0.0.0"
-source = "git+https://github.com/left-curve/left-curve.git?branch=grug/tendermint_broadcast_response#225944a8cb2ee9f2505898e4546983f33420c7c2"
+source = "git+https://github.com/left-curve/left-curve.git#0c968278070df21e2c1dc762a368b18e0ecf8c0d"
 dependencies = [
  "elsa",
  "grug-app",

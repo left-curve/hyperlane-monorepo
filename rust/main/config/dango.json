@@ -21,7 +21,9 @@
             "merkleTreeHook": "0x0000000000000000000000000f4f47e2bd07b308bd1b3b4b93d72412e874ca8a",
             "chain_id": "dev-1",
             "provder_config": {
-                "rpc": {}
+                "rpc": {
+                    "url": "http://localhost:26657"
+                }
             },
             "gas_price": {
                 "denom": "dango",
@@ -60,7 +62,9 @@
             "merkleTreeHook": "0x0000000000000000000000000f4f47e2bd07b308bd1b3b4b93d72412e874ca8a",
             "chain_id": "dev-1",
             "provder_config": {
-                "rpc": {}
+                "rpc": {
+                    "url": "http://localhost:36657"
+                }
             },
             "gas_price": {
                 "denom": "dango",

@@ -1,29 +1,30 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    ops::{Deref, DerefMut, Index, IndexMut},
-    time::Duration,
+use {
+    async_trait::async_trait,
+    dango_client::SingleSigner,
+    dango_hyperlane_types::isms,
+    dango_types::{
+        auth::Nonce,
+        config::AppConfig,
+        warp::{self, Route},
+    },
+    grug::{
+        Addr, BroadcastClientExt, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message,
+        QueryClientExt, SearchTxClient, SearchTxOutcome, Signer, TendermintRpcClient, TxOutcome,
+    },
+    std::{
+        collections::{BTreeMap, BTreeSet},
+        ops::{Deref, DerefMut, Index, IndexMut},
+        time::Duration,
+    },
+    tokio::time::sleep,
 };
-
-use async_trait::async_trait;
-use dango_client::SingleSigner;
-use dango_hyperlane_types::isms;
-use dango_types::{
-    auth::Nonce,
-    config::AppConfig,
-    warp::{self, Route},
-};
-use grug::{
-    Addr, BroadcastClientExt, Coin, Coins, Defined, Denom, GasOption, HexByteArray, Message,
-    QueryClientExt, SearchTxClient, Signer, TendermintRpcClient, TxOutcome,
-};
-
-use tokio::time::sleep;
 
 pub struct ChainHelper {
     pub cfg: AppConfig,
     pub client: TendermintRpcClient,
     pub accounts: Accounts,
     pub chain_id: String,
+    pub hyperlane_domain: u32,
 }
 
 impl ChainHelper {
@@ -31,6 +32,7 @@ impl ChainHelper {
         client: TendermintRpcClient,
         accounts: BTreeMap<String, SingleSigner<Defined<Nonce>>>,
         chain_id: String,
+        hyperlane_domain: u32,
     ) -> anyhow::Result<Self> {
         let cfg = client.query_app_config(None).await?;
 
@@ -39,6 +41,7 @@ impl ChainHelper {
             client,
             accounts: Accounts(accounts),
             chain_id,
+            hyperlane_domain,
         })
     }
 
@@ -48,7 +51,8 @@ impl ChainHelper {
         destination_domain: u32,
         route: Route,
     ) -> anyhow::Result<TxOutcome> {
-        self.client
+        Ok(self
+            .client
             .broadcast_and_find(
                 &mut self.accounts["owner"],
                 Message::execute(
@@ -65,7 +69,8 @@ impl ChainHelper {
                 },
                 &self.chain_id,
             )
-            .await
+            .await?
+            .outcome)
     }
 
     pub async fn send_remote(
@@ -74,7 +79,7 @@ impl ChainHelper {
         coin: Coin,
         destination_domain: u32,
         recipient: Addr,
-    ) -> anyhow::Result<TxOutcome> {
+    ) -> anyhow::Result<SearchTxOutcome> {
         self.client
             .broadcast_and_find(
                 &mut self.accounts[sender],
@@ -101,7 +106,8 @@ impl ChainHelper {
         threshold: u32,
         validators: BTreeSet<HexByteArray<20>>,
     ) -> anyhow::Result<TxOutcome> {
-        self.client
+        Ok(self
+            .client
             .broadcast_and_find(
                 &mut self.accounts["owner"],
                 Message::execute(
@@ -118,7 +124,8 @@ impl ChainHelper {
                 },
                 &self.chain_id,
             )
-            .await
+            .await?
+            .outcome)
     }
 }
 pub struct Accounts(BTreeMap<String, SingleSigner<Defined<Nonce>>>);
@@ -165,7 +172,7 @@ pub trait ClientExt {
         message: Message,
         gas_opt: GasOption,
         chain_id: &str,
-    ) -> anyhow::Result<TxOutcome>
+    ) -> anyhow::Result<SearchTxOutcome>
     where
         S: Signer + Send + Sync + 'static;
 }
@@ -178,7 +185,7 @@ impl ClientExt for TendermintRpcClient {
         message: Message,
         gas_opt: GasOption,
         chain_id: &str,
-    ) -> anyhow::Result<TxOutcome>
+    ) -> anyhow::Result<SearchTxOutcome>
     where
         S: Signer + Send + Sync + 'static,
     {
@@ -196,7 +203,7 @@ impl ClientExt for TendermintRpcClient {
             let outcome = self.search_tx(hash).await;
 
             if let Ok(outcome) = outcome {
-                return Ok(outcome.outcome);
+                return Ok(outcome);
             }
 
             counter += 1;

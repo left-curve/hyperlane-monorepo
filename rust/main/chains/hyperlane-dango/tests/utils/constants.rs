@@ -44,3 +44,5 @@ pub const DANGO2_DOMAIN: u32 = 88888886;
 
 pub const EMPTY_METRICS: LazyLock<CoreMetrics> =
     LazyLock::new(|| CoreMetrics::new("dango", 9090, prometheus::Registry::new()).unwrap());
+
+pub const TEST_FOLDER: &str = "cache_test";

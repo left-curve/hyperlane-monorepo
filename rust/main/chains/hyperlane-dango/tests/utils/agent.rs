@@ -1,17 +1,25 @@
 use {
-    super::user::IntoSignerConf,
+    super::{chain_helper::ChainHelper, user::IntoSignerConf},
+    crate::utils::constants::TEST_FOLDER,
+    dango_types::config::AppAddresses,
+    grug::JsonSerExt,
     hyperlane_base::settings::{CheckpointSyncerConf, SignerConf},
     hyperlane_core::H256,
+    hyperlane_dango::{DangoConvertor, ProviderConf},
+    std::fs,
     std::{
         collections::{BTreeMap, BTreeSet},
         path::PathBuf,
         process::{Child, Command, Stdio},
+        vec,
     },
 };
 
 #[derive(Default)]
 pub struct AgentBuilder<'a> {
     agent: Agent,
+    provider_conf: Option<ProviderConf>,
+    addresses: BTreeMap<&'a str, AppAddresses>,
     checkpoint_syncer: Option<CheckpointSyncerConf>,
     origin_chain_name: Option<OriginChainName>,
     allow_local_checkpoint_syncer: Option<AllowLocalCheckpointSyncer>,
@@ -21,6 +29,7 @@ pub struct AgentBuilder<'a> {
     metrics_port: Option<MetricsPort>,
     piped: bool,
     db: Option<Db>,
+    chain_helpers: BTreeMap<&'a str, &'a ChainHelper>,
 }
 
 impl<'a> AgentBuilder<'a> {
@@ -29,6 +38,21 @@ impl<'a> AgentBuilder<'a> {
             agent,
             ..Default::default()
         }
+    }
+
+    pub fn with_provider_conf(mut self, provider_conf: ProviderConf) -> Self {
+        self.provider_conf = Some(provider_conf);
+        self
+    }
+
+    pub fn with_addresses(mut self, chain: &'a str, addresses: AppAddresses) -> Self {
+        self.addresses.insert(chain, addresses);
+        self
+    }
+
+    pub fn with_chain_helper(mut self, chain: &'a str, chain_helper: &'a ChainHelper) -> Self {
+        self.chain_helpers.insert(chain, chain_helper);
+        self
     }
 
     pub fn with_origin_chain_name(mut self, origin_chain_name: &str) -> Self {
@@ -92,7 +116,35 @@ impl<'a> AgentBuilder<'a> {
             (Stdio::null(), Stdio::null())
         };
 
+        let mut db_args = self.db.args();
+
+        if db_args.is_empty() {
+            let db_path = PathBuf::from(match self.agent.clone() {
+                Agent::Validator => {
+                    format!(
+                        "validator_db_{}",
+                        self.origin_chain_name
+                            .clone()
+                            .unwrap_or(OriginChainName("chain".to_string()))
+                            .0
+                    )
+                }
+                Agent::Relayer => "relayer".to_string(),
+            });
+
+            let relative_path = adding_cache_folder_path(&db_path);
+
+            if let Err(e) = fs::create_dir_all(workspace().join(relative_path.clone())) {
+                panic!("Failed to create the directory {:?} : {}", relative_path, e);
+            }
+
+            let db = Db(relative_path.to_string_lossy().to_string());
+            db_args = db.args();
+        }
+
         Command::new(path)
+            .args(self.chain_helpers.args())
+            .args(self.addresses.args())
             .args(self.origin_chain_name.args())
             .args(self.checkpoint_syncer.args())
             .args(self.chain_signers.args())
@@ -100,7 +152,7 @@ impl<'a> AgentBuilder<'a> {
             .args(self.relay_chains.args())
             .args(self.allow_local_checkpoint_syncer.args())
             .args(self.metrics_port.args())
-            .args(self.db.args())
+            .args(db_args)
             .current_dir(workspace())
             .stdout(stdout)
             .stderr(stderr)
@@ -152,7 +204,7 @@ impl Args for BTreeMap<&str, SignerConf> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum Agent {
     #[default]
     Validator,
@@ -168,6 +220,7 @@ impl Args for Agent {
     }
 }
 
+#[derive(Clone)]
 struct OriginChainName(String);
 
 impl Args for OriginChainName {
@@ -184,7 +237,9 @@ impl Args for CheckpointSyncerConf {
                     "--checkpointSyncer.type".to_string(),
                     "localStorage".to_string(),
                     "--checkpointSyncer.path".to_string(),
-                    path.to_string_lossy().to_string(),
+                    adding_cache_folder_path(&path)
+                        .to_string_lossy()
+                        .to_string(),
                 ]
             }
             _ => unimplemented!(),
@@ -274,14 +329,125 @@ impl Args for Db {
     fn args(self) -> Vec<String> {
         let path = workspace().join(self.0);
         vec!["--db".to_string(), path.to_string_lossy().to_string()]
-        // vec!["--db".to_string(), format!("/{}", self.0)]
     }
 }
 
-#[test]
-fn workspace_work() {
-    println!("{:?}", workspace());
+impl Args for ProviderConf {
+    fn args(self) -> Vec<String> {
+        vec![
+            "--provider_config".to_string(),
+            self.to_json_string().unwrap(),
+        ]
+    }
+}
 
-    let path = workspace().join("./validator_db_dango1");
-    println!("{:?}", path);
+// Specify addresses for a specific chain
+#[derive(Clone)]
+pub struct Addresses {
+    addresses: AppAddresses,
+    chain: String,
+}
+
+impl Args for Addresses {
+    fn args(self) -> Vec<String> {
+        vec![
+            format!("--chains.{}.mailbox", self.chain),
+            format!(
+                "{:?}",
+                DangoConvertor::<H256>::convert(self.addresses.hyperlane.mailbox)
+            ),
+            // Merkle tree hook is the same as mailbox for dango chain
+            format!("--chains.{}.merkleTreeHook", self.chain),
+            format!(
+                "{:?}",
+                DangoConvertor::<H256>::convert(self.addresses.hyperlane.mailbox)
+            ),
+            format!("--chains.{}.validatorAnnounce", self.chain),
+            format!(
+                "{:?}",
+                DangoConvertor::<H256>::convert(self.addresses.hyperlane.va)
+            ),
+            // Interchain gas paymaster is not used on dango chain.
+            format!("--chains.{}.interchainGasPaymaster", self.chain),
+            format!("{:?}", H256::zero()),
+        ]
+    }
+}
+
+impl Args for BTreeMap<&str, AppAddresses> {
+    fn args(self) -> Vec<String> {
+        self.into_iter()
+            .flat_map(|(chain, addresses)| {
+                vec![
+                    format!("--chains.{}.mailbox", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(addresses.hyperlane.mailbox)
+                    ),
+                    // Merkle tree hook is the same as mailbox for dango chain
+                    format!("--chains.{}.merkleTreeHook", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(addresses.hyperlane.mailbox)
+                    ),
+                    format!("--chains.{}.validatorAnnounce", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(addresses.hyperlane.va)
+                    ),
+                    // Interchain gas paymaster is not used on dango chain.
+                    format!("--chains.{}.interchainGasPaymaster", chain),
+                    format!("{:?}", H256::zero()),
+                ]
+            })
+            .collect()
+    }
+}
+
+impl Args for BTreeMap<&str, &ChainHelper> {
+    fn args(self) -> Vec<String> {
+        self.into_iter()
+            .flat_map(|(chain, chain_helper)| {
+                vec![
+                    // Chain id
+                    format!("--chains.{}.chainId", chain),
+                    chain_helper.chain_id.clone(),
+                    // Domain ID
+                    format!("--chains.{}.domainId", chain),
+                    chain_helper.hyperlane_domain.to_string(),
+                    // Mailbox
+                    format!("--chains.{}.mailbox", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(
+                            chain_helper.cfg.addresses.hyperlane.mailbox
+                        )
+                    ),
+                    // Merkle tree hook is the same as mailbox for dango chain
+                    format!("--chains.{}.merkleTreeHook", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(
+                            chain_helper.cfg.addresses.hyperlane.mailbox
+                        )
+                    ),
+                    // Validator announce
+                    format!("--chains.{}.validatorAnnounce", chain),
+                    format!(
+                        "{:?}",
+                        DangoConvertor::<H256>::convert(chain_helper.cfg.addresses.hyperlane.va)
+                    ),
+                    // Interchain gas paymaster is not used on dango chain.
+                    format!("--chains.{}.interchainGasPaymaster", chain),
+                    format!("{:?}", H256::zero()),
+                ]
+            })
+            .collect()
+    }
+}
+
+pub fn adding_cache_folder_path(path: &PathBuf) -> PathBuf {
+    let mut new_path = PathBuf::from(TEST_FOLDER);
+    new_path.push(path);
+    new_path
 }

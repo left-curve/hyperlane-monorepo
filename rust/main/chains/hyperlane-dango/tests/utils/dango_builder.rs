@@ -29,14 +29,16 @@ macro_rules! try_start_test {
     };
 }
 
-pub struct DangoBuilder<HD = Undefined<u32>, RPC = Undefined<u16>>
+pub struct DangoBuilder<HD = Undefined<u32>, RP = Undefined<u16>, GP = Undefined<u16>>
 where
     HD: MaybeDefined<u32>,
-    RPC: MaybeDefined<u16>,
+    RP: MaybeDefined<u16>,
+    GP: MaybeDefined<u16>,
 {
     container_name: String,
     hyperlane_domain: HD,
-    port: RPC,
+    port_rpc: RP,
+    port_graphql: GP,
 }
 
 impl DangoBuilder {
@@ -44,51 +46,78 @@ impl DangoBuilder {
         Self {
             container_name: container_name.to_string(),
             hyperlane_domain: Undefined::default(),
-            port: Undefined::default(),
+            port_rpc: Undefined::default(),
+            port_graphql: Undefined::default(),
         }
     }
 }
 
-impl<RPC> DangoBuilder<Undefined<u32>, RPC>
+impl<RP, GP> DangoBuilder<Undefined<u32>, RP, GP>
 where
-    RPC: MaybeDefined<u16>,
+    RP: MaybeDefined<u16>,
+    GP: MaybeDefined<u16>,
 {
-    pub fn with_hyperlane_domain(self, hyperlane_domain: u32) -> DangoBuilder<Defined<u32>, RPC> {
+    pub fn with_hyperlane_domain(
+        self,
+        hyperlane_domain: u32,
+    ) -> DangoBuilder<Defined<u32>, RP, GP> {
         DangoBuilder {
             container_name: self.container_name,
             hyperlane_domain: Defined::new(hyperlane_domain),
-            port: self.port,
+            port_rpc: self.port_rpc,
+            port_graphql: self.port_graphql,
         }
     }
 }
 
-impl<HD> DangoBuilder<HD, Undefined<u16>>
+impl<HD, GP> DangoBuilder<HD, Undefined<u16>, GP>
 where
     HD: MaybeDefined<u32>,
+    GP: MaybeDefined<u16>,
 {
-    pub fn with_rpc_port(self, port: u16) -> DangoBuilder<HD, Defined<u16>> {
+    pub fn with_rpc_port(self, port: u16) -> DangoBuilder<HD, Defined<u16>, GP> {
         DangoBuilder {
             container_name: self.container_name,
             hyperlane_domain: self.hyperlane_domain,
-            port: Defined::new(port),
+            port_rpc: Defined::new(port),
+            port_graphql: self.port_graphql,
         }
     }
 }
 
-impl<HD, RPC> DangoBuilder<HD, RPC>
+impl<HD, RP> DangoBuilder<HD, RP, Undefined<u16>>
 where
     HD: MaybeDefined<u32>,
-    RPC: MaybeDefined<u16>,
+    RP: MaybeDefined<u16>,
+{
+    pub fn with_graphql_port(self, port: u16) -> DangoBuilder<HD, RP, Defined<u16>> {
+        DangoBuilder {
+            container_name: self.container_name,
+            hyperlane_domain: self.hyperlane_domain,
+            port_rpc: self.port_rpc,
+            port_graphql: Defined::new(port),
+        }
+    }
+}
+
+impl<HD, RP, GP> DangoBuilder<HD, RP, GP>
+where
+    HD: MaybeDefined<u32>,
+    RP: MaybeDefined<u16>,
+    GP: MaybeDefined<u16>,
 {
     pub async fn start(self) -> anyhow::Result<(ChainHelper, Child)> {
-        let port = self.port.maybe_into_inner().unwrap_or(26657);
+        let rpc_port = self.port_rpc.maybe_into_inner().unwrap_or(26657);
 
-        let client = TendermintRpcClient::new(format!("http://localhost:{port}").as_str()).unwrap();
+        let client =
+            TendermintRpcClient::new(format!("http://localhost:{rpc_port}").as_str()).unwrap();
+
+        let hyperlane_domain = self.hyperlane_domain.maybe_into_inner().unwrap_or(88888888);
 
         let child = start_dango_docker(
             self.container_name.as_str(),
-            port,
-            self.hyperlane_domain.maybe_into_inner().unwrap_or(88888888),
+            rpc_port,
+            hyperlane_domain,
             &client,
         )
         .await?;
@@ -125,7 +154,10 @@ where
             accounts.insert(username, signer);
         }
 
-        Ok((ChainHelper::new(client, accounts, chain_id).await?, child))
+        Ok((
+            ChainHelper::new(client, accounts, chain_id, hyperlane_domain).await?,
+            child,
+        ))
     }
 }
 
