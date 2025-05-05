@@ -43,7 +43,7 @@ async fn mailbox() {
     let test_suite = ChainConfBuilder::new(chain_helper.chain_id.clone())
         .with_default_rpc_provider()
         .with_signer(user1.as_signer_conf())
-        .build()
+        .build(&chain_helper)
         .await;
 
     let chain_conf = test_suite.chain_conf;

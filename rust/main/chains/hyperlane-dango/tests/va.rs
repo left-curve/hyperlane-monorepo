@@ -36,7 +36,7 @@ async fn validator() {
     let mut test_suite = ChainConfBuilder::new(chain_helper.chain_id.clone())
         .with_default_rpc_provider()
         .with_signer(user1)
-        .build()
+        .build(&chain_helper)
         .await;
 
     let chain_conf = test_suite.chain_conf;
@@ -75,6 +75,8 @@ async fn validator() {
         mailbox_domain: chain_conf.domain.id(),
         storage_location: storage_location.clone(),
     };
+
+    println!("Announcement: {:?}", announcement);
 
     let signed_announcement = signer.sign(announcement).await.unwrap();
 

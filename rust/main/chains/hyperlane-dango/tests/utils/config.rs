@@ -1,11 +1,15 @@
 use {
+    super::chain_helper::ChainHelper,
     dango_types::config::AppConfig,
     ethers_prometheus::middleware::PrometheusMiddlewareConf,
     grug::{Addr, Coin, Defined, MaybeDefined, QueryClientExt, Undefined},
     hyperlane_base::settings::{
         ChainConf, ChainConnectionConf, CoreContractAddresses, IndexSettings, SignerConf,
     },
-    hyperlane_core::{HyperlaneDomain, KnownHyperlaneDomain, ReorgPeriod, H256},
+    hyperlane_core::{
+        HyperlaneDomain, HyperlaneDomainProtocol, HyperlaneDomainTechnicalStack,
+        HyperlaneDomainType, KnownHyperlaneDomain, ReorgPeriod, H256,
+    },
     hyperlane_dango::{
         ConnectionConf, DangoConvertor, DangoProvider, DangoSigner, GraphQlConfig, ProviderConf,
         RpcConfig,
@@ -128,7 +132,7 @@ where
     T: MaybeDefined<CoreContractAddresses>,
     S: MaybeDefined<SignerConf>,
 {
-    pub async fn build(self) -> TestSuite {
+    pub async fn build(self, ch: &ChainHelper) -> TestSuite {
         let connection =
             build_connection_conf(self.provider_conf.into_inner(), self.chain_id.clone());
         let signer = if let Some(signer_conf) = self.signer.maybe_inner() {
@@ -158,7 +162,13 @@ where
         };
 
         let chain_conf = ChainConf {
-            domain: DANGO_DOMAIN,
+            domain: HyperlaneDomain::Unknown {
+                domain_id: ch.hyperlane_domain,
+                domain_name: "dango".to_string(),
+                domain_type: HyperlaneDomainType::Testnet,
+                domain_protocol: HyperlaneDomainProtocol::Dango,
+                domain_technical_stack: HyperlaneDomainTechnicalStack::Other,
+            },
             signer: self.signer.maybe_into_inner(),
             reorg_period: ReorgPeriod::None,
             addresses,

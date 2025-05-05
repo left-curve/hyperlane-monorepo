@@ -135,7 +135,7 @@ where
         println!("Chain ID: {}", chain_id);
 
         let genesis: dangod_types::Genesis =
-            read_docker_file(&self.container_name, "/root/.dangod/genesis.json")?;
+            read_docker_file(&self.container_name, "/root/.dangod/genesis.json").unwrap();
 
         let mut accounts = BTreeMap::new();
 
@@ -149,7 +149,7 @@ where
             )
             .unwrap()
             .query_nonce(&client)
-            .await?;
+            .await.unwrap();
 
             accounts.insert(username, signer);
         }
