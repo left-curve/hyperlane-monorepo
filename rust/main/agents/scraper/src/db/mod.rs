@@ -39,6 +39,9 @@ impl ScraperDb {
             DatabaseConnection::SqlxPostgresPoolConnection(conn) => {
                 DatabaseConnection::SqlxPostgresPoolConnection(conn.clone())
             }
+            DatabaseConnection::SqlxSqlitePoolConnection(conn) => {
+                DatabaseConnection::SqlxSqlitePoolConnection(conn.clone())
+            }
             DatabaseConnection::Disconnected => DatabaseConnection::Disconnected,
             DatabaseConnection::MockDatabaseConnection(conn) => {
                 DatabaseConnection::MockDatabaseConnection(conn.clone())
